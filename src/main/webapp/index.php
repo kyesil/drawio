@@ -60,7 +60,10 @@
 			
 			return result;
 		})();
-		
+
+		urlParams['offline']=1;
+		urlParams['dev']=1;
+
 		// Forces CDN caches by passing URL parameters via URL hash
 		if (window.location.hash != null && window.location.hash.substring(0, 2) == '#P')
 		{
@@ -146,12 +149,8 @@
 				}
 			};
 			
-			var name = 'draw.io';
+			var name = 'pdraw';
 
-			if (urlParams['offline'] === '1')
-			{
-				name += ' app';
-			}
 			
 			addMeta('apple-mobile-web-app-title', name);
 			addMeta('application-name', name);

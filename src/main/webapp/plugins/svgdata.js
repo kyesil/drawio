@@ -41,7 +41,7 @@ Draw.loadPlugin(function(ui) {
 				for (var i = 0; i < state.cell.value.attributes.length; i++)
 				{
 					var attrib = state.cell.value.attributes[i];
-					g.setAttribute('data-' + attrib.name, attrib.value);
+					g.setAttribute( attrib.name, attrib.value);
 				}
 			}
 			
