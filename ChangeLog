@@ -1,3 +1,27 @@
+24-OCT-2019: 12.1.5
+
+- Fixes scopes for Google Drive Connector for Confluence Cloud
+- Fixes opening libraries from GitLab
+
+23-OCT-2019: 12.1.4
+
+- Fixes scrollbars in Confluence Diagram Viewer
+- Fixes embed dialog for Google Shared Drives
+- Fixes snap to grid while panning
+- Adds paging for GitLab picker
+- Uses mxGraph 4.0.6 beta 1
+
+17-OCT-2019: 12.1.3
+
+- Fixes Google Drive auth in Office plugin
+- Uses mxGraph 4.0.5
+
+16-OCT-2019: 12.1.2
+
+- Fixes scrollbars in Confluence Cloud and Jira Cloud
+- Fixes export of uncompressed XML files to PDF
+- Uses mxGraph 4.0.3 beta 7
+
 14-OCT-2019: 12.1.1
 
 - Uses uncompressed XML files in GitLab and GitHub
