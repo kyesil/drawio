@@ -592,7 +592,7 @@ App.main = function(callback, createUi)
 			{
 				// Loading plugins inside the asynchronous block below stops the page from loading so a 
 				// hardcoded message for the warning dialog is used since the resources are loadd below
-				var warning = 'Loaded:\n \n {1}\n \n Would you like to load these plugin(s) now?\n \n NOTE : Only allow plugins to run if you fully understand the security implications of doing so.\n';
+				var warning = 'The page has requested to load the following plugin(s):\n \n {1}\n \n Would you like to load these plugin(s) now?\n \n NOTE : Only allow plugins to run if you fully understand the security implications of doing so.\n';
 				var tmp = window.location.protocol + '//' + window.location.host;
 				var local = true;
 				
