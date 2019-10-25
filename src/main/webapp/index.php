@@ -63,10 +63,7 @@ require  '_boot.php';
 			
 			return result;
 		})();
-
-		urlParams['offline']=1;
-		urlParams['dev']=1;
-
+		
 		// Forces CDN caches by passing URL parameters via URL hash
 		if (window.location.hash != null && window.location.hash.substring(0, 2) == '#P')
 		{
@@ -152,8 +149,12 @@ require  '_boot.php';
 				}
 			};
 			
-			var name = 'pdraw';
+			var name = 'draw.io';
 
+			if (urlParams['offline'] === '1')
+			{
+				name += ' app';
+			}
 			
 			addMeta('apple-mobile-web-app-title', name);
 			addMeta('application-name', name);
@@ -335,12 +336,20 @@ require  '_boot.php';
 		if (urlParams['dev'] == '1')
 		{
 			// Used to request grapheditor/mxgraph sources in dev mode
-			var mxDevUrl ='../../../../pmxgraph';
+			var mxDevUrl = document.location.protocol + '//devhost.jgraph.com/mxgraph2';
 			
 			// Used to request draw.io sources in dev mode
-			var drawDevUrl = './';
+			var drawDevUrl = document.location.protocol + '//devhost.jgraph.com/drawio/src/main/webapp/';
+			
+			if (document.location.protocol == 'file:')
+			{
+				mxDevUrl = '../../../../../mxgraph2';
+				drawDevUrl = './';
+				
 				// Forces includes for dev environment in node.js
 				mxForceIncludes = true;
+			}
+
 			var geBasePath = mxDevUrl + '/javascript/examples/grapheditor/www/js';
 			var mxBasePath = mxDevUrl + '/javascript/src';
 			
