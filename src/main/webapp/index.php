@@ -336,20 +336,12 @@ require  '_boot.php';
 		if (urlParams['dev'] == '1')
 		{
 			// Used to request grapheditor/mxgraph sources in dev mode
-			var mxDevUrl = document.location.protocol + '//devhost.jgraph.com/mxgraph2';
+			var mxDevUrl ='../../../../pmxgraph';
 			
 			// Used to request draw.io sources in dev mode
-			var drawDevUrl = document.location.protocol + '//devhost.jgraph.com/drawio/src/main/webapp/';
-			
-			if (document.location.protocol == 'file:')
-			{
-				mxDevUrl = '../../../../../mxgraph2';
-				drawDevUrl = './';
-				
+			var drawDevUrl = './';
 				// Forces includes for dev environment in node.js
 				mxForceIncludes = true;
-			}
-
 			var geBasePath = mxDevUrl + '/javascript/examples/grapheditor/www/js';
 			var mxBasePath = mxDevUrl + '/javascript/src';
 			
