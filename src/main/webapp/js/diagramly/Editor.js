@@ -1190,6 +1190,13 @@
 	 */
 	Editor.prototype.isCorsEnabledForUrl = function(url)
 	{
+		//Disable proxy for electron since it doesn't exist (it is served locally) and it works with most of the sites
+		//The same with Chrome App, never use proxy
+		if (mxClient.IS_CHROMEAPP || EditorUi.isElectronApp)
+		{
+			return true;
+		}
+		
 		if (urlParams['cors'] != null && this.corsRegExp == null)
 		{
 			this.corsRegExp = new RegExp(decodeURIComponent(urlParams['cors']));
@@ -3905,7 +3912,67 @@
 		
 		return result;
 	};
+	
+	/**
+	 * Overridden to support client-side math typesetting.
+	 */
+	var graphCreateSvgImageExport = Graph.prototype.createSvgImageExport;
+	
+	Graph.prototype.createSvgImageExport = function()
+	{
+		var imgExport = graphCreateSvgImageExport.apply(this, arguments);
+		
+		if (this.mathEnabled)
+		{
+			var graph = this;
+			var origin = graph.container.getBoundingClientRect();
+			var dy = graph.container.scrollTop - origin.y;
+			var dx = graph.container.scrollLeft - origin.x;
+			var drawText = imgExport.drawText;
 
+			// Copies rendered math from container to SVG document
+			imgExport.drawText = function(state, canvas)
+			{
+				if (state.text != null && state.text.node != null &&
+					state.text.node.ownerSVGElement == null)
+				{
+					// Copies text into DOM using actual bounding box
+					var rect = state.text.node.getBoundingClientRect();
+					
+					// Sets position on foreignObject
+					var fo = canvas.root.ownerDocument.createElementNS(mxConstants.NS_SVG, 'foreignObject');
+					fo.setAttribute('x', (rect.x + dx) * canvas.state.scale + canvas.state.dx);
+					fo.setAttribute('y', (rect.y + dy) * canvas.state.scale + canvas.state.dy);
+					fo.setAttribute('width', rect.width * canvas.state.scale);
+					fo.setAttribute('height', rect.height * canvas.state.scale);
+					
+					// Resets position on inner DIV
+					var clone = state.text.node.cloneNode(true);
+					clone.style.top = '0px';
+					clone.style.left = '0px';
+					clone.style.transform = '';
+					
+					// Removes all math elements
+					var ele = clone.getElementsByTagName('math');
+					
+					while (ele.length > 0)
+					{
+						ele[0].parentNode.removeChild(ele[0]);
+					}
+					
+					fo.appendChild(clone);
+					canvas.root.ownerSVGElement.appendChild(fo);
+				}
+				else
+				{
+					drawText.apply(this, arguments);
+				}
+			};
+		}
+		
+		return imgExport;
+	};
+	
 	/**
 	 * Safari has problems with math typesetting inside foreignObjects.
 	 */
@@ -4927,6 +4994,23 @@
 			
 			function printGraph(thisGraph, pv, forcePageBreaks)
 			{
+				// Workaround for CSS transforms affecting the print output
+				// is to disable during print output and restore after
+				var prev = thisGraph.useCssTransforms;
+				var prevTranslate = thisGraph.currentTranslate;
+				var prevScale = thisGraph.currentScale;
+				var prevViewTranslate = thisGraph.view.translate;
+				var prevViewScale = thisGraph.view.scale;
+
+				if (thisGraph.useCssTransforms)
+				{
+					thisGraph.useCssTransforms = false;
+					thisGraph.currentTranslate = new mxPoint(0,0);
+					thisGraph.currentScale = 1;
+					thisGraph.view.translate = new mxPoint(0,0);
+					thisGraph.view.scale = 1;
+				}
+
 				// Negative coordinates are cropped or shifted if page visible
 				var gb = thisGraph.getGraphBounds();
 				var border = 0;
@@ -4973,7 +5057,7 @@
 				{
 					autoOrigin = true;
 				}
-
+				
 				if (pv == null)
 				{
 					pv = PrintDialog.createPrintPreview(thisGraph, scale, pf, border, x0, y0, autoOrigin);
@@ -5064,6 +5148,16 @@
 					pv.appendGraph(thisGraph, scale, x0, y0, forcePageBreaks, true);
 				}
 				
+				// Restores state if css transforms are used
+				if (prev)
+				{
+					thisGraph.useCssTransforms = prev;
+					thisGraph.currentTranslate = prevTranslate;
+					thisGraph.currentScale = prevScale;
+					thisGraph.view.translate = prevViewTranslate;
+					thisGraph.view.scale = prevViewScale;
+				}
+				
 				return pv;
 			};
 			
@@ -5092,7 +5186,7 @@
 				{
 					var page = editorUi.pages[i];
 					var tempGraph = (page == editorUi.currentPage) ? graph : null;
-					
+
 					if (tempGraph == null)
 					{
 						tempGraph = editorUi.createTemporaryGraph(graph.getStylesheet());
@@ -5152,7 +5246,7 @@
 						editorUi.updatePageRoot(page);
 						tempGraph.model.setRoot(page.root);
 					}
-
+					
 					pv = printGraph(tempGraph, pv, i != imax);
 
 					if (tempGraph != graph)

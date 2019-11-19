@@ -1,3 +1,39 @@
+12-NOV-2019: 12.2.4
+
+- Updates IBM stencils
+- Fixes Lucidchart import NPE
+- Adds pools and lanes in BPMN General library
+- Adds client-side SVG and PNG export for math
+
+08-NOV-2019: 12.2.3
+
+- Improves stencils in dark mode
+- Removes electron useragent check
+- Fixes shifted text labels in PDF with math
+- Adds clipping for print output
+- Uses mxGraph 4.0.6 beta 5
+
+06-NOV-2019: 12.2.2
+
+- Fixes NPE in pasteCells
+
+06-NOV-2019: 12.2.1
+
+- Fixes slow paste from clipboard in modern browsers
+- Improves handling of timeouts in Google Drive
+- Fixes event handling on iOS
+- Uses mxGraph 4.0.6 beta 4
+
+04-NOV-2019: 12.2.0
+
+- Fixes Google auth after hibernate on Windows
+- Fixes print in lightbox for some file types
+- Fixes extension for command line export
+- Open file asks for new or same window
+- Handles trashed state in Google Drive
+- Fixes links in labels for SVG export
+- Appends tab name for image export
+
 30-OCT-2019: 12.1.9
 
 - Fixes anchor points for certain shape styles

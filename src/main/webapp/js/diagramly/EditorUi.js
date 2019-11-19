@@ -13,7 +13,6 @@
 	 * Overrides compact UI setting.
 	 */
 	EditorUi.compactUi = uiTheme != 'atlas';
-	
 
 	/**
 	 * Overrides default grid color for dark mode
@@ -1012,26 +1011,57 @@
 		currentPage = (currentPage != null) ? currentPage : false;
 		uncompressed = (uncompressed != null) ? uncompressed : !Editor.compressXml;
 		
+		// Generats graph model XML node for single page export
 		var node = this.editor.getGraphXml(ignoreSelection);
-			
+		
 		if (ignoreSelection && this.fileNode != null && this.currentPage != null)
 		{
-			if (uncompressed)
-			{
-				EditorUi.removeChildNodes(this.currentPage.node);
-				this.currentPage.node.appendChild(node);
-			}
-			else
-			{
-				var data = Graph.compressNode(node);
-				mxUtils.setTextContent(this.currentPage.node, data);
-			}
-			
+			// Updates current page XML if selection is ignored
+			EditorUi.removeChildNodes(this.currentPage.node);
+			mxUtils.setTextContent(this.currentPage.node, Graph.compressNode(node));
+
+			// Creates a clone of the file node for processing
 			node = this.fileNode.cloneNode(false);
+
+			// Appends the node of the page and applies compression
+			function appendPage(pageNode)
+			{
+				var models = pageNode.getElementsByTagName('mxGraphModel');
+				var modelNode = (models.length > 0) ? models[0] : null;
+				var clone = pageNode;
+				
+				if (modelNode == null && uncompressed)
+				{
+					var text = mxUtils.trim(mxUtils.getTextContent(pageNode));
+					clone = pageNode.cloneNode(false);
+					
+					if (text.length > 0)
+					{
+						var tmp = Graph.decompress(text);
+						
+						if (tmp != null && tmp.length > 0)
+						{
+							clone.appendChild(mxUtils.parseXml(tmp).documentElement);
+						}
+					}
+				}
+				else if (modelNode != null && !uncompressed)
+				{
+					clone = pageNode.cloneNode(false);
+					mxUtils.setTextContent(clone, Graph.compressNode(modelNode));
+				}
+				else
+				{
+					clone = pageNode.cloneNode(true);
+				}
+				
+				node.appendChild(clone);
+			};
+
 			
 			if (currentPage)
 			{
-				node.appendChild(this.currentPage.node);
+				appendPage(this.currentPage.node);
 			}
 			else
 			{
@@ -1045,29 +1075,15 @@
 							var enc = new mxCodec(mxUtils.createXmlDocument());
 							var temp = enc.encode(new mxGraphModel(this.pages[i].root));
 							this.editor.graph.saveViewState(this.pages[i].viewState, temp);
-							
-							if (uncompressed)
-							{
-								EditorUi.removeChildNodes(this.pages[i].node);
-								this.pages[i].node.appendChild(temp);
-							}
-							else
-							{
-								mxUtils.setTextContent(this.pages[i].node, Graph.compressNode(temp));
-							}
-							
+							EditorUi.removeChildNodes(this.pages[i].node);
+							mxUtils.setTextContent(this.pages[i].node, Graph.compressNode(temp));
+
 							// Marks the page as up-to-date
 							delete this.pages[i].needsUpdate;
 						}
-						else if (uncompressed)
-						{
-							var temp = Editor.parseDiagramNode(this.pages[i].node);
-							EditorUi.removeChildNodes(this.pages[i].node);
-							this.pages[i].node.appendChild(temp);
-						}
 					}
 					
-					node.appendChild(this.pages[i].node);
+					appendPage(this.pages[i].node);
 				}
 			}
 		}
@@ -3610,7 +3626,7 @@
 	 * @param {number} dx X-coordinate of the translation.
 	 * @param {number} dy Y-coordinate of the translation.
 	 */
-	EditorUi.prototype.handleError = function(resp, title, fn, invokeFnOnClose, notFoundMessage)
+	EditorUi.prototype.handleError = function(resp, title, fn, invokeFnOnClose, notFoundMessage, fileHash)
 	{
 		var resume = (this.spinner != null && this.spinner.pause != null) ? this.spinner.pause() : function() {};
 		var e = (resp != null && resp.error != null) ? resp.error : resp;
@@ -3655,7 +3671,7 @@
 							', ' + this.drive.user.email+ ')' : ''));
 					}
 					
-					var id = window.location.hash;
+					var id = (fileHash != null) ? fileHash : window.location.hash;
 					
 					// #U handles case where we tried to fallback to Google File and
 					// hash property still shows the public URL we tried to load
@@ -3749,13 +3765,19 @@
 							this.showDialog(dlg.container, 300, 75, true, true);
 						}), mxResources.get('cancel'), mxUtils.bind(this, function()
 						{
-							window.location.hash = '';
+							this.hideDialog();
+							
+							if (fn != null)
+							{
+								fn();
+							}
 						}), 480, 150);
 								
 						return;
 					}
 				}
-				else if (e.message != null)
+				
+				if (e.message != null)
 				{
 					msg = mxUtils.htmlEntities(e.message);
 				}
@@ -3840,7 +3862,7 @@
 			}
 		}, okLabel, cancelLabel, null, null, null, null, height);
 		
-		this.showDialog(dlg.container, 340, 34 + height, true, closable);
+		this.showDialog(dlg.container, 340, 46 + height, true, closable);
 		dlg.init();
 	};
 
@@ -3880,7 +3902,7 @@
 	 */
 	EditorUi.prototype.isExportToCanvas = function()
 	{
-		return mxClient.IS_CHROMEAPP || (!this.editor.graph.mathEnabled && this.useCanvasForExport);
+		return mxClient.IS_CHROMEAPP || this.useCanvasForExport;
 	};
 
 	/**
@@ -4148,7 +4170,7 @@
 						}
 						else
 						{
-							win.document.write('<pre>' + mxUtils.htmlEntities(data, false) + '<pre>');
+							win.document.write('<pre>' + mxUtils.htmlEntities(data, false) + '</pre>');
 							win.document.close();
 						}
 					}
@@ -4209,7 +4231,7 @@
 				}
 				else
 				{
-					win.document.write('<html><img src="data:' +
+					win.document.write('<html><img style="max-width:100%;" src="data:' +
 						mimeType + ((base64Encoded) ? ';base64,' +
 						data : ';charset=utf8,' + encodeURIComponent(data)) +
 						'"/></html>');
@@ -4555,21 +4577,21 @@
 				var svg = '<?xml version="1.0" encoding="UTF-8"?>\n' +
 					'<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n' +
 					mxUtils.getXml(svgRoot);
-				
-		    		if (this.isLocalFileSave() || svg.length <= MAX_REQUEST_SIZE)
-		    		{
-		    			this.saveData(filename, 'svg', svg, 'image/svg+xml');
-		    		}
-		    		else
-		    		{
-		    			this.handleError({message: mxResources.get('drawingTooLarge')}, mxResources.get('error'), mxUtils.bind(this, function()
-		    			{
-		    				mxUtils.popup(svg);
-		    			}));
-		    		}
+			
+	    		if (this.isLocalFileSave() || svg.length <= MAX_REQUEST_SIZE)
+	    		{
+	    			this.saveData(filename, 'svg', svg, 'image/svg+xml');
+	    		}
+	    		else
+	    		{
+	    			this.handleError({message: mxResources.get('drawingTooLarge')}, mxResources.get('error'), mxUtils.bind(this, function()
+	    			{
+	    				mxUtils.popup(svg);
+	    			}));
+	    		}
 			});
 			
-			this.convertMath(this.editor.graph, svgRoot, false, mxUtils.bind(this, function()
+			this.convertMath(this.editor.graph, svgRoot, mxUtils.bind(this, function()
 			{
 				if (embedImages)
 				{
@@ -4883,7 +4905,7 @@
 			else
 			{
 				data = '#R' + encodeURIComponent((allPages) ?
-					this.getFileData(true, null, null, null, null, null, null, true) :
+					this.getFileData(true, null, null, null, null, null, null, true, null, false) :
 					Graph.compress(mxUtils.getXml(this.editor.getGraphXml())))
 			}
 		}
@@ -5851,9 +5873,30 @@
 	/**
 	 * Converts math in the given SVG
 	 */
-	EditorUi.prototype.convertMath = function(graph, svgRoot, fixPosition, callback)
+	EditorUi.prototype.convertMath = function(graph, svgRoot, callback)
 	{
-		if (graph.mathEnabled && typeof(MathJax) !== 'undefined' && typeof(MathJax.Hub) !== 'undefined')
+		// CSS styles are needed for the math to render correctly
+		// unfortunately, there is no ID on the MathJax CSS only
+		var defs = svgRoot.getElementsByTagName('defs');
+		
+		if (defs != null && defs.length > 0)
+		{
+			var styles = document.getElementsByTagName('style');
+			
+			for (var i = 0; i < styles.length; i++)
+			{
+				if (styles[i].getAttribute('type') == 'text/css')
+				{
+					defs[0].appendChild(styles[i].cloneNode(true));
+				}
+			}
+		}
+		
+		// NOTE: This is never true as mathEnabled is not set on off-screen graphs
+		// (on-screen is handled via createSvgImageExport override in Editor.js)
+		if (graph != this.editor.graph && graph.mathEnabled &&
+			typeof(MathJax) !== 'undefined' &&
+			typeof(MathJax.Hub) !== 'undefined')
 		{
 	      	// Temporarily attaches to DOM for rendering
 			// FIXME: If adding svgRoot to body, the text
@@ -5863,7 +5906,7 @@
 			// if math is enabled.
 //			document.body.appendChild(svgRoot);
 			Editor.MathJaxRender(svgRoot);
-	      
+
 			window.setTimeout(mxUtils.bind(this, function()
 			{
 				MathJax.Hub.Queue(mxUtils.bind(this, function ()
@@ -6119,7 +6162,7 @@
 			   		{
 			   			this.saveCanvas(canvas, (editable) ? this.getFileData(true, null,
 			   				null, null, ignoreSelection, currentPage) : null,
-			   				format, !currentPage, dpi);
+			   				format, (this.pages == null || this.pages.length == 0), dpi);
 			   		}
 			   		catch (e)
 			   		{
@@ -6426,7 +6469,7 @@
 							defs[0].appendChild(st);
 						}
 						
-						this.convertMath(graph, svgRoot, true, mxUtils.bind(this, function()
+						this.convertMath(graph, svgRoot, mxUtils.bind(this, function()
 						{
 							img.src = this.createSvgDataUri(mxUtils.getXml(svgRoot));
 						}));
@@ -7226,6 +7269,11 @@
 				}
 				catch (e)
 				{
+					if (window.console != null)
+					{
+						console.error(e);
+					}
+					
 					error(e);
 				}
 			}
@@ -9467,22 +9515,6 @@
 		
 		this.initPages();
 
-		// Installs listener for fixing references in undo history in
-		// collaborative editing where terminals may have vanished
-	    // Undo/Redo listener to update edit's references before executing undo/redo
-	    this.editUpdateListener = mxUtils.bind(this, function(sender, evt)
-	    {
-	    	var edit = evt.getProperty('edit');
-	    	    
-	    	if (edit != null)
-	    	{
-	    		this.updateEditReferences(edit);
-	    	}
-	    });
-	    
-	    this.editor.undoManager.addListener(mxEvent.BEFORE_UNDO, this.editUpdateListener);
-	    this.editor.undoManager.addListener(mxEvent.BEFORE_REDO, this.editUpdateListener);
-
 		// Embedded mode
 		if (urlParams['embed'] == '1')
 		{
@@ -9583,19 +9615,29 @@
 		var graph = this.editor.graph;
 
 		// Focused but invisible textarea during control or meta key events
+		// LATER: Disable text rendering to avoid delay while keeping focus
 		var textInput = document.createElement('div');
 		textInput.setAttribute('autocomplete', 'off');
 		textInput.setAttribute('autocorrect', 'off');
 		textInput.setAttribute('autocapitalize', 'off');
 		textInput.setAttribute('spellcheck', 'false');
+		textInput.style.textRendering = 'optimizeSpeed';
+		textInput.style.fontFamily = 'monospace';
+		textInput.style.wordBreak = 'break-all';
+		textInput.style.background = 'transparent';
+		textInput.style.color = 'transparent';
 		textInput.style.position = 'absolute';
 		textInput.style.whiteSpace = 'nowrap';
 		textInput.style.overflow = 'hidden';
 		textInput.style.display = 'block';
-		textInput.contentEditable = true;
-		mxUtils.setOpacity(textInput, 0);
+		textInput.style.fontSize = '1';
+		textInput.style.zIndex = '-1';
+		textInput.style.resize = 'none';
+		textInput.style.outline = 'none';
 		textInput.style.width = '1px';
 		textInput.style.height = '1px';
+		mxUtils.setOpacity(textInput, 0);
+		textInput.contentEditable = true;
 		textInput.innerHTML = '&nbsp;';
 
 		var restoreFocus = false;
@@ -9725,14 +9767,22 @@
 		{
 			if (graph.isEnabled() && !graph.isCellLocked(graph.getDefaultParent()))
 			{
+				var t0 = new Date().getTime();
 				textInput.innerHTML = '&nbsp;';
 				textInput.focus();
 				
-				window.setTimeout(mxUtils.bind(this, function()
+				if (evt.clipboardData != null)
 				{
-					this.pasteCells(evt, textInput);
-					textInput.innerHTML = '&nbsp;';
-				}), 0);
+					this.pasteCells(evt, textInput, true);
+				}
+
+				if (!mxEvent.isConsumed(evt))
+				{
+					window.setTimeout(mxUtils.bind(this, function()
+					{
+						this.pasteCells(evt, textInput, false);
+					}), 0);
+				}
 			}
 		}), true);
 		
@@ -9951,15 +10001,9 @@
 		
 		if (!graph.isSelectionEmpty())
 		{
-			var cells = mxUtils.sortCells(graph.model.getTopmostCells(graph.getSelectionCells()));
-			
-			// LATER: Add span with XML in data attribute
-			// var span = document.createElement('span');
-			// span.setAttribute('data-jgraph-type', 'application/vnd.jgraph.xml');
-			// span.setAttribute('data-jgraph-content', mxUtils.getXml(graph.encodeCells(clones)));
-			
 			// Fixes cross-platform clipboard UTF8 issues by encoding as URI
-			var xml = mxUtils.getXml(this.editor.graph.encodeCells(cells));
+			var cells = mxUtils.sortCells(graph.model.getTopmostCells(graph.getSelectionCells()));
+			var xml = mxUtils.getXml(graph.encodeCells(cells));
 			mxUtils.setTextContent(elt, encodeURIComponent(xml));
 			
 			if (removeCells)
@@ -9986,10 +10030,20 @@
 	/**
 	 * Creates the format panel and adds overrides.
 	 */
-	EditorUi.prototype.pasteCells = function(evt, elt)
+	EditorUi.prototype.pasteCells = function(evt, realElt, useEvent)
 	{
 		if (!mxEvent.isConsumed(evt))
 		{
+			var elt = realElt;
+			
+			if (useEvent && evt.clipboardData != null)
+			{
+				// Creates a dummy element and parses the HTML to get
+				// consistent behaviour for system paste HTML into elt
+				elt = document.createElement('div');
+				elt.innerHTML = evt.clipboardData.getData('text/html');
+			}
+			
 			var spans = elt.getElementsByTagName('span');
 		
 			if (spans != null && spans.length > 0 && spans[0].getAttribute('data-lucid-type') ===
@@ -10002,7 +10056,19 @@
 					this.convertLucidChart(content, mxUtils.bind(this, function(xml)
 					{
 						var graph = this.editor.graph;
-						graph.setSelectionCells(this.importXml(xml, 0, 0));
+						
+						if (graph.lastPasteXml == xml)
+						{
+							graph.pasteCounter++;
+						}
+						else
+						{
+							graph.lastPasteXml = xml;
+							graph.pasteCounter = 0;
+						}
+						
+						var dx = graph.pasteCounter * graph.gridSize;
+						graph.setSelectionCells(this.importXml(xml, dx, dx));
 						graph.scrollCellToVisible(graph.getSelectionCell());
 					}), mxUtils.bind(this, function(e)
 					{
@@ -10014,11 +10080,10 @@
 			}
 			else
 			{
-				var graph = this.editor.graph;
 				var xml = mxUtils.trim((mxClient.IS_QUIRKS || document.documentMode == 8) ?
 					mxUtils.getTextContent(elt) : elt.textContent);
 				var compat = false;
-	
+				
 				// Workaround for junk after XML in VM
 				try
 				{
@@ -10052,21 +10117,23 @@
 				{
 					// ignore
 				}
-				
-				if (graph.lastPasteXml == xml)
-				{
-					graph.pasteCounter++;
-				}
-				else
-				{
-					graph.lastPasteXml = xml;
-					graph.pasteCounter = 0;
-				}
-				
-				var dx = graph.pasteCounter * graph.gridSize;
+
+				var graph = this.editor.graph;
 				
 				if (xml != null && xml.length > 0)
 				{
+					if (graph.lastPasteXml == xml)
+					{
+						graph.pasteCounter++;
+					}
+					else
+					{
+						graph.lastPasteXml = xml;
+						graph.pasteCounter = 0;
+					}
+
+					var dx = graph.pasteCounter * graph.gridSize;
+										
 					if (compat || this.isCompatibleString(xml))
 					{
 						graph.setSelectionCells(this.importXml(xml, dx, dx));
@@ -10108,8 +10175,15 @@
 						}
 					}
 				}
+				else if (!useEvent)
+				{
+					graph.lastPasteXml = null;
+					graph.pasteCounter = 0;
+				}
 			}
 		}
+		
+		realElt.innerHTML = '&nbsp;';
 	};
 
 	/**
@@ -12754,12 +12828,6 @@
 
 	EditorUi.prototype.destroy = function()
 	{
-		if (this.editUpdateListener)
-		{
-			this.editor.undoManager.removeListener(this.editUpdateListener);	
-			this.editUpdateListener = null;
-		}
-
 		if (this.exportDialog != null)
 		{
 			this.exportDialog.parentNode.removeChild(this.exportDialog);
@@ -12838,87 +12906,6 @@
 			}
 		};
 	}
-
-	/*********************************************************************************************
-	 * This section is a fix for undo/redo edits having stale 1st- and 2nd-order references      *
-	 * The code might be reworked or even thrown out when a conceptually nicer solution is found *
-	 *********************************************************************************************/
-
-	/**
-	 * Updates all references in all edits and their changes in order to correspond to current model
-	 */
-	EditorUi.prototype.updateEditReferences = function(edit)
-	{
-        for (var i = 0; i < edit.changes.length; i++)
-        {
-            var change = edit.changes[i];
-            
-            if (change != null && change.constructor == mxChildChange)
-            {
-                if (change.child != null)
-                {
-                    var child = change.child;
-                    
-                    if (child.source != null && child.source.id != null)
-                    {
-                        var modelSource = this.getFutureCellForEdit(change.model, edit, child.source.id);
-                        
-                        if (modelSource != child.source)
-                        {
-                            child.source = modelSource
-                        }
-                    }
-                    
-                    if (child.target != null && child.target.id != null)
-                    {
-                        var modelTarget = this.getFutureCellForEdit(change.model, edit, child.target.id);
-
-                        if (modelTarget != child.target)
-                        {
-                            child.target = modelTarget
-                        }
-                    }
-                }
-            }
-        }
-	};
-
-	/**
-	 * Looks ahead in edit's changes to see if the last child change containing ID is one that creates a cell, then returns it.
-	 * If cell already exists in a model, returns it first.
-	 */
-	EditorUi.prototype.getFutureCellForEdit = function(model, edit, id)
-	{
-		var result = model.getCell(id);
-		
-		if (result == null)
-		{
-			// Scans changes backwards
-			for (var i = edit.changes.length - 1; i >= 0; i--)
-			{
-				var change = edit.changes[i];
-				
-				if (change.constructor == mxChildChange)
-				{
-					// Checks if child is being added in this change
-					if (change.child != null && change.child.id == id)
-					{
-						// Checks if cell is being removed
-						if (model.contains(change.previous))
-						{
-							result = change.child;
-						}
-						
-						// Stops scan in any case, at the end of the edit
-						// the cell will be either added or deleted
-						break;
-					}
-				}
-			}
-		}
-		
-		return result;
-	};
 
 	EditorUi.prototype.getDiagramTextContent = function()
 	{

@@ -930,6 +930,8 @@ var EmbedDialog = function(editorUi, result, timeout, ignoreSize, previewFn, tit
 	text.setAttribute('autocorrect', 'off');
 	text.setAttribute('autocapitalize', 'off');
 	text.setAttribute('spellcheck', 'false');
+	text.style.fontFamily = 'monospace';
+	text.style.wordBreak = 'break-all';
 	text.style.marginTop = '10px';
 	text.style.resize = 'none';
 	text.style.height = '150px';
@@ -2201,7 +2203,7 @@ var ParseDialog = function(editorUi, title, defaultType)
 							if (listCell == null)
 							{
 								listCell = new mxCell(lines[i], new mxGeometry(x0, 0, 160, 26 + 4),
-									'swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;swimlaneFillColor=#ffffff;');
+									'swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;');
 								listCell.vertex = true;
 								cells.push(listCell);
 
