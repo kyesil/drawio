@@ -1,5 +1,5 @@
 <?php 
-require  '_boot.php';
+require  '../../../_SCREEN/_boot.php';
 ?>
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=5" ><![endif]-->
 <!DOCTYPE html>
@@ -20,7 +20,7 @@ require  '_boot.php';
     <meta name="mobile-web-app-capable" content="yes">
 	<meta name="theme-color" content="#d89000">
 	<script type="text/javascript">
-		var mxIsElectron = (window && window.process && window.process.type) || (navigator.userAgent.toLowerCase().indexOf(' electron/') > -1);
+		var mxIsElectron = window && window.process && window.process.type;
 		var mxIsElectron5 = mxIsElectron && parseInt(process.versions.electron) >= 5;
 		var hostName = window.location.hostname;
 		// Supported domains are *.draw.io that draw.io host, or the packaged version in Quip
@@ -336,7 +336,7 @@ require  '_boot.php';
 		if (urlParams['dev'] == '1')
 		{
 			// Used to request grapheditor/mxgraph sources in dev mode
-			var mxDevUrl ='../../../../pmxgraph';
+			var mxDevUrl ='../../../../pdrawm';
 			
 			// Used to request draw.io sources in dev mode
 			var drawDevUrl = './';
@@ -348,7 +348,7 @@ require  '_boot.php';
 			mxscript(drawDevUrl + 'js/PreConfig.js');
 			mxscript(drawDevUrl + 'js/diagramly/Init.js');
 			mxscript(geBasePath + '/Init.js');
-			mxscript(mxDevUrl + '/javascript/src/js/mxClient.js');
+			mxscript( '../../../etc/mxgraph/mxClient.js');
 			
 			// Adds all JS code that depends on mxClient. This indirection via Devel.js is
 			// required in some browsers to make sure mxClient.js (and the files that it
@@ -449,6 +449,7 @@ require  '_boot.php';
  * Main
  */
 App.main();
+mxscript('_pjs/main.js');
 </script>
 </body>
 </html>
