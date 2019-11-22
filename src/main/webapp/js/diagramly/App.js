@@ -509,7 +509,7 @@ App.main = function(callback, createUi)
 	{
 		EditorUi.logError(message, url, linenumber, colno, err);
 	};
-	
+
 	// Removes info text in embed mode
 	if (urlParams['embed'] == '1' || urlParams['lightbox'] == '1')
 	{
@@ -578,7 +578,7 @@ App.main = function(callback, createUi)
 					// ignore
 				}
 			}
-						
+
 			var temp = urlParams['p'];
 			App.initPluginCallback();
 
@@ -667,6 +667,60 @@ App.main = function(callback, createUi)
 			// Adds bundle text to resources
 			mxResources.parse(xhr[0].getText());
 			
+			// Configuration mode
+			if (isLocalStorage && localStorage != null && window.location.hash != null &&
+				window.location.hash.substring(0, 9) == '#_CONFIG_')
+			{
+				try
+				{
+					var trustedPlugins = {};
+					
+					for (var key in App.pluginRegistry)
+					{
+						trustedPlugins[App.pluginRegistry[key]] = true;
+					}
+					
+					// Only allows trusted plugins
+					function checkPlugins(plugins)
+					{
+						if (plugins != null)
+						{
+							for (var i = 0; i < plugins.length; i++)
+							{
+								if (!trustedPlugins[plugins[i]])
+								{
+									throw new Error(mxResources.get('invalidInput') + ' "' + plugins[i]) + '"';
+								}
+							}
+						}
+						
+						return true;
+					};
+					
+					var value = JSON.parse(Graph.decompress(window.location.hash.substring(9)));
+
+					if (value != null && checkPlugins(value.plugins))
+					{
+						EditorUi.debug('Setting configuration', JSON.stringify(value));
+						
+						if (confirm(mxResources.get('configLinkWarn')) &&
+							confirm(mxResources.get('configLinkConfirm')))
+						{
+							localStorage.setItem('.configuration', JSON.stringify(value));
+							window.location.hash = '';
+							window.location.reload();
+						}
+					}
+
+					window.location.hash = '';
+				}
+				catch (e)
+				{
+					window.location.hash = '';
+					alert(e);
+				}
+			}
+						
 			// Prepares themes with mapping from old default-style to old XML file
 			if (xhr.length > 2)
 			{
@@ -779,87 +833,58 @@ App.main = function(callback, createUi)
 
 	function doMain()
 	{
+		// Optional override for autosaveDelay and defaultEdgeLength
+		try
+		{
+			if (mxSettings.settings != null)
+			{
+				if (mxSettings.settings.autosaveDelay != null)
+				{
+					var val = parseInt(mxSettings.settings.autosaveDelay);
+					
+					if (!isNaN(val) && val > 0)
+					{
+						DrawioFile.prototype.autosaveDelay = val;
+						EditorUi.debug('Setting autosaveDelay', val);
+					}
+					else
+					{
+						EditorUi.debug('Invalid autosaveDelay', val);
+					}
+				}
+				
+				if (mxSettings.settings.defaultEdgeLength != null)
+				{
+					var val = parseInt(mxSettings.settings.defaultEdgeLength);
+					
+					if (!isNaN(val) && val > 0)
+					{
+						Graph.prototype.defaultEdgeLength = val;
+						EditorUi.debug('Using defaultEdgeLength', val);
+					}
+					else
+					{
+						EditorUi.debug('Invalid defaultEdgeLength', val);
+					}
+				}
+			}
+		}
+		catch (e)
+		{
+			if (window.console != null)
+			{
+				console.error(e);
+			}
+		}
+		
 		// Adds required resources (disables loading of fallback properties, this can only
 		// be used if we know that all keys are defined in the language specific file)
 		mxResources.loadDefaultBundle = false;
 		doLoad(mxResources.getDefaultBundle(RESOURCE_BASE, mxLanguage) ||
 			mxResources.getSpecialBundle(RESOURCE_BASE, mxLanguage));
 	};
-	
-	// Optional override for autosaveDelay and defaultEdgeLength
-	try
-	{
-		if (mxSettings.settings != null)
-		{
-			if (mxSettings.settings.autosaveDelay != null)
-			{
-				var val = parseInt(mxSettings.settings.autosaveDelay);
-				
-				if (!isNaN(val) && val > 0)
-				{
-					DrawioFile.prototype.autosaveDelay = val;
 
-					if (window.console != null)
-					{
-						console.log('Setting autosaveDelay to ' + DrawioFile.prototype.autosaveDelay);
-					}
-				}
-				else
-				{
-					if (window.console != null)
-					{
-						console.log('Invalid value for autosaveDelay');
-					}
-				}
-			}
-			
-			if (mxSettings.settings.defaultEdgeLength != null)
-			{
-				var val = parseInt(mxSettings.settings.defaultEdgeLength);
-				
-				if (!isNaN(val) && val > 0)
-				{
-					Graph.prototype.defaultEdgeLength = val;
-		
-					if (window.console != null)
-					{
-						console.log('Setting defaultEdgeLength to ' + Graph.prototype.defaultEdgeLength);
-					}
-				}
-				else
-				{
-					if (window.console != null)
-					{
-						console.log('Invalid value for defaultEdgeLength');
-					}
-				}
-			}
-		}
-	}
-	catch (e)
-	{
-		if (window.console != null)
-		{
-			console.error(e);
-		}
-	}
-	
-	if (window.DRAWIO_CONFIG != null)
-	{
-		try
-		{
-			Editor.configure(window.DRAWIO_CONFIG, true);
-		}
-		catch (e)
-		{
-			if (window.console != null)
-			{
-				console.log('Error in global configuration: ' + e, window.DRAWIO_CONFIG);
-			}
-		}
-	}
-	
-	// Sends load event if configuration is requested and waits for configure action
+	// Sends load event if configuration is requested and waits for configure message
 	if (urlParams['configure'] == '1')
 	{
 		var op = window.opener || window.parent;
@@ -874,7 +899,7 @@ App.main = function(callback, createUi)
 					
 					if (data != null && data.action == 'configure')
 					{
-						mxEvent.removeListener(window, 'message', configHandler);					
+						mxEvent.removeListener(window, 'message', configHandler);
 						Editor.configure(data.config, true);
 						mxSettings.load();
 						doMain();
@@ -884,7 +909,7 @@ App.main = function(callback, createUi)
 				{
 					if (window.console != null)
 					{
-						console.log('Error in configuration: ' + e);
+						console.log('Error in configure message: ' + e, evt.data);
 					}
 				}
 			}
@@ -896,6 +921,53 @@ App.main = function(callback, createUi)
 	}
 	else
 	{
+		if (Editor.config == null)
+		{
+			// Loads configuration from global scope or local storage
+			if (window.DRAWIO_CONFIG != null)
+			{
+				try
+				{
+					EditorUi.debug('Using global configuration', window.DRAWIO_CONFIG);
+					Editor.configure(window.DRAWIO_CONFIG);
+				}
+				catch (e)
+				{
+					if (window.console != null)
+					{
+						console.error(e);
+					}
+				}
+			}
+	
+			// Loads configuration from local storage
+			if (isLocalStorage && localStorage != null && urlParams['embed'] != '1')
+			{
+				var configData = localStorage.getItem('.configuration');
+	
+				if (configData != null)
+				{
+					try
+					{
+						configData = JSON.parse(configData);
+						
+						if (configData != null)
+						{
+							EditorUi.debug('Using local configuration', configData);
+							Editor.configure(configData);
+						}
+					}
+					catch (e)
+					{
+						if (window.console != null)
+						{
+							console.error(e);
+						}
+					}
+				}
+			}
+		}
+		
 		doMain();
 	}
 };
@@ -987,6 +1059,8 @@ App.embedModePluginsCount = 0;
  */
 App.loadPlugins = function(plugins, useInclude)
 {
+	EditorUi.debug('Loading plugins', plugins);
+
 	for (var i = 0; i < plugins.length; i++)
 	{
 		if (plugins[i] != null && plugins[i].length > 0)
@@ -2932,11 +3006,17 @@ App.prototype.start = function()
 				{
 					if (this.stateArg.ids != null)
 					{
+						if (window.history && window.history.replaceState)
+						{
+							// Removes state URL parameter without reloading the page
+							window.history.replaceState(null, null, window.location.pathname +
+								this.getSearch(['state']));
+						}
+						
 						window.location.hash = 'G' + this.stateArg.ids[0];
 					}
 				}
-		
-				if ((window.location.hash == null || window.location.hash.length <= 1) &&
+				else if ((window.location.hash == null || window.location.hash.length <= 1) &&
 					this.drive != null && this.stateArg != null && this.stateArg.action == 'create')
 				{
 					this.setMode(App.MODE_GOOGLE);
@@ -3562,52 +3642,78 @@ App.prototype.saveFile = function(forceDialog, success)
 			
 			var rowLimit = (serviceCount <= 4) ? 2 : (serviceCount > 6 ? 4 : 3);
 			
-			var dlg = new CreateDialog(this, filename, mxUtils.bind(this, function(name, mode)
+			var dlg = new CreateDialog(this, filename, mxUtils.bind(this, function(name, mode, input)
 			{
 				if (name != null && name.length > 0)
 				{
-					if (prev == null && mode == App.MODE_DEVICE)
+					// Handles special case where PDF export is detected
+					if (/(\.pdf)$/i.test(name))
 					{
-						this.setMode(App.MODE_DEVICE);
-						this.save(name, done);
-					}
-					else if (mode == 'download')
-					{
-						var tmp = new LocalFile(this, null, name);
-						tmp.save();
-					}
-					else if (mode == '_blank')
-					{
-						window.openFile = new OpenFile(function()
+						this.confirm(mxResources.get('didYouMeanToExportToPdf'), mxUtils.bind(this, function()
 						{
-							window.openFile = null;
-						});
+							this.hideDialog();
+							this.actions.get('exportPdf').funct();
+						}), mxUtils.bind(this, function()
+						{
+							input.value = name.split('.').slice(0, -1).join('.');
+							input.focus();
+							
+							if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5 || mxClient.IS_QUIRKS)
+							{
+								input.select();
+							}
+							else
+							{
+								document.execCommand('selectAll', false, null);
+							}
+						}), mxResources.get('yes'), mxResources.get('no'));
+					}
+					else
+					{
+						this.hideDialog();
 						
-						// Do not use a filename to use undefined mode
-						window.openFile.setData(this.getFileData(true));
-						this.openLink(this.getUrl(window.location.pathname), null, true);
-					}
-					else if (prev != mode)
-					{
-						this.pickFolder(mode, mxUtils.bind(this, function(folderId)
+						if (prev == null && mode == App.MODE_DEVICE)
 						{
-							this.createFile(name, this.getFileData(/(\.xml)$/i.test(name) ||
-								name.indexOf('.') < 0 || /(\.drawio)$/i.test(name),
-								/(\.svg)$/i.test(name), /(\.html)$/i.test(name)),
-								null, mode, done, this.mode == null, folderId);
-						}));
-					}
-					else if (mode != null)
-					{
-						this.save(name, done);
+							this.setMode(App.MODE_DEVICE);
+							this.save(name, done);
+						}
+						else if (mode == 'download')
+						{
+							var tmp = new LocalFile(this, null, name);
+							tmp.save();
+						}
+						else if (mode == '_blank')
+						{
+							window.openFile = new OpenFile(function()
+							{
+								window.openFile = null;
+							});
+							
+							// Do not use a filename to use undefined mode
+							window.openFile.setData(this.getFileData(true));
+							this.openLink(this.getUrl(window.location.pathname), null, true);
+						}
+						else if (prev != mode)
+						{
+							this.pickFolder(mode, mxUtils.bind(this, function(folderId)
+							{
+								this.createFile(name, this.getFileData(/(\.xml)$/i.test(name) ||
+									name.indexOf('.') < 0 || /(\.drawio)$/i.test(name),
+									/(\.svg)$/i.test(name), /(\.html)$/i.test(name)),
+									null, mode, done, this.mode == null, folderId);
+							}));
+						}
+						else if (mode != null)
+						{
+							this.save(name, done);
+						}
 					}
 				}
 			}), mxUtils.bind(this, function()
 			{
 				this.hideDialog();
 			}), mxResources.get('saveAs'), mxResources.get('download'), null, null, allowTab,
-				null, true, rowLimit, null, null, null, this.editor.fileExtensions);
-			
+				null, true, rowLimit, null, null, null, this.editor.fileExtensions, false);
 			this.showDialog(dlg.container, 400, (serviceCount > rowLimit) ? 390 : 270, true, true);
 			dlg.init();
 		}

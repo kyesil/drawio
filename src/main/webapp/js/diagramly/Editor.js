@@ -800,6 +800,20 @@
 			  	Editor.prototype.fontCss = config.fontCss;
 			}
 			
+			if (config.autosaveDelay != null)
+			{
+				var val = parseInt(config.autosaveDelay);
+				
+				if (!isNaN(val) && val > 0)
+				{
+					DrawioFile.prototype.autosaveDelay = val;
+				}
+				else
+				{
+					EditorUi.debug('Invalid autosaveDelay: ' + config.autosaveDelay);
+				}
+			}
+			
 			if (config.plugins != null && !untrusted)
 			{
 				// Required for callback
@@ -813,6 +827,8 @@
 		}
 	};
 
+	Editor.GOOGLE_FONTS =  'https://fonts.googleapis.com/css?family=';
+	
 	/**
 	 * Generates a unique ID of the given length
 	 */
@@ -933,6 +949,29 @@
 				this.graph.updateCssTransform();
 
 				this.graph.setShadowVisible(node.getAttribute('shadow') == '1', false);
+				
+				var extFonts = node.getAttribute('extFonts');
+				
+				if (extFonts)
+				{
+					try
+					{
+						extFonts = extFonts.split('|').map(function(ef)
+						{
+							var parts = ef.split('^');
+							return {name: parts[0], url: parts[1]};
+						});
+						
+						for (var i = 0; i < extFonts.length; i++)
+						{
+							this.graph.addExtFont(extFonts[i].name, extFonts[i].url);
+						}
+					}
+					catch(e)
+					{
+						console.log('ExtFonts format error: ' + e.message);
+					}
+				}
 			}
 	
 			// Calls updateGraphComponents
@@ -970,6 +1009,16 @@
 		
 		node.setAttribute('math', (this.graph.mathEnabled) ? '1' : '0');
 		node.setAttribute('shadow', (this.graph.shadowVisible) ? '1' : '0');
+		
+		if (this.graph.extFonts != null && this.graph.extFonts.length > 0)
+		{
+			var strExtFonts = this.graph.extFonts.map(function(ef)
+			{
+				return ef.name + '^' + ef.url;
+			});
+			
+			node.setAttribute('extFonts', strExtFonts.join('|'));
+		}
 		
 		return node;
 	};
@@ -1211,7 +1260,7 @@
 			/^https?:\/\/[^\/]*\.draw\.io\/proxy/.test(url) ||
 			/^https?:\/\/[^\/]*\.github\.io\//.test(url);
 	};
-
+	
 	//TODO This function is a replica of EditorUi one, it is planned to replace all calls to EditorUi one to point to this one
 	/**
 	 * Converts all images in the SVG output to data URIs for immediate rendering
@@ -1644,47 +1693,35 @@
         }
     };
 
-	//TODO This function is a replica of EditorUi one, it is planned to replace all calls to EditorUi one to point to this one
 	/**
-	 * Converts math in the given SVG
+	 * Copies MathJax CSS into the SVG output.
 	 */
-	Editor.prototype.convertMath = function(graph, svgRoot, fixPosition, callback)
+	Editor.prototype.addMathCss = function(svgRoot)
 	{
-		if (graph.mathEnabled && typeof(MathJax) !== 'undefined' && typeof(MathJax.Hub) !== 'undefined')
+		var defs = svgRoot.getElementsByTagName('defs');
+		
+		if (defs != null && defs.length > 0)
 		{
-	      	// Temporarily attaches to DOM for rendering
-			// FIXME: If adding svgRoot to body, the text
-			// value of the math is appended, if not
-			// added to DOM then LaTeX does not work.
-			// This must be fixed to enable client-side export
-			// if math is enabled.
-//			document.body.appendChild(svgRoot);
-			Editor.MathJaxRender(svgRoot);
-	      
-			window.setTimeout(mxUtils.bind(this, function()
+			var styles = document.getElementsByTagName('style');
+			
+			for (var i = 0; i < styles.length; i++)
 			{
-				MathJax.Hub.Queue(mxUtils.bind(this, function ()
+				// Ignores style elements with no MathJax CSS
+				if (mxUtils.getTextContent(styles[i]).indexOf('MathJax') > 0)
 				{
-					// Removes from DOM
-//					svgRoot.parentNode.removeChild(svgRoot);
-					
-					callback();
-				}));
-			}), 0);
-		}
-		else
-		{
-			callback();
+					defs[0].appendChild(styles[i].cloneNode(true));
+				}
+			}
 		}
 	};
-
+	
 	//TODO This function is a replica of EditorUi one, it is planned to replace all calls to EditorUi one to point to this one
 	/**
 	 * See fixme in convertMath for client-side image generation with math.
 	 */
 	Editor.prototype.isExportToCanvas = function()
 	{
-		return mxClient.IS_CHROMEAPP || (!this.graph.mathEnabled && this.useCanvasForExport);
+		return mxClient.IS_CHROMEAPP || ((this.graph.extFonts == null || this.graph.extFonts.length == 0) && this.useCanvasForExport);
 	};
 
 	//TODO This function is a replica of EditorUi one, it is planned to replace all calls to EditorUi one to point to this one
@@ -1807,10 +1844,12 @@
 						defs[0].appendChild(st);
 					}
 					
-					this.convertMath(graph, svgRoot, true, mxUtils.bind(this, function()
+					if (graph.mathEnabled)
 					{
-						img.src = this.createSvgDataUri(mxUtils.getXml(svgRoot));
-					}));
+						this.addMathCss(svgRoot);
+					}
+					
+					img.src = this.createSvgDataUri(mxUtils.getXml(svgRoot));
 				});
 				
 				this.loadFonts(done);
@@ -3891,7 +3930,8 @@
 	 */
 	var graphGetSvg = Graph.prototype.getSvg;
 	
-	Graph.prototype.getSvg = function()
+	Graph.prototype.getSvg = function(background, scale, border, nocrop, crisp,
+			ignoreSelection, showText, imgExport, linkTarget, hasShadow, incExtFonts)
 	{
 		var temp = null;
 		
@@ -3903,6 +3943,37 @@
 		}
 		
 		var result = graphGetSvg.apply(this, arguments);
+		
+		// Adds extrnal fonts
+		if (incExtFonts && this.extFonts != null && this.extFonts.length > 0)
+		{
+			var svgDoc = result.ownerDocument;
+			var style = (svgDoc.createElementNS != null) ?
+		    	svgDoc.createElementNS(mxConstants.NS_SVG, 'style') : svgDoc.createElement('style');
+			svgDoc.setAttributeNS != null? style.setAttributeNS('type', 'text/css') : style.setAttribute('type', 'text/css');
+			
+			var styleCnt = '';
+			    	
+			for (var i = 0; i < this.extFonts.length; i++)
+			{
+				var fontName = this.extFonts[i].name, fontUrl = this.extFonts[i].url;
+				
+				if (fontUrl.indexOf(Editor.GOOGLE_FONTS) == 0)
+				{
+					styleCnt += '@import url(' + fontUrl + ');';
+				}
+				else
+				{
+					styleCnt += '@font-face {' +
+			            'font-family: "'+ fontName +'";' + 
+			            'src: url("'+ fontUrl +'");' + 
+			            '}';
+				}				
+			}
+			
+			style.appendChild(svgDoc.createTextNode(styleCnt));
+			result.getElementsByTagName('defs')[0].appendChild(style);
+		}
 		
 		if (temp != null)
 		{
@@ -3926,32 +3997,25 @@
 		{
 			var graph = this;
 			var origin = graph.container.getBoundingClientRect();
-			var dy = graph.container.scrollTop - origin.y;
-			var dx = graph.container.scrollLeft - origin.x;
+			var y0 = graph.container.scrollTop - origin.y;
+			var x0 = graph.container.scrollLeft - origin.x;
 			var drawText = imgExport.drawText;
 
-			// Copies rendered math from container to SVG document
 			imgExport.drawText = function(state, canvas)
 			{
 				if (state.text != null && state.text.node != null &&
 					state.text.node.ownerSVGElement == null)
 				{
-					// Copies text into DOM using actual bounding box
+					// Copies text into DOM using untransformed bounding box
+					var tr = state.text.node.style.transform;
+					state.text.node.style.transform = '';
 					var rect = state.text.node.getBoundingClientRect();
-					
-					// Sets position on foreignObject
-					var fo = canvas.root.ownerDocument.createElementNS(mxConstants.NS_SVG, 'foreignObject');
-					fo.setAttribute('x', (rect.x + dx) * canvas.state.scale + canvas.state.dx);
-					fo.setAttribute('y', (rect.y + dy) * canvas.state.scale + canvas.state.dy);
-					fo.setAttribute('width', rect.width * canvas.state.scale);
-					fo.setAttribute('height', rect.height * canvas.state.scale);
-					
-					// Resets position on inner DIV
 					var clone = state.text.node.cloneNode(true);
-					clone.style.top = '0px';
-					clone.style.left = '0px';
-					clone.style.transform = '';
-					
+					state.text.node.style.transform = tr;
+
+					// Removes unused style
+					clone.style.transformOrigin = '';
+
 					// Removes all math elements
 					var ele = clone.getElementsByTagName('math');
 					
@@ -3960,6 +4024,54 @@
 						ele[0].parentNode.removeChild(ele[0]);
 					}
 					
+					// Sets position on foreignObject
+					var s = canvas.state.scale * state.text.scale;
+					var x = (rect.x + x0) / state.text.scale + canvas.state.dx;
+					var y = (rect.y + y0) / state.text.scale + canvas.state.dy;
+					var w = rect.width;
+					var h = rect.height;
+					
+					var fo = canvas.root.ownerDocument.createElementNS(mxConstants.NS_SVG, 'foreignObject');
+					fo.setAttribute('x', x * s);
+					fo.setAttribute('y', y * s);
+					fo.setAttribute('width', w);
+					fo.setAttribute('height', h);
+					
+					// Resets position on inner DIV
+					clone.style.top = '0px';
+					clone.style.left = '0px';
+					
+					// Applies transform on foreignObject
+					var theta = state.text.getTextRotation();
+					var dx = state.text.margin.x;
+					var dy = state.text.margin.y;
+					var tx = (2 * w * dx - w * s * dx) / s;
+					var ty = (2 * h * dy - h * s * dy) / s;
+					
+					// FIXME: Center/right aligned text with rotation and export zoom
+					if (s != 1 && theta != 0)
+					{
+//						var rad = theta * (Math.PI / 180);
+//						var pt = mxUtils.getRotatedPoint(new mxPoint(dx, dy), Math.cos(rad), Math.sin(rad));
+//						tx -= 2 * pt.x * w * s + 2 * pt.y * h * s;
+//						ty -= 2 * pt.y * h * s + 2 * pt.x * w * s;
+//						console.log('s', s, theta, dx, w, pt);
+					}
+					
+					var tr = 'translate(' +
+						canvas.format(tx) + ',' +
+						canvas.format(ty) + ')';
+					
+					if (theta != 0)
+					{
+						tr += ' rotate(' + theta + ')';
+					}
+					
+					fo.setAttribute('transform-origin',
+						canvas.format((x - dx * w) * s) + ' ' +
+						canvas.format((y - dy * h) * s));
+					fo.setAttribute('transform', tr +
+						' scale(' + s + ')');
 					fo.appendChild(clone);
 					canvas.root.ownerSVGElement.appendChild(fo);
 				}
@@ -4649,6 +4761,7 @@
 	mxStencilRegistry.libraries['bpmn'] = [SHAPES_PATH + '/bpmn/mxBpmnShape2.js', STENCIL_PATH + '/bpmn.xml'];
 	mxStencilRegistry.libraries['dfd'] = [SHAPES_PATH + '/mxDFD.js'];
 	mxStencilRegistry.libraries['er'] = [SHAPES_PATH + '/er/mxER.js'];
+	mxStencilRegistry.libraries['kubernetes'] = [SHAPES_PATH + '/mxKubernetes.js', STENCIL_PATH + '/kubernetes.xml'];
 	mxStencilRegistry.libraries['flowchart'] = [SHAPES_PATH + '/mxFlowchart.js', STENCIL_PATH + '/flowchart.xml'];
 	mxStencilRegistry.libraries['ios'] = [SHAPES_PATH + '/mockup/mxMockupiOS.js'];
 	mxStencilRegistry.libraries['rackGeneral'] = [SHAPES_PATH + '/rack/mxRack.js', STENCIL_PATH + '/rack/general.xml'];
