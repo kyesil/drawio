@@ -3,7 +3,7 @@ define('PD', dirname(__FILE__).'/../');
 define('KWWW',PD .'/../../../');
 
 define('UF', PD.'/../R/pd/');
-define('PDW', PD.'javascript/examples/grapheditor/www/');
+define('PDW', PD.'src/main/webapp/');
 
 define('KLIB', KWWW.'predixiWeb/app/library/');
 

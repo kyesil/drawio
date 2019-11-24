@@ -161,7 +161,7 @@ require  '../../../_SCREEN/_boot.php';
 
 			if (mxIsElectron5)
 			{
-				addMeta(null, 'default-src \'self\' \'unsafe-inline\'; connect-src \'self\' https://*.draw.io; img-src * data:; media-src *; font-src *', 'Content-Security-Policy');
+				addMeta(null, 'default-src \'self\' \'unsafe-inline\'; connect-src \'self\' https://*.draw.io; img-src * data:; media-src *; font-src *; style-src-elem \'self\' \'unsafe-inline\' https://fonts.googleapis.com', 'Content-Security-Policy');
 			}
 		})();
 	</script>
@@ -449,7 +449,7 @@ require  '../../../_SCREEN/_boot.php';
  * Main
  */
 App.main();
-mxscript('_pjs/main.js');
 </script>
+<script src="_pjs/main.js"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@ var graphCreateSvgImageExport = Graph.prototype.createSvgImageExport;
 
 Graph.prototype.createSvgImageExport = function () {
 	var exp = graphCreateSvgImageExport.apply(this, arguments);
-
+	
 	// Overrides rendering to add metadata
 	var expDrawCellState = exp.drawCellState;
 
@@ -45,25 +45,28 @@ Graph.prototype.createSvgImageExport = function () {
 //more shape images
 mxClient.IS_CHROMEAPP=1; 
 
+var PsaveFile = App.prototype.saveFile;
+App.prototype.saveFile = function(forceDialog, success)
+{
+	var graph = this.editor.graph;
+	var svgRoot = graph.getSvg(null, null, null, null, null, true);
+
+	var r = PsaveFile.apply(this, arguments);
+	console.log(	mxUtils.getXml(svgRoot));
+	console.log(	this.getFileData(true,false));	
+	
+	return r;
+};
+
+var Pappinit = App.prototype.init;
+App.prototype.init = function()
+{
+	
+
+	var r = Pappinit.apply(this, arguments);
+alert(r);
+	return r;
+};
 
 
-	EditorUi.prototype.saveFile = function (forceDialog) {
-		if (!forceDialog && this.editor.filename != null) {
-			this.save(this.editor.getOrCreateFilename());
-		}
-		else {
-			var dlg = new FilenameDialog(this, this.editor.getOrCreateFilename(), mxResources.get('save'), mxUtils.bind(this, function (name) {
-				this.save(name);
-			}), null, mxUtils.bind(this, function (name) {
-				if (name != null && name.length > 0) {
-					return true;
-				}
-
-				mxUtils.confirm(mxResources.get('invalidName'));
-
-				return false;
-			}));
-			this.showDialog(dlg.container, 300, 100, true, true);
-			dlg.init();
-		}
-	};
+EditorUi.drawHost = 'https://predixi.lan/s/pdraw/src/main/webapp/';
