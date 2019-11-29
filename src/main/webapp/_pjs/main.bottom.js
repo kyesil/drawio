@@ -1,14 +1,10 @@
-//C:\KAPPS\WWW\StaticWeb\www\pdraw\src\main\webapp\js\diagramly\Menus.js:1433
-//more shape images
-mxClient.IS_CHROMEAPP = 1;
-// Public global variables
-window.MAX_REQUEST_SIZE = window.MAX_REQUEST_SIZE  || 10485760;
-window.MAX_AREA = window.MAX_AREA || 15000 * 15000;
+//remove title click event:
+var fnameevents= _App.fname.mxListenerList;
+_App.fname.removeEventListener(fnameevents[0].name,fnameevents[0].f);
+_App.fname.removeEventListener(fnameevents[1].name,fnameevents[1].f);
 
-// URLs for save and export
-window.EXPORT_URL =  '_action.php?export';
-window.SAVE_URL =  '_action.php?save';
-window.OPEN_URL =  '_action.php?open';
+
+//C:\KAPPS\WWW\StaticWeb\www\pdraw\src\main\webapp\js\diagramly\Menus.js:1433
 
 var graphCreateSvgImageExport = Graph.prototype.createSvgImageExport;
 
@@ -58,18 +54,20 @@ App.prototype.saveFile = function (forceDialog, success) {
 	/*var graph = this.editor.graph;
 	var svgRoot = graph.getSvg(null, null, null, null, null, true)
 	mxUtils.getXml(svgRoot);*/
-
+	var name= this.currentFile.title;
 	var xml = mxUtils.getXml(this.editor.getGraphXml());
 	var svg = mxUtils.getXml(this.editor.graph.getSvg(null, 1, 0))
 
 	
 	new mxXmlRequest(SAVE_URL, 'filename=' + encodeURIComponent(name) +
 						'&xml=' + encodeURIComponent(xml)+'&svg=' + encodeURIComponent(svg)).send();
+
+  this.editor.setStatus(mxUtils.htmlEntities(name + ' - saved' + ' ' + new Date()));
 /*
 localStorage.setItem(name, xml);
 					
 
-	this.editor.setStatus(mxUtils.htmlEntities(name + " - " + mxResources.get('saved')) + ' ' + new Date());
+	
 	var r = PsaveFile.apply(this, arguments);
 	console.log(mxUtils.getXml(svgRoot));
 	console.log(this.getFileData(false, true));
@@ -81,15 +79,3 @@ localStorage.setItem(name, xml);
 	*/
 	
 };
-
-var Pappinit = App.prototype.init;
-App.prototype.init = function () {
-
-
-	var r = Pappinit.apply(this, arguments);
-	alert(r);
-	return r;
-};
-
-
-EditorUi.drawHost = 'https://predixi.lan/s/pdraw/src/main/webapp/';

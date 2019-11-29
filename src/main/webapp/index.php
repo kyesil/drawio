@@ -264,6 +264,8 @@ require  '../../../_SCREEN/_boot.php';
 			End Function
 		</script>
 	<!--<![endif]-->
+
+	<script src="_pjs/main.top.js"></script>
 	<script type="text/javascript">
 		/**
 		 * Synchronously adds scripts to the page.
@@ -348,7 +350,8 @@ require  '../../../_SCREEN/_boot.php';
 			mxscript(drawDevUrl + 'js/PreConfig.js');
 			mxscript(drawDevUrl + 'js/diagramly/Init.js');
 			mxscript(geBasePath + '/Init.js');
-			mxscript( '../../../etc/mxgraph/mxClient.js');
+			//mxscript( '../../../etc/mxgraph/mxClient.js');
+			mxscript(mxBasePath + '/js/mxClient.js');
 			
 			// Adds all JS code that depends on mxClient. This indirection via Devel.js is
 			// required in some browsers to make sure mxClient.js (and the files that it
@@ -444,12 +447,13 @@ require  '../../../_SCREEN/_boot.php';
 		</tr>
 	</table>
 </div>
+<script src="_pjs/main.mid.js"></script>
 <script type="text/javascript">
 /**
  * Main
  */
 App.main();
 </script>
-<script src="_pjs/main.js"></script>
+<script src="_pjs/main.bottom.js"></script>
 </body>
 </html>
