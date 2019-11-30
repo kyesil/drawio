@@ -4,8 +4,6 @@ _App.fname.removeEventListener(fnameevents[0].name,fnameevents[0].f);
 _App.fname.removeEventListener(fnameevents[1].name,fnameevents[1].f);
 
 
-//C:\KAPPS\WWW\StaticWeb\www\pdraw\src\main\webapp\js\diagramly\Menus.js:1433
-
 var graphCreateSvgImageExport = Graph.prototype.createSvgImageExport;
 
 Graph.prototype.createSvgImageExport = function () {

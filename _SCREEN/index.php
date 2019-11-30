@@ -66,16 +66,16 @@ require  '_boot.php';
 				<h4>{{sc.name}}</h4>
 				<p class="pcount"><b>{{sc.spcount}}</b> pages</p>
 				<p class="lcount"><b></b> linked nodes</p>
-				<div class="icon fa fa-edit" v-on:click="scEditClick(sc.id,sc.name);"></div>
-				<div class="icon fa fa-folder-open" v-on:click="scOpenClick(sc.id,sc.name);"></div>
+				<div class="icon fa fa-edit" v-on:click="scEditClick(sc.id);" title="edit"></div>
+				<div class="icon fa fa-folder-open" v-on:click="scOpenClick(sc.id);" title="show pages"></div>
 			</div>
 		</div>
 
 		<div class="cards_wrap" id="pages_wrap" v-if="vpage==='pages'">
 			<div v-for="pg in pages" v-bind:id="pg.id" class="card">
 				<h4>{{pg.name}}</h4>
-				<div class="icon fa fa-edit" v-on:click="pgEditClick(pg.id);"></div>
-				<div class="icon fa fa-folder-open" v-on:click="pgOpenClick(pg.id);"></div>
+				<div class="icon fa fa-edit" v-on:click="pgEditClick(pg.id);" title="edit"></div>
+				<div class="icon fa fa-drafting-compass" v-on:click="pgDrawClick(pg.id);" title="draw...>"></div>
 			</div>
 			<h1 v-if="pages.length===0">No pages</h1>
 		</div>
@@ -83,11 +83,23 @@ require  '_boot.php';
 		<div class="dialog" v-if="vpage==='addsc'||vpage==='addpg'">
 			<h1 v-html="dtitle"></h1>
 			<form>
-				<div class="field"> <label >ID: </label> <input name=id type="text" disabled> </div>
-				<div class="field"> <label >Screen ID: </label> <input name=sid type="text" disabled> </div>
-				<div class="field"> <label >Name: </label> <input name=id type="text" > </div>
-				<div class="field"> <label >Author Path: </label> <input name=authpath type="text" > </div>
-				<div class="field"> <label >Type: </label> <input name=type type="text" > </div>
+				<div class="field"> <label>ID: </label> <input v-model="form.id" name=id type="text" disabled> </div>
+				<div class="field" v-if="vpage==='addpg'"> <label>Screen ID: </label> <input v-model="form.sid" name=sid type="text" disabled> </div>
+				<div class="field"> <label>Name: </label> <input v-model="form.name" name=name type="text"> </div>
+				<div class="field"> <label>Author Path: </label> <input v-model="form.authpath" name=authpath type="text"> </div>
+				<div class="field"> <label>Type: </label> <input v-model="form.type" name=type type="text"> </div>
+				<div class="menu first" onclick="backClick(0);">
+					<p>Back</p>
+					<div class="icon fa fa-arrow-alt-circle-left"></div>
+				</div>
+				<div class="menu" onclick="saveClick(0);">
+					<p>Save</p>
+					<div class="icon fa fa-save"></div>
+				</div>
+				<div class="menu" onclick="delClick(0);" v-if="sid>0||pid>0">
+					<p>Delete</p>
+					<div class="icon fa fa-trash"></div>
+				</div>
 			</form>
 		</div>
 
