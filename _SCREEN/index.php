@@ -86,7 +86,7 @@ require  '_boot.php';
 				<div class="field"> <label>ID: </label> <input v-model="form.id" name=id type="text" disabled> </div>
 				<div class="field" v-if="vpage==='addpg'"> <label>Screen ID: </label> <input v-model="form.sid" name=sid type="text" disabled> </div>
 				<div class="field"> <label>Name: </label> <input v-model="form.name" name=name type="text"> </div>
-				<div class="field"> <label>Author Path: </label> <input v-model="form.authpath" name=authpath type="text"> </div>
+				<div class="field" v-if="vpage==='addsc'" > <label>Author Path: </label> <input v-model="form.authpath" name=authpath type="text"> </div>
 				<div class="field"> <label>Type: </label> <input v-model="form.type" name=type type="text"> </div>
 				<div class="menu first" onclick="backClick(0);">
 					<p>Back</p>

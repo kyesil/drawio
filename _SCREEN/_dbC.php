@@ -37,7 +37,7 @@ class dbC
         return $result;
     }
 
-     function readGroup2Dic($grby, $lv2, $tparams)
+    function readGroup2Dic($grby, $lv2, $tparams)
     { /* tablo yu iki seviye gruplayıp son seviyede deki değerleri seçer */
         $result = array();
         $tmp = array();
@@ -51,18 +51,19 @@ class dbC
 
     public function getLastId()
     {
-      return $this->db->insert_id; 
+        return $this->db->insert_id;
     }
 
-    public function execQuery($sql, $type = null,$q = null, $k = null, $v = null, $a = null)
+    public function execQuery($sql, $type = null, $q = null, $k = null, $v = null, $a = null)
     {
         if (is_array($q))
             foreach ($q as $k => $v)
                 $q[$k] = $this->db->escape_string($v);
 
-           // echo    vsprintf($sql, $q);
+        $sql = vsprintf($sql, $q);
+      
         try {
-            if ($this->reader = $this->db->query(vsprintf($sql, $q))) {
+            if ($this->reader = $this->db->query($sql)) {
                 switch ($type) {
                     case 1:
                         $r = $this->reader->fetch_assoc();
@@ -80,8 +81,11 @@ class dbC
                         $r = $this->readGroup2Dic($k, $v, $a);
                         break;
                     case 6:
-                        $r = $this->reader->fetch_row()[0]; //last insert id // first column first value 
+                        $r = $this->reader->fetch_row()[0]; //last insert id // first columns first value 
                         break;
+                        case 7:
+                            $r = $this->db->insert_id; //last insert id // first columns first value 
+                            break;
                     default:
                         $r = $this->db->affected_rows;
                         break;
@@ -139,22 +143,76 @@ class dbC
         return $result;
     }
 
-    public function getScreens($f,$path)
+    public function getScreens($f, $path)
     {
-      return $this->execQuery("SELECT sc.*,  COUNT(sp.id) AS spcount FROM screens sc
+        return $this->execQuery(
+            "SELECT sc.*,  COUNT(sp.id) AS spcount FROM screens sc
       LEFT JOIN screen_pages sp ON sp.sid=sc.id 
       WHERE sc.authpath LIKE '%s%%'
 	  GROUP BY sc.id
       ORDER BY sc.time DESC;",
-      2,array($path)); 
+            2,
+            array($path)
+        );
     }
 
-    public function getPages($f,$path)
+    public function getPages($f, $path)
     {
-      return $this->execQuery("SELECT sp.*,  sc.id AS sid, sc.name AS sname FROM screen_pages sp
+         return $this->execQuery(
+            "SELECT sp.*,  sc.id AS sid, sc.name AS sname FROM screen_pages sp
       LEFT JOIN screens sc ON sp.sid=sc.id 
-      WHERE sc.id='%s' AND sc.authpath LIKE '%s%%'
-	  ;",
-      2,array($f,$path)); 
+      WHERE sc.id='%s' AND sc.authpath LIKE '%s%%';",
+            2,
+            array($f, $path)
+        );
+    }
+
+    public function saveScreen($data)
+    {
+        $ss = "";
+        if (strlen($data[0])>0) 
+            $ss = "id='%s',";
+            else unset($data[0]);
+        return $this->execQuery(
+            "REPLACE INTO screens
+            SET $ss  name='%s',authpath='%s', type='%s', revision=revision+1;",
+            7,
+            $data
+        );
+    }
+
+    public function savePage($data)
+    {
+        $ss = "";
+        if (strlen($data[0])>0) 
+            $ss = "id='%s',";
+            else unset($data[0]);
+        return $this->execQuery(
+            "REPLACE INTO screen_pages
+            SET $ss  sid='%s',name='%s', type='%s', revision=revision+1;",
+            7,
+            $data
+        );
+    }
+
+    public function delScreen($data)
+    {
+        return $this->execQuery(
+            "DELETE FROM screens
+            WHERE  id='%s';",
+            0,
+            $data
+        );
+    }
+
+    
+    public function delPage($data)
+    {
+        return $this->execQuery(
+            "DELETE FROM screen_pages
+            WHERE  id='%s';",
+            0,
+            $data
+        );
     }
 }
