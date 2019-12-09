@@ -1,3 +1,25 @@
+05-DEC-2019: 12.3.7
+
+- Fixes handling of clipboard data
+- Uses mxGraph 4.0.6 beta 9
+
+03-DEC-2019: 12.3.6
+
+- Moves rotation handle to top right corner
+- Adds faster mouse wheel zoom
+- Uses mxGraph 4.0.6 beta 8
+
+02-DEC-2019: 12.3.5
+
+- Fixes deletion bugs causing search incorrect results in Jira Cloud
+- Fixes text alignment for block elements
+
+02-DEC-2019: 12.3.4
+
+- Fixes Gliffy global text size setting on import
+- Fixes settings override with configuration
+- Adds custom fonts in print output
+
 28-NOV-2019: 12.3.3
 
 - Adds more ERD shapes

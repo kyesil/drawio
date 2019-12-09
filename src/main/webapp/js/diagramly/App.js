@@ -1296,17 +1296,27 @@ App.prototype.init = function()
 		{
 			if (typeof window.Trello !== 'undefined')
 			{
-				this.trello = new TrelloClient(this);
-				
-				//TODO we have no user info from Trello so we don't set a user
-				this.trello.addListener('userChanged', mxUtils.bind(this, function()
+				try
 				{
-					this.updateUserElement();
-					this.restoreLibraries();
-				}));
-				
-				// Notifies listeners of new client
-				this.fireEvent(new mxEventObject('clientLoaded', 'client', this.trello));
+					this.trello = new TrelloClient(this);
+					
+					//TODO we have no user info from Trello so we don't set a user
+					this.trello.addListener('userChanged', mxUtils.bind(this, function()
+					{
+						this.updateUserElement();
+						this.restoreLibraries();
+					}));
+					
+					// Notifies listeners of new client
+					this.fireEvent(new mxEventObject('clientLoaded', 'client', this.trello));
+				}
+				catch (e)
+				{
+					if (window.console != null)
+					{
+						console.error(e);
+					}
+				}
 			}
 			else if (window.DrawTrelloClientCallback == null)
 			{
@@ -5493,7 +5503,7 @@ App.prototype.updateHeader = function()
 		this.appIcon.style.width = '28px';
 		this.appIcon.style.height = (this.menubarHeight - 28) + 'px';
 		this.appIcon.style.margin = '14px 0px 8px 20px';
-		this.appIcon.style.opacity = '0.75';
+		this.appIcon.style.opacity = '0.85';
 		this.appIcon.style.borderRadius = '3px';
 		
 		if (uiTheme != 'dark')
