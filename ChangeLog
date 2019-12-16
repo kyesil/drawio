@@ -1,3 +1,34 @@
+14-DEC-2019: 12.4.2
+
+- Improves move/resize preview and guides
+- Adds pinch to zoom for macOS trackpad
+- Disables drop style for swimlanes
+- Adds anchor points for corners
+- Fixes edge label move preview
+- Uses mxGraph 4.0.6 beta 11
+
+12-DEC-2019: 12.4.1
+
+- Fixes initial key state for cloning
+- Uses mxGraph 4.0.6 beta 11
+
+12-DEC-2019: 12.4.0
+
+- Adds Catalan translations, credit Pere Orga pere@orga.cat
+- Fixes drag cells to library, subtree moving live preview
+- Fixes conf cloud gliffy mass import paging bug
+- Uses mxGraph 4.0.6 beta 10
+
+09-DEC-2019: 12.3.9
+
+- Fixes NPE in Lucidchart import
+- Adds check for empty layerID array in GraphViewer
+
+06-DEC-2019: 12.3.8
+
+- Improves Gliffy import of nested links
+- Adds pageID target export selection in Confluence Cloud
+
 05-DEC-2019: 12.3.7
 
 - Fixes handling of clipboard data
