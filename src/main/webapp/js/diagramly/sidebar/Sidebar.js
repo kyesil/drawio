@@ -50,6 +50,8 @@
 	Sidebar.prototype.cisco = ['Buildings', 'Computers and Peripherals', 'Controllers and Modules', 'Directors', 'Hubs and Gateways', 'Misc',
 	                           'Modems and Phones', 'People', 'Routers', 'Security', 'Servers', 'Storage', 'Switches', 'Wireless'];
 	
+	Sidebar.prototype.cisco19 = ['LAN Switching', 'Routing WAN', 'Network Management', 'Data Center', 'Wireless LAN', 'Collaboration', 'Security Clouds Connectors', 'Endpoint Client Device Icons', 'DNA SD Access', 'SD WAN Viptela', 'ETA Stealthwatch', 'SAFE'];
+
 	Sidebar.prototype.cisco_safe = ['Architecture', 'Capability', 'Design', 'Threat'];
 	
 	Sidebar.prototype.sysml = ['Model Elements', 'Blocks', 'Ports and Flows', 'Constraint Blocks', 'Activities', 'Interactions', 'State Machines', 
@@ -105,7 +107,7 @@
 	                                   {id: 'ios', prefix: 'ios', libs: [''/*prefix is library*/, '7icons', '7ui']}, 
 	                                   {id: 'android', prefix: 'android', libs: [''/*prefix is library*/]}, {id: 'aws3d'},
 	                                   {id: 'flowchart'}, {id: 'basic'}, {id: 'infographic'}, {id: 'arrows'}, {id: 'arrows2'}, {id: 'lean_mapping'}, {id: 'citrix'}, {id: 'azure'}, {id: 'network'}, {id: 'vvd'}, 
-	                                   {id: 'sitemap'}, {id: 'dfd'}, {id : 'kubernetes'},
+	                                   {id: 'sitemap'}, {id:'c4'}, {id: 'dfd'}, {id : 'kubernetes'}, {id : 'cisco19', prefix: 'cisco19', libs: Sidebar.prototype.cisco19},
 	                                   {id: 'mscae', prefix: 'mscae', libs: ['Companies', 'EnterpriseFlat', 'IntuneFlat', 'OMSFlat', 'System CenterFlat', 'AI and ML Service', 'Analytics Service', 'Compute Service', 'Compute Service VM', 'Container Service', 'Databases Service', 'DevOps Service', 'General Service', 'Identity Service', 'Integration Service', 'Internet of Things Service', 'Intune Service', 'Management and Governance Service', 'Management and Governance Service Media', 'Migrate Service', 'Mixed Reality Service', 'Mobile Service', 'Networking Service', 'Other Category Service', 'Security Service', 'Storage Service', 'Web Service']},
 	                                   {id: 'active_directory'},
 	                                   {id: 'bpmn', prefix: 'bpmn', libs: [''/*prefix is library*/, 'Gateways', 'Events']},
@@ -391,6 +393,7 @@
             					  {title: mxResources.get('android'), id: 'android', image: IMAGE_PATH + '/sidebar-android.png'},
             					  {title: 'Atlassian', id: 'atlassian', image: IMAGE_PATH + '/sidebar-atlassian.png'},
             			          {title: mxResources.get('bootstrap'), id: 'bootstrap', image: IMAGE_PATH + '/sidebar-bootstrap.png'},
+            			          {title: 'C4', id: 'c4', image: IMAGE_PATH + '/sidebar-c4.png'},
             			          {title: 'Data Flow Diagram', id: 'dfd', image: IMAGE_PATH + '/sidebar-dfd.png'},
             			          {title: mxResources.get('entityRelation'), id: 'er', image: IMAGE_PATH + '/sidebar-er.png'},
             			          {title: mxResources.get('ios'), id: 'ios', image: IMAGE_PATH + '/sidebar-ios.png'},
@@ -407,6 +410,7 @@
             			          {title: mxResources.get('azure'), id: 'azure', image: IMAGE_PATH + '/sidebar-azure.png'},
             			          {title: 'Cloud & Enterprise', id: 'mscae', image: IMAGE_PATH + '/sidebar-mscae.png'},
             			          {title: mxResources.get('cisco'), id: 'cisco', image: IMAGE_PATH + '/sidebar-cisco.png'},
+            			          {title: 'Cisco19', id: 'cisco19', image: IMAGE_PATH + '/sidebar-cisco19.png'},
             			          {title: 'Cisco Safe', id: 'cisco_safe', image: IMAGE_PATH + '/sidebar-cisco_safe.png'},
             			          {title: 'Cumulus', id: 'cumulus', image: IMAGE_PATH + '/sidebar-cumulus.png'},
             			          {title: 'Citrix', id: 'citrix', image: IMAGE_PATH + '/sidebar-citrix.png'},
@@ -710,6 +714,7 @@
 		var rack = this.rack;
 		var pids = this.pids;
 		var cisco = this.cisco;
+		var cisco19 = this.cisco19;
 		var cisco_safe = this.cisco_safe;
 		var sysml = this.sysml;
 		var eip = this.eip;
@@ -933,6 +938,7 @@
 		this.addAWS3DPalette();
 		this.addAzurePalette();
 		this.addMSCAEPalette();
+		this.addC4Palette();
 		
 		for (var i = 0; i < cisco.length; i++)
 		{
@@ -941,6 +947,7 @@
 				';html=1;pointerEvents=1;dashed=0;fillColor=#036897;strokeColor=#ffffff;strokeWidth=2;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;', null, null, 1.6);
 		}
 
+		this.addCisco19Palette();
 		this.addCiscoSafePalette();
 		this.addCumulusPalette();
 		this.addCitrixPalette();

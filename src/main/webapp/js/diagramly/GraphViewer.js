@@ -412,6 +412,9 @@ GraphViewer.prototype.getImageUrl = function(url)
  */
 GraphViewer.prototype.setXmlNode = function(xmlNode)
 {
+	//Extract graph model from html & svg formats 
+	xmlNode = this.editor.extractGraphModel(xmlNode, true);
+
 	this.xmlDocument = xmlNode.ownerDocument;
 	this.xml = mxUtils.getXml(xmlNode);
 	this.xmlNode = xmlNode;
@@ -1294,7 +1297,12 @@ GraphViewer.prototype.addClickHandler = function(graph, ui)
 		
 		if (ui != null)
 		{
-			if (href != null && !(graph.isExternalProtocol(href) || graph.isBlankLink(href) || graph.customLinkClicked(href)))
+			if (href == null || graph.isCustomLink(href))
+			{
+				mxEvent.consume(evt);
+			}
+			else if (!graph.isExternalProtocol(href) &&
+					!graph.isBlankLink(href))
 			{
 				// Hides lightbox if any links are clicked
 				// Async handling needed for anchors to work
@@ -1302,10 +1310,6 @@ GraphViewer.prototype.addClickHandler = function(graph, ui)
 				{
 					ui.destroy();
 				}, 0);
-			}
-			else
-			{
-				mxEvent.consume(evt);
 			}
 		}
 		else if (href != null && ui == null && graph.isCustomLink(href) &&
