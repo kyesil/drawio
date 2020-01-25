@@ -11,3 +11,5 @@ https://desk.draw.io/support/solutions/articles/16000042546-what-url-parameters-
 https://desk.draw.io/support/solutions/articles/16000080686
 
 app.getEmbeddedSvg
+
+Load data Editoruid.js:2022

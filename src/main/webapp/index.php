@@ -161,7 +161,7 @@ require  '../../../_SCREEN/_boot.php';
 
 			if (mxIsElectron5)
 			{
-				addMeta(null, 'default-src \'self\' \'unsafe-inline\'; connect-src \'self\' https://*.draw.io; img-src * data:; media-src *; font-src *; style-src-elem \'self\' \'unsafe-inline\' https://fonts.googleapis.com', 'Content-Security-Policy');
+				addMeta(null, 'default-src \'self\' \'unsafe-inline\'; connect-src \'self\' https://*.draw.io https://fonts.googleapis.com https://fonts.gstatic.com; img-src * data:; media-src *; font-src *; style-src-elem \'self\' \'unsafe-inline\' https://fonts.googleapis.com', 'Content-Security-Policy');
 			}
 		})();
 	</script>
@@ -170,6 +170,7 @@ require  '../../../_SCREEN/_boot.php';
 	<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
 	<link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#d89000">
+	<link rel="stylesheet" type="text/css" href="js/croppie/croppie.min.css">
     <link rel="stylesheet" type="text/css" href="styles/grapheditor.css">
     <link rel="canonical" href="https://www.draw.io">
 	<link rel="manifest" href="images/manifest.json">
@@ -302,7 +303,11 @@ require  '../../../_SCREEN/_boot.php';
 				}
 			  	
 			  	var t = document.getElementsByTagName('script')[0];
-			  	t.parentNode.insertBefore(s, t);
+			  	
+			  	if (t != null)
+			  	{
+			  		t.parentNode.insertBefore(s, t);
+			  	}
 			}
 			else
 			{
@@ -338,7 +343,7 @@ require  '../../../_SCREEN/_boot.php';
 		if (urlParams['dev'] == '1')
 		{
 			// Used to request grapheditor/mxgraph sources in dev mode
-			var mxDevUrl ='../../../../pdrawm';
+			var mxDevUrl ='../../../../pmxgraph';
 			
 			// Used to request draw.io sources in dev mode
 			var drawDevUrl = './';
