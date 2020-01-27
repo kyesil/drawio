@@ -4,12 +4,12 @@ define('PDPHP', __DIR__);
 define('PD', PDPHP.'/../../../../..');
 define('KWWW',PD .'/../../../');
 
-define('UF', PD.'/../R/pd/');
 define('PDW', PD.'src/main/webapp/');
 
-define('KLIB', KWWW.'predixiWeb/app/library/');
+define('KLIB', KWWW.'/predixiWeb/app/library/');
 
-require  KWWW.'predixiWeb/conf/_config.php';
+
+require  KWWW.'/predixiWeb/conf/_config.php';
 
 require KLIB . 'dbH.php';
 require KLIB . 'dbNodeH.php';

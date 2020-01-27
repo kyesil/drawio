@@ -1,7 +1,3 @@
-//remove title click event:
-var fnameevents= _App.fname.mxListenerList;
-_App.fname.removeEventListener(fnameevents[0].name,fnameevents[0].f);
-_App.fname.removeEventListener(fnameevents[1].name,fnameevents[1].f);
 
 
 var graphCreateSvgImageExport = Graph.prototype.createSvgImageExport;
@@ -56,15 +52,13 @@ App.prototype.saveFile = function (forceDialog, success) {
 	var name= this.currentFile.title;
 	var xml = mxUtils.getXml(this.editor.getGraphXml());
 	var svg = mxUtils.getXml(this.editor.graph.getSvg(null, 1, 0))
-
 	
-	new mxXmlRequest(SAVE_URL+'&path='+urlParams['nscreen']+'/'+urlParams['npage']+'&', 
+	new mxXmlRequest(SAVE_URL+'&path='+_SC_PATH +'&', 
 						'&xml=' + encodeURIComponent(xml)+'&svg=' + encodeURIComponent(svg)).send();
 
-  this.editor.setStatus(mxUtils.htmlEntities(name + ' - saved' + ' ' + new Date()));
+  this.editor.setStatus(mxUtils.htmlEntities(_SC_PATH  + ' - saved' + ' ' + new Date()));
+  localStorage.setItem(_SC_PATH , xml);
 /*
-localStorage.setItem(name, xml);
-					
 
 	
 	var r = PsaveFile.apply(this, arguments);
