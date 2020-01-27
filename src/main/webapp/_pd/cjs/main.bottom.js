@@ -48,6 +48,7 @@ Graph.prototype.createSvgImageExport = function () {
 
 
 var PsaveFile = App.prototype.saveFile;
+
 App.prototype.saveFile = function (forceDialog, success) {
 	/*var graph = this.editor.graph;
 	var svgRoot = graph.getSvg(null, null, null, null, null, true)
@@ -57,7 +58,7 @@ App.prototype.saveFile = function (forceDialog, success) {
 	var svg = mxUtils.getXml(this.editor.graph.getSvg(null, 1, 0))
 
 	
-	new mxXmlRequest(SAVE_URL, 'filename=' + encodeURIComponent(name) +
+	new mxXmlRequest(SAVE_URL+'&path='+urlParams['nscreen']+'/'+urlParams['npage']+'&', 
 						'&xml=' + encodeURIComponent(xml)+'&svg=' + encodeURIComponent(svg)).send();
 
   this.editor.setStatus(mxUtils.htmlEntities(name + ' - saved' + ' ' + new Date()));
@@ -77,3 +78,4 @@ localStorage.setItem(name, xml);
 	*/
 	
 };
+

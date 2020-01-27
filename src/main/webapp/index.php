@@ -1,5 +1,5 @@
 <?php 
-require  '../../../_SCREEN/_boot.php';
+require  '_pd/php/_boot.php';
 ?>
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=5" ><![endif]-->
 <!DOCTYPE html>
@@ -266,7 +266,8 @@ require  '../../../_SCREEN/_boot.php';
 		</script>
 	<!--<![endif]-->
 
-	<script src="_pjs/main.top.js"></script>
+	<script src="_pd/cjs/main.top.js"></script>
+	<?php  require  PDPHP.'/_top.php'; ?>
 	<script type="text/javascript">
 		/**
 		 * Synchronously adds scripts to the page.
@@ -452,13 +453,13 @@ require  '../../../_SCREEN/_boot.php';
 		</tr>
 	</table>
 </div>
-<script src="_pjs/main.mid.js"></script>
+<script src="_pd/cjs/main.mid.js"></script>
 <script type="text/javascript">
 /**
  * Main
  */
 App.main();
 </script>
-<script src="_pjs/main.bottom.js"></script>
+<script src="_pd/cjs/main.bottom.js"></script>
 </body>
 </html>
