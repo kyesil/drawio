@@ -42,13 +42,20 @@ Graph.prototype.createSvgImageExport = function () {
 };
 
 
+App.prototype.onBeforeUnload = function (e) {
+	if(this.currentFile.modified==true)
+	{
+	}
+
+}
 
 var PsaveFile = App.prototype.saveFile;
-
 App.prototype.saveFile = function (forceDialog, success) {
 	/*var graph = this.editor.graph;
 	var svgRoot = graph.getSvg(null, null, null, null, null, true)
 	mxUtils.getXml(svgRoot);*/
+
+
 	var name= this.currentFile.title;
 	var xml = mxUtils.getXml(this.editor.getGraphXml());
 	var svg = mxUtils.getXml(this.editor.graph.getSvg(null, 1, 0))
@@ -58,9 +65,16 @@ App.prototype.saveFile = function (forceDialog, success) {
 
   this.editor.setStatus(mxUtils.htmlEntities(_SC_PATH  + ' - saved' + ' ' + new Date()));
   localStorage.setItem(_SC_PATH , xml);
-/*
 
-	
+  
+  this.editor.setModified(false);
+  this.currentFile.setModified(false);
+  console.log(this.editor);
+  this.editor.setFilename(_SC_PATH);
+  this.updateDocumentTitle();
+
+
+/*
 	var r = PsaveFile.apply(this, arguments);
 	console.log(mxUtils.getXml(svgRoot));
 	console.log(this.getFileData(false, true));
@@ -68,8 +82,8 @@ App.prototype.saveFile = function (forceDialog, success) {
 	this.editor.setFilename(name);
 	this.updateDocumentTitle();
 	console.log(this);
-	return r;
-	*/
 	
+	*/
+	return true;
 };
 

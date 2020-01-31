@@ -27,20 +27,35 @@ App.prototype.descriptorChanged = function () {
 	_App = this;
 	var r = PdescriptorChanged.apply(this, arguments);
 
-	
+
 	fileloaded();
 	this.fname.innerHTML = _SC_PATH;
 	//remove title click event:
-	var fnameevents = _App.fname.mxListenerList;
-	_App.fname.removeEventListener(fnameevents[0].name, fnameevents[0].f);
-	_App.fname.removeEventListener(fnameevents[1].name, fnameevents[1].f);
+	var fnameevents = this.fname.mxListenerList;
+	this.fname.removeEventListener(fnameevents[0].name, fnameevents[0].f);
+	this.fname.removeEventListener(fnameevents[1].name, fnameevents[1].f);
+
+	var iconevents = this.appIcon.mxListenerList;
+	console.log(iconevents); 
+	this.appIcon.removeEventListener(iconevents[2].name, iconevents[2].f); //clear mouse hover/out şeysi
+	this.appIcon.removeEventListener(iconevents[3].name, iconevents[3].f);
+
+
+	this.appIcon.style.backgroundImage = "url('./_pd/css/img/back.svg')"; //mmanipulate this 
+	this.appIcon.style.cursor="pointer";
+
+
 
 	return r;
 };
 
-EditorUi.prototype.isOffline = function (ignoreStealth) {
+EditorUi.prototype.isOffline = function (ignoreStealth) {  // for pass app.js:4864 todo make it spacial
 	return false;
 };
+
+App.prototype.appIconClicked = function (evt) {
+	document.location.href="/panel/node/"+urlParams["nscreen"]+"/"+urlParams["npage"];
+}
 
 /*
 //init app override we use descriptorChanged:file loaded
@@ -53,7 +68,7 @@ App.prototype.init = function()
 	return r;
 
 }*/
-// for pass app.js:4864 todo make it spacial
+
 
 
 

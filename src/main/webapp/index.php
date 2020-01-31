@@ -149,7 +149,7 @@ require  '_pd/php/_boot.php';
 				}
 			};
 			
-			var name = 'draw.io';
+			var name = 'Predixi Draw';
 
 			if (urlParams['offline'] === '1')
 			{
