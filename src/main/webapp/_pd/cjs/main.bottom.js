@@ -43,8 +43,7 @@ Graph.prototype.createSvgImageExport = function () {
 
 
 App.prototype.onBeforeUnload = function (e) {
-	if(this.currentFile.modified==true)
-	{
+	if (this.currentFile.modified == true) {
 	}
 
 }
@@ -54,36 +53,45 @@ App.prototype.saveFile = function (forceDialog, success) {
 	/*var graph = this.editor.graph;
 	var svgRoot = graph.getSvg(null, null, null, null, null, true)
 	mxUtils.getXml(svgRoot);*/
+if (forceDialog)  return PsaveFile.apply(this, arguments); // if coming from save as
 
+	if (!_SC_PATH) return this.showAlert('Error: No file path');
 
-	var name= this.currentFile.title;
+	var name = this.currentFile.title;
 	var xml = mxUtils.getXml(this.editor.getGraphXml());
 	var svg = mxUtils.getXml(this.editor.graph.getSvg(null, 1, 0))
-	
-	new mxXmlRequest(SAVE_URL+'&path='+_SC_PATH +'&', 
-						'&xml=' + encodeURIComponent(xml)+'&svg=' + encodeURIComponent(svg)).send();
 
-  this.editor.setStatus(mxUtils.htmlEntities(_SC_PATH  + ' - saved' + ' ' + new Date()));
-  localStorage.setItem(_SC_PATH , xml);
+	new mxXmlRequest(SAVE_URL + '&path=' + _SC_PATH + '&',
+		'&xml=' + encodeURIComponent(xml) + '&svg=' + encodeURIComponent(svg)).send();
 
-  
-  this.editor.setModified(false);
-  this.currentFile.setModified(false);
-  console.log(this.editor);
-  this.editor.setFilename(_SC_PATH);
-  this.updateDocumentTitle();
+	this.editor.setStatus(mxUtils.htmlEntities(_SC_PATH + ' - saved' + ' ' + new Date()));
+
+	localStorage.setItem(_SC_PATH, xml);
 
 
-/*
-	var r = PsaveFile.apply(this, arguments);
-	console.log(mxUtils.getXml(svgRoot));
-	console.log(this.getFileData(false, true));
 	this.editor.setModified(false);
-	this.editor.setFilename(name);
+	this.currentFile.setModified(false);
+
+	this.editor.setFilename(_SC_PATH);
 	this.updateDocumentTitle();
-	console.log(this);
-	
-	*/
+
+
+	/*
+		var r = PsaveFile.apply(this, arguments);
+		console.log(mxUtils.getXml(svgRoot));
+		console.log(this.getFileData(false, true));
+		this.editor.setModified(false);
+		this.editor.setFilename(name);
+		this.updateDocumentTitle();
+		console.log(this);
+		
+		*/
 	return true;
 };
+
+
+/// Todo: _App.format.panels[].container means right sidebar tabs
+//_App.format.selectionState means selected object 
+// _App.format.update(); draw right panel
+//Format.prototype.init can be override for tags binding or Format.prototype.updateSelectionStateForCell
 
