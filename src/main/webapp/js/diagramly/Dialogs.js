@@ -5024,81 +5024,20 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 /**
  * Constructs a new about dialog
  */
-var AboutDialog = function(editorUi)
-{
-	var div = document.createElement('div');
-	div.style.marginTop = '6px';
-	div.setAttribute('align', 'center');
-	
-	var img = document.createElement('img');
-	img.style.border = '0px';
-	
-	if (mxClient.IS_SVG)
-	{
-		img.setAttribute('width', '164');
-		img.setAttribute('height', '221');
-		img.style.width = '164px';
-		img.style.height = '221px';
-		img.setAttribute('src', IMAGE_PATH + '/drawlogo-text-bottom.svg');
-	}
-	else
-	{
-		img.setAttribute('width', '176');
-		img.setAttribute('height', '219');
-		img.style.width = '170px';
-		img.style.height = '219px';
-		img.setAttribute('src', IMAGE_PATH + '/logo-flat.png');
-	}
-	
-	if (uiTheme == 'dark')
-	{
-		img.style.filter = 'grayscale(100%) invert(100%)';
-	}
-	
-	div.appendChild(img);
-	mxUtils.br(div);
-	
-	var clr = (uiTheme == 'dark') ? '#cccccc' : '#505050';
-	var v = document.createElement('small');
-	v.innerHTML = 'v ' + EditorUi.VERSION;
-	v.style.color = clr;
-	div.appendChild(v);
-	
-	mxUtils.br(div);
-	mxUtils.br(div);
-
-	var small = document.createElement('small');
-	small.style.color = clr;
-	small.innerHTML = '&copy; 2005-2020 <a href="https://about.draw.io/" style="color:inherit;" target="_blank">JGraph Ltd</a>.<br>All Rights Reserved.';
-	div.appendChild(small);
-	
-	mxEvent.addListener(div, 'click', function(e)
-	{
-		if (mxEvent.getSource(e).nodeName != 'A')
-		{
-			editorUi.hideDialog();
-		}
-	});
-	
-	this.container = div;
-};
-
-/**
- * Constructs a new about dialog
- */
-var FeedbackDialog = function(editorUi)
+var FeedbackDialog = function(editorUi, subject, emailOptional, diagramData)
 {
 	var div = document.createElement('div');
 	
 	var label = document.createElement('div');
-	mxUtils.write(label, mxResources.get('sendYourFeedbackToDrawIo'));
+	mxUtils.write(label, mxResources.get('sendYourFeedback'));
 	label.style.fontSize = '18px';
 	label.style.marginBottom = '18px';
 	
 	div.appendChild(label);
 	
 	label = document.createElement('div');
-	mxUtils.write(label, mxResources.get('yourEmailAddress') + ' (' + mxResources.get('required') + ')');
+	mxUtils.write(label, mxResources.get('yourEmailAddress') +
+		((emailOptional) ? '' : ' (' + mxResources.get('required') + ')'));
 	
 	div.appendChild(label);
 	
@@ -5110,7 +5049,8 @@ var FeedbackDialog = function(editorUi)
 	var sendButton = mxUtils.button(mxResources.get('sendMessage'), function()
 	{
 		var diagram = textarea.value +
-			((cb.checked) ? '\nDiagram:\n' + mxUtils.getXml(editorUi.getXmlFileData()) : '') +
+			((cb.checked) ? '\nDiagram:\n' + ((diagramData != null) ?
+			diagramData : mxUtils.getXml(editorUi.getXmlFileData())) : '') +
 			'\nBrowser:\n' + navigator.userAgent;
 		
 		if (diagram.length > FeedbackDialog.maxAttachmentSize)
@@ -5127,7 +5067,8 @@ var FeedbackDialog = function(editorUi)
 				mxUtils.post(postUrl, 'email=' + encodeURIComponent(email.value) +
 						'&version=' + encodeURIComponent(EditorUi.VERSION) +
 						'&url=' + encodeURIComponent(window.location.href) +
-						'&body=' + encodeURIComponent('Feedback:\n' + diagram),
+						'&body=' + encodeURIComponent(((subject != null) ?
+							subject : 'Feedback') + ':\n' + diagram),
 					function(req)
 					{
 						editorUi.spinner.stop();
@@ -5151,33 +5092,37 @@ var FeedbackDialog = function(editorUi)
 	});
 	sendButton.className = 'geBtn gePrimaryBtn';
 	
-	sendButton.setAttribute('disabled', 'disabled');
-	var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-	
-	mxEvent.addListener(email, 'change', function()
+	if (!emailOptional)
 	{
-		if (email.value.length > 0 && re.test(email.value) > 0)
+		sendButton.setAttribute('disabled', 'disabled');
+
+		var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+		
+		mxEvent.addListener(email, 'change', function()
 		{
-			sendButton.removeAttribute('disabled');
-		}
-		else
+			if (email.value.length > 0 && re.test(email.value) > 0)
+			{
+				sendButton.removeAttribute('disabled');
+			}
+			else
+			{
+				sendButton.setAttribute('disabled', 'disabled');
+			}
+		});
+		
+		mxEvent.addListener(email, 'keyup', function()
 		{
-			sendButton.setAttribute('disabled', 'disabled');
-		}
-	});
-	
-	mxEvent.addListener(email, 'keyup', function()
-	{
-		if (email.value.length > 0 && re.test(email.value))
-		{
-			sendButton.removeAttribute('disabled');
-		}
-		else
-		{
-			sendButton.setAttribute('disabled', 'disabled');
-		}
-	});
-	
+			if (email.value.length > 0 && re.test(email.value))
+			{
+				sendButton.removeAttribute('disabled');
+			}
+			else
+			{
+				sendButton.setAttribute('disabled', 'disabled');
+			}
+		});
+	}
+		
 	div.appendChild(email);
 	
 	this.init = function()
@@ -6301,6 +6246,7 @@ var FindWindow = function(ui, x, y, w, h)
 	var graph = ui.editor.graph;
 	var lastSearch = null;
 	var lastFound = null;
+	var allChecked = false;
 
 	var div = document.createElement('div');
 	div.style.userSelect = 'none';
@@ -6321,18 +6267,37 @@ var FindWindow = function(ui, x, y, w, h)
 	mxUtils.br(div);
 	
 	var regexInput = document.createElement('input');
+	regexInput.setAttribute('id', 'geFindWinRegExChck');
 	regexInput.setAttribute('type', 'checkbox');
 	regexInput.style.marginRight = '4px';
 	div.appendChild(regexInput);
 	
-	mxUtils.write(div, mxResources.get('regularExpression'));
-
+	var regexLabel = document.createElement('label');
+	regexLabel.setAttribute('for', 'geFindWinRegExChck');
+	div.appendChild(regexLabel);
+	mxUtils.write(regexLabel, mxResources.get('regularExpression'));
+	div.appendChild(regexLabel);
+	
     var help = ui.menus.createHelpLink('https://desk.draw.io/support/solutions/articles/16000088250');
     help.style.position = 'relative';
     help.style.marginLeft = '6px';
     help.style.top = '-1px';
     div.appendChild(help);
+    
+	mxUtils.br(div);
 
+    var allPagesInput = document.createElement('input');
+    allPagesInput.setAttribute('id', 'geFindWinAllPagesChck');
+    allPagesInput.setAttribute('type', 'checkbox');
+    allPagesInput.style.marginRight = '4px';
+	div.appendChild(allPagesInput);
+	
+	var allPagesLabel = document.createElement('label');
+	allPagesLabel.setAttribute('for', 'geFindWinAllPagesChck');
+	div.appendChild(allPagesLabel);
+	mxUtils.write(allPagesLabel, mxResources.get('allPages'));
+	div.appendChild(allPagesLabel);
+    
 	var tmp = document.createElement('div');
 	
 	function testMeta(re, cell, search)
@@ -6359,24 +6324,69 @@ var FindWindow = function(ui, x, y, w, h)
 		return false;
 	};
 	
-	function search()
+	function search(internalCall)
 	{
 		var cells = graph.model.getDescendants(graph.model.getRoot());
-		var search = searchInput.value.toLowerCase();
-		var re = (regexInput.checked) ? new RegExp(search) : null;
+		var searchStr = searchInput.value.toLowerCase();
+		var re = (regexInput.checked) ? new RegExp(searchStr) : null;
 		var firstMatch = null;
 		
-		if (lastSearch != search)
+		if (lastSearch != searchStr)
 		{
-			lastSearch = search;
+			lastSearch = searchStr;
 			lastFound = null;
+			allChecked = false;
 		}
 
 		var active = lastFound == null;
 		
-		if (search.length > 0)
+		if (searchStr.length > 0)
 		{
-			for (var i = 0; i < cells.length; i++)
+			if (allChecked)
+			{
+				allChecked = false;
+				
+				//Find current page index
+				var currentPageIndex;
+				
+				for (var i = 0; i < ui.pages.length; i++)
+				{
+					if (ui.currentPage == ui.pages[i])
+					{
+						currentPageIndex = i;
+						break;
+					}
+				}
+				
+				var nextPageIndex = (currentPageIndex + 1) % ui.pages.length, nextPage;
+				lastFound = null;
+				
+				do
+				{
+					allChecked = false;
+					nextPage = ui.pages[nextPageIndex];
+					graph = ui.createTemporaryGraph(graph.getStylesheet());
+					ui.updatePageRoot(nextPage);
+					graph.model.setRoot(nextPage.root);
+					nextPageIndex = (nextPageIndex + 1) % ui.pages.length;
+				}
+				while(!search(true) && nextPageIndex != currentPageIndex);
+				
+				if (lastFound)
+				{
+					lastFound = null;
+					ui.selectPage(nextPage);
+				}
+				
+				allChecked = false;
+				graph = ui.editor.graph;
+				
+				return search(true);
+			}
+			
+			var i;
+			
+			for (i = 0; i < cells.length; i++)
 			{
 				var state = graph.view.getState(cells[i]);
 				
@@ -6395,8 +6405,8 @@ var FindWindow = function(ui, x, y, w, h)
 		
 					label = mxUtils.trim(label.replace(/[\x00-\x1F\x7F-\x9F]|\s+/g, ' ')).toLowerCase();
 					
-					if ((re == null && (label.substring(0, search.length) === search || testMeta(re, state.cell, search))) ||
-						(re != null && (re.test(label) || testMeta(re, state.cell, search))))
+					if ((re == null && (label.substring(0, searchStr.length) === searchStr || testMeta(re, state.cell, searchStr))) ||
+						(re != null && (re.test(label) || testMeta(re, state.cell, searchStr))))
 					{
 						if (active)
 						{
@@ -6417,6 +6427,13 @@ var FindWindow = function(ui, x, y, w, h)
 					
 		if (firstMatch != null)
 		{
+			if (i == cells.length && allPagesInput.checked)
+			{
+				lastFound = null;
+				allChecked = true;
+				return search(true);
+			}
+			
 			lastFound = firstMatch;
 			graph.scrollCellToVisible(lastFound.cell);
 			
@@ -6429,12 +6446,18 @@ var FindWindow = function(ui, x, y, w, h)
 				graph.highlightCell(lastFound.cell);
 			}
 		}
+		//Check other pages
+		else if (!internalCall && allPagesInput.checked)
+		{
+			allChecked = true;
+			return search(true);
+		}
 		else if (graph.isEnabled())
 		{
 			graph.clearSelection();
 		}
 		
-		return search.length == 0 || firstMatch != null;
+		return searchStr.length == 0 || firstMatch != null;
 	};
 
 	mxUtils.br(div);
@@ -6445,12 +6468,14 @@ var FindWindow = function(ui, x, y, w, h)
 		searchInput.style.backgroundColor = '';
 		lastFound = null;
 		lastSearch = null;
+		allChecked = false;
 		searchInput.focus();
 	});
 	
 	resetBtn.setAttribute('title', mxResources.get('reset'));
 	resetBtn.style.marginTop = '6px';
 	resetBtn.style.marginRight = '4px';
+	resetBtn.style.marginLeft = ((w - 20 - 2 * 78) / 2) + 'px'; // 20 are window padding, and 78 is btn width
 	resetBtn.className = 'geBtn';
 	
 	div.appendChild(resetBtn);
@@ -6528,6 +6553,16 @@ var FindWindow = function(ui, x, y, w, h)
 			else
 			{
 				document.execCommand('selectAll', false, null);
+			}
+			
+			if (ui.pages != null && ui.pages.length > 1)
+			{
+				allPagesInput.removeAttribute('disabled');
+			}
+			else
+			{
+				allPagesInput.checked = false;
+				allPagesInput.setAttribute('disabled', 'disabled');
 			}
 		}
 		else

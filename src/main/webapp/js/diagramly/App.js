@@ -508,7 +508,7 @@ App.main = function(callback, createUi)
 	window.onerror = function(message, url, linenumber, colno, err)
 	{
 		EditorUi.logError('Global: ' + ((message != null) ? message : ''),
-			url, linenumber, colno, err);
+			url, linenumber, colno, err, null, true);
 	};
 
 	// Removes info text in embed mode
@@ -531,25 +531,13 @@ App.main = function(callback, createUi)
 	
 	if (window.mxscript != null)
 	{
-		// Check that service workers are supported and registers,
-		// unregisters or updates the installed service worker
+		// Runs as progressive web app if service workers are supported
 		try
 		{
-			if ('serviceWorker' in navigator)
+			if ('serviceWorker' in navigator && (/.*\.diagrams\.net$/.test(window.location.hostname) ||
+				/.*\.draw\.io$/.test(window.location.hostname) || urlParams['offline'] == '1'))
 			{
-				if (urlParams['offline'] == '1')
-				{
-					mxscript('js/shapes.min.js');
-					mxscript('js/stencils.min.js');
-					mxscript('js/extensions.min.js');
-		
-					// Use the window load event to keep the page load performant
-					window.addEventListener('load', function()
-					{
-						navigator.serviceWorker.register('/service-worker.js');
-					});
-				}
-				else if (urlParams['offline'] == '0')
+				if (urlParams['offline'] == '0' || (urlParams['offline'] != '1' && urlParams['dev'] == '1'))
 				{
 					navigator.serviceWorker.getRegistrations().then(function(registrations)
 					{
@@ -559,9 +547,13 @@ App.main = function(callback, createUi)
 						}
 					});
 				}
-				else if (navigator.serviceWorker.controller)
+				else
 				{
-					// Updates cache if PWA was registered
+					mxscript('js/shapes.min.js');
+					mxscript('js/stencils.min.js');
+					mxscript('js/extensions.min.js');
+		
+					// Use the window load event to keep the page load performant
 					window.addEventListener('load', function()
 					{
 						navigator.serviceWorker.register('/service-worker.js');
@@ -1440,71 +1432,20 @@ App.prototype.init = function()
 			this.mode = App.mode;
 		}
 		
-		// Integrates Add to Home Screen
-		if (urlParams['offline'] == '1' && 'serviceWorker' in navigator &&
-			!mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp)
+		// Add to Home Screen dialog for mobile devices
+		if ('serviceWorker' in navigator && (mxClient.IS_ANDROID || mxClient.IS_IOS))
 		{
-			var deferredPrompt = null;
-			
 			window.addEventListener('beforeinstallprompt', mxUtils.bind(this, function(e)
 			{
-				if (!this.footerShowing && (!isLocalStorage || mxSettings.settings == null ||
-					mxSettings.settings.closeAddToHomeScreenFooter == null))
+				this.showBanner('AddToHomeScreenFooter', mxResources.get('installApp'), function()
 				{
-					deferredPrompt = e;
-					
-					var done = mxUtils.bind(this, function()
-					{
-						footer.parentNode.removeChild(footer);
-						this.footerShowing = false;
-						deferredPrompt = null;
-	
-						// Close permanently
-						if (isLocalStorage && mxSettings.settings != null)
-						{
-							mxSettings.settings.closeAddToHomeScreenFooter = Date.now();
-							mxSettings.save();
-						}
-					});
-					
-					var footer = this.createBanner('<img border="0" align="absmiddle" ' +
-						'style="margin-top:-6px;cursor:pointer;margin-left:8px;margin-right:12px;width:24px;height:24px;" src="' +
-						IMAGE_PATH + '/logo.png' + '"><font size="3" style="color:#ffffff;">' +
-						mxUtils.htmlEntities(mxResources.get('installDrawio', null, 'Install draw.io')) + '</font>',
-						'https://www.draw.io/index.html?offline=1', 'geStatusMessage geBtn gePrimaryBtn', done, null,
-						mxUtils.bind(this, function()
-						{
-						    // Show the prompt
-							if (deferredPrompt != null)
-							{
-							    deferredPrompt.prompt();
-							    
-							    // Wait for the user to respond to the prompt
-							    deferredPrompt.userChoice.then(done);
-							} 
-						}));
-		
-					// Push to after splash dialog background
-					footer.style.zIndex = mxPopupMenu.prototype.zIndex;
-					footer.style.padding = '18px 50px 12px 30px';
-					footer.getElementsByTagName('img')[1].style.filter = 'invert(1)';
-					document.body.appendChild(footer);
-					this.footerShowing = true;
-					
-					window.setTimeout(mxUtils.bind(this, function()
-					{
-						mxUtils.setPrefixedStyle(footer.style, 'transform', 'translate(-50%,0%)');
-					}), 500);
-					
-					window.setTimeout(mxUtils.bind(this, function()
-					{
-						mxUtils.setPrefixedStyle(footer.style, 'transform', 'translate(-50%,110%)');
-						this.footerShowing = false;
-					}), 60000);
-				}
+				    e.prompt();
+				});
 			}));
 		}
-		else if (!mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp && !this.isOfflineApp() &&
+		
+		if (!mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp && !this.isOffline() &&
+			!mxClient.IS_ANDROID && !mxClient.IS_IOS &&
 			urlParams['open'] == null && (!this.editor.chromeless || this.editor.editable))
 		{
 			this.editor.addListener('fileLoaded', mxUtils.bind(this, function()
@@ -1520,7 +1461,7 @@ App.prototype.init = function()
 		}
 		
 		if (!mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp && urlParams['embed'] != '1' && DrawioFile.SYNC == 'auto' &&
-			urlParams['local'] != '1' && urlParams['stealth'] != '1' && urlParams['offline'] != '1' &&
+			urlParams['local'] != '1' && urlParams['stealth'] != '1' && this.isOffline() &&
 			(!this.editor.chromeless || this.editor.editable))
 		{
 			// Checks if the cache is alive
@@ -1733,53 +1674,12 @@ App.prototype.getPusher = function()
 /**
  * Shows a footer to download the desktop version once per session.
  */
-App.prototype.showDiagramsDotNetBanner = function()
+App.prototype.showNameChangeBanner = function()
 {
-	if (!this.diagramsNetFooterShown && !this.footerShowing && (!isLocalStorage ||
-		mxSettings.settings == null || mxSettings.settings.closeDiagramsFooter == null))
+	this.showBanner('DiagramsFooter', 'draw.io is now diagrams.net', mxUtils.bind(this, function()
 	{
-		this.diagramsNetFooterShown = true;
-		var href = 'https://www.diagrams.net/blog/move-diagrams-net';
-		
-		var closeHandler = mxUtils.bind(this, function()
-		{
-			footer.parentNode.removeChild(footer);
-			this.footerShowing = false;
-
-			// Close permanently
-			if (isLocalStorage && mxSettings.settings != null)
-			{
-				mxSettings.settings.closeDiagramsFooter = Date.now();
-				mxSettings.save();
-			}
-		});
-		
-		var footer = this.createBanner('<img border="0" align="absmiddle" style="margin-top:-6px;cursor:pointer;margin-left:8px;margin-right:12px;width:24px;height:24px;" src="' +
-			IMAGE_PATH + '/logo.png' + '"><font size="3" style="color:#ffffff;">draw.io is now diagrams.net</font>',
-			href, 'geStatusMessage geBtn gePrimaryBtn', closeHandler, null, mxUtils.bind(this, function()
-		{
-			window.open(href);
-			closeHandler();
-		}));
-		
-		// Push to after splash dialog background
-		footer.style.zIndex = mxPopupMenu.prototype.zIndex;
-		footer.style.padding = '18px 50px 12px 30px';
-		footer.getElementsByTagName('img')[1].style.filter = 'invert(1)';
-		document.body.appendChild(footer);
-		this.footerShowing = true;
-		
-		window.setTimeout(mxUtils.bind(this, function()
-		{
-			mxUtils.setPrefixedStyle(footer.style, 'transform', 'translate(-50%,0%)');
-		}), 500);
-		
-		window.setTimeout(mxUtils.bind(this, function()
-		{
-			mxUtils.setPrefixedStyle(footer.style, 'transform', 'translate(-50%,110%)');
-			this.footerShowing = false;
-		}), 20000);
-	}
+		this.openLink('https://www.diagrams.net/blog/move-diagrams-net');
+	}));
 };
 
 /**
@@ -1787,53 +1687,18 @@ App.prototype.showDiagramsDotNetBanner = function()
  */
 App.prototype.showDownloadDesktopBanner = function()
 {
-	if (!this.downloadDesktopFooterShown && !this.footerShowing && (!isLocalStorage ||
-		mxSettings.settings == null || mxSettings.settings.closeDesktopFooter == null))
+	var link = 'https://get.draw.io/';
+	
+	if (this.showBanner('DesktopFooter', mxResources.get('downloadDesktop'), mxUtils.bind(this, function()
+		{
+			this.openLink(link);
+		})))
 	{
-		this.downloadDesktopFooterShown = true;
-		
-		var closeHandler = mxUtils.bind(this, function()
-		{
-			footer.parentNode.removeChild(footer);
-			this.footerShowing = false;
-
-			// Close permanently
-			if (isLocalStorage && mxSettings.settings != null)
-			{
-				mxSettings.settings.closeDesktopFooter = Date.now();
-				mxSettings.save();
-			}
-		});
-		
-		var footer = this.createBanner('<img border="0" align="absmiddle" style="margin-top:-6px;cursor:pointer;margin-left:8px;margin-right:12px;width:24px;height:24px;" src="' +
-			IMAGE_PATH + '/logo.png' + '"><font size="3" style="color:#ffffff;">' +
-			mxUtils.htmlEntities(mxResources.get('downloadDesktop')) + '</font>',
-			'https://get.draw.io/', 'geStatusMessage geBtn gePrimaryBtn', closeHandler, null, closeHandler);
-		
-		// Push to after splash dialog background
-		footer.style.zIndex = mxPopupMenu.prototype.zIndex;
-		footer.style.padding = '18px 50px 12px 30px';
-		footer.getElementsByTagName('img')[1].style.filter = 'invert(1)';
-		document.body.appendChild(footer);
-		this.footerShowing = true;
-		
-		window.setTimeout(mxUtils.bind(this, function()
-		{
-			mxUtils.setPrefixedStyle(footer.style, 'transform', 'translate(-50%,0%)');
-		}), 500);
-		
-		window.setTimeout(mxUtils.bind(this, function()
-		{
-			mxUtils.setPrefixedStyle(footer.style, 'transform', 'translate(-50%,110%)');
-			this.footerShowing = false;
-		}), 60000);
-		
-		// Updates the download link to point to the right operating system
+		// Downloads installer for macOS and Windows
 		mxUtils.get('https://api.github.com/repos/jgraph/drawio-desktop/releases/latest', mxUtils.bind(this, function(req)
 		{
 			try
 			{
-				var a = footer.getElementsByTagName('a')[0];
 				var rel = JSON.parse(req.getText());
 				
 				if (rel != null)
@@ -1842,77 +1707,23 @@ App.prototype.showDownloadDesktopBanner = function()
 					{
 						if (mxClient.IS_MAC)
 						{
-							a.setAttribute('href', 'https://github.com/jgraph/drawio-desktop/releases/download/' +
-		        				rel.tag_name + '/draw.io-' + rel.name + '.dmg');
+							link = 'https://github.com/jgraph/drawio-desktop/releases/download/' +
+		        				rel.tag_name + '/draw.io-' + rel.name + '.dmg';
 						}
 						else if (mxClient.IS_WIN)
 						{
-							a.setAttribute('href', 'https://github.com/jgraph/drawio-desktop/releases/download/' +
-		        				rel.tag_name + '/draw.io-' + rel.name + '-windows-installer.exe');
+							link = 'https://github.com/jgraph/drawio-desktop/releases/download/' +
+		        				rel.tag_name + '/draw.io-' + rel.name + '-windows-installer.exe';
 						}
 					}
 				}
 			}
 			catch (e)
 			{
-				// ignores parsing errors
+				// ignore
 			}
 		}));
 	}
-};
-
-/**
- * Creates a popup banner.
- */
-App.prototype.createBanner = function(label, link, className, closeHandler, helpLink, clickHandler, noBlank)
-{
-	var footer = document.createElement('div');
-	footer.style.cssText = 'position:absolute;bottom:0px;max-width:90%;padding:10px;padding-right:26px;' +
-		'white-space:nowrap;left:50%;bottom:2px;';
-	footer.className = className;
-
-	var icn = ((className == 'geStatusAlert') ? '<img src="' + mxClient.imageBasePath + '/warning.gif" border="0" ' +
-		'style="margin-top:-4px;margin-right:8px;margin-left:8px;" valign="middle"/>' : '');
-	
-	mxUtils.setPrefixedStyle(footer.style, 'transform', 'translate(-50%,110%)');
-	mxUtils.setPrefixedStyle(footer.style, 'transition', 'all 1s ease');
-	footer.style.whiteSpace = 'nowrap';
-	footer.innerHTML = '<a href="' + ((link != null) ? link : 'javascript:void(0)') +
-		'" ' + ((!noBlank) ? 'target="_blank" ' : '') + 'style="display:inline;text-decoration:none;font-weight:700;font-size:13px;opacity:1;">' +
-		icn + label + icn + '</a>' + ((helpLink != null) ? '<a href="' + helpLink +
-		'" target="_blank" style="display:inline;text-decoration:none;font-weight:700;font-size:13px;opacity:1;margin-right:8px;">Help</a>' : '');
-	
-	var img = document.createElement('img');
-	
-	img.setAttribute('src', Dialog.prototype.closeImage);
-	img.setAttribute('title', mxResources.get('close'));
-	img.style.position = 'absolute';
-	img.style.cursor = 'pointer';
-	img.style.right = '10px';
-	img.style.top = '12px';
-
-	footer.appendChild(img);
-
-	if (closeHandler)
-	{
-		mxEvent.addListener(img, 'click', mxUtils.bind(this, function(e)
-		{
-			closeHandler(e);
-			mxEvent.consume(e);
-		}));
-	}
-	
-	if (clickHandler != null)
-	{
-		footer.style.paddingRight = '40px';
-		
-		mxEvent.addListener(footer, 'click', mxUtils.bind(this, function(e)
-		{
-			clickHandler(e);
-		}));
-	}
-	
-	return footer;
 };
 
 /**
@@ -2882,7 +2693,7 @@ App.prototype.start = function()
 	window.onerror = function(message, url, linenumber, colno, err)
 	{
 		EditorUi.logError('Uncaught: ' + ((message != null) ? message : ''),
-			url, linenumber, colno, err);
+			url, linenumber, colno, err, null, true);
 		ui.handleError({message: message}, mxResources.get('unknownError'),
 			null, null, null, null, true);
 	};
@@ -2919,9 +2730,10 @@ App.prototype.start = function()
 				}
 
 				if (!mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp && !this.isOfflineApp() &&
+					/.*\.draw\.io$/.test(window.location.hostname) &&
 					(!this.editor.chromeless || this.editor.editable))
 				{
-					this.showDiagramsDotNetBanner();
+					this.showNameChangeBanner();
 				}
 			}
 			catch (e)
@@ -3410,6 +3222,7 @@ App.prototype.showSplash = function(force)
 			}), true);
 		
 		if (!mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp && !this.isOfflineApp() &&
+			!mxClient.IS_ANDROID && !mxClient.IS_IOS &&
 			(this.mode == App.MODE_DEVICE || this.mode == App.MODE_BROWSER))
 		{
 			this.showDownloadDesktopBanner();
@@ -3575,6 +3388,22 @@ App.prototype.pickFile = function(mode)
 				window.openNew = this.getCurrentFile() != null && !this.isDiagramEmpty();
 				window.baseUrl = this.getUrl();
 				window.openKey = 'open';
+				
+				window.listBrowserFiles = mxUtils.bind(this, function(success, error) 
+				{
+					StorageFile.listFiles(this, 'F', success, error);
+				});
+				
+				window.openBrowserFile = mxUtils.bind(this, function(title, success, error)
+				{
+					StorageFile.getFileContent(this, title, success, error);
+				});
+				
+				window.deleteBrowserFile = mxUtils.bind(this, function(title, success, error)
+				{
+					StorageFile.deleteFile(this, title, success, error);
+				});
+				
 				var prevValue = Editor.useLocalStorage;
 				Editor.useLocalStorage = (mode == App.MODE_BROWSER);
 				this.openFile();
@@ -3729,6 +3558,21 @@ App.prototype.pickLibrary = function(mode)
 	{
 		window.openNew = false;
 		window.openKey = 'open';
+		
+		window.listBrowserFiles = mxUtils.bind(this, function(success, error) 
+		{
+			StorageFile.listFiles(this, 'L', success, error);
+		});
+		
+		window.openBrowserFile = mxUtils.bind(this, function(title, success, error)
+		{
+			StorageFile.getFileContent(this, title, success, error);
+		});
+		
+		window.deleteBrowserFile = mxUtils.bind(this, function(title, success, error)
+		{
+			StorageFile.deleteFile(this, title, success, error);
+		});
 		
 		var prevValue = Editor.useLocalStorage;
 		Editor.useLocalStorage = mode == App.MODE_BROWSER;
@@ -4512,11 +4356,19 @@ App.prototype.loadFile = function(id, sameWindow, file, success, force)
 				}
 				else
 				{
-					try
+					var error = mxUtils.bind(this, function (e)
 					{
-						id = decodeURIComponent(id.substring(1));
-						var data = localStorage.getItem(id);
-						
+						this.handleError(e, mxResources.get('errorLoadingFile'), mxUtils.bind(this, function()
+						{
+							var tempFile = this.getCurrentFile();
+							window.location.hash = (tempFile != null) ? tempFile.getHash() : '';
+						}));
+					});
+					
+					id = decodeURIComponent(id.substring(1));
+					
+					StorageFile.getFileContent(this, id, mxUtils.bind(this, function(data)
+					{
 						if (data != null)
 						{
 							this.fileLoaded(new StorageFile(this, data, id));
@@ -4528,17 +4380,9 @@ App.prototype.loadFile = function(id, sameWindow, file, success, force)
 						}
 						else
 						{
-							throw {message: mxResources.get('fileNotFound')};
+							error({message: mxResources.get('fileNotFound')});
 						}
-					}
-					catch (e)
-					{
-						this.handleError(e, mxResources.get('errorLoadingFile'), mxUtils.bind(this, function()
-						{
-							var tempFile = this.getCurrentFile();
-							window.location.hash = (tempFile != null) ? tempFile.getHash() : '';
-						}));
-					}
+					}), error);
 				}
 			}
 			else if (file != null)
@@ -5006,7 +4850,7 @@ App.prototype.loadLibraries = function(libs, done)
 									{
 										var name = decodeURIComponent(id.substring(1));
 										
-										var xml = this.getLocalData(name, mxUtils.bind(this, function(xml)
+										StorageFile.getFileContent(this, name, mxUtils.bind(this, function(xml)
 										{
 											if (name == '.scratchpad' && xml == null)
 											{
@@ -5021,7 +4865,7 @@ App.prototype.loadLibraries = function(libs, done)
 											{
 												onerror();
 											}
-										}));
+										}), onerror);
 									}
 									catch (e)
 									{

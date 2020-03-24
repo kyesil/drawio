@@ -130,7 +130,7 @@
 	/**
 	 * Disables the shadow option in the format panel.
 	 */
-	Editor.shadowOptionEnabled = true;
+	Editor.shadowOptionEnabled = !mxClient.IS_SF;
 
 	/**
 	 * Reference to the config object passed to <configure>.
@@ -609,7 +609,7 @@
 
 		// Workaround for invalid character error in Safari
 		var f = (window.atob && !mxClient.IS_SF) ? atob(base64) : Base64.decode(base64, true);
-		var check = '\n/Subject (';
+		var check = '/Subject (%3Cmxfile';
 		var result = null;
 		var curline = '';
 		var checked = 0;
@@ -639,7 +639,8 @@
 			
 			if (checked == check.length)
 			{
-				var end = f.indexOf(')\n', pos);
+				var end = f.indexOf('%3C%2Fmxfile%3E)', pos) + 15; //15 is the length of encoded </mxfile>
+				pos -= 9; //9 is the length of encoded <mxfile
 				
 				// Default case is XML inlined in Subject metadata
 				if (end > pos)
@@ -4905,7 +4906,7 @@
 	 */
 	Graph.prototype.setShadowVisible = function(value, fireEvent)
 	{
-		if (mxClient.IS_SVG)
+		if (mxClient.IS_SVG && !mxClient.IS_SF)
 		{
 			fireEvent = (fireEvent != null) ? fireEvent : true;
 			this.shadowVisible = value;
@@ -4993,7 +4994,7 @@
 	mxStencilRegistry.libraries['mockup/navigation'] = [SHAPES_PATH + '/mockup/mxMockupNavigation.js', STENCIL_PATH + '/mockup/misc.xml'];
 	mxStencilRegistry.libraries['mockup/text'] = [SHAPES_PATH + '/mockup/mxMockupText.js'];
 	mxStencilRegistry.libraries['floorplan'] = [SHAPES_PATH + '/mxFloorplan.js', STENCIL_PATH + '/floorplan.xml'];
-	mxStencilRegistry.libraries['bootstrap'] = [SHAPES_PATH + '/mxBootstrap.js', STENCIL_PATH + '/bootstrap.xml'];
+	mxStencilRegistry.libraries['bootstrap'] = [SHAPES_PATH + '/mxBootstrap.js', SHAPES_PATH + '/mxBasic.js', STENCIL_PATH + '/bootstrap.xml'];
 	mxStencilRegistry.libraries['gmdl'] = [SHAPES_PATH + '/mxGmdl.js', STENCIL_PATH + '/gmdl.xml'];
 	mxStencilRegistry.libraries['gcp2'] = [SHAPES_PATH + '/mxGCP2.js', STENCIL_PATH + '/gcp2.xml'];
 	mxStencilRegistry.libraries['ibm'] = [SHAPES_PATH + '/mxIBM.js', STENCIL_PATH + '/ibm.xml'];

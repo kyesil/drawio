@@ -5,10 +5,10 @@
     <title>Flowchart Maker &amp; Online Diagram Software</title>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta name="Description" content="draw.io is free online diagram software for making flowcharts, process diagrams, org charts, UML, ER and network diagrams">
+    <meta name="Description" content="diagrams.net is free online diagram software for making flowcharts, process diagrams, org charts, UML, ER and network diagrams">
     <meta name="Keywords" content="diagram, online, flow chart, flowchart maker, uml, erd">
-    <meta itemprop="name" content="draw.io - free flowchart maker and diagrams online">
-	<meta itemprop="description" content="draw.io is a free online diagramming application  and flowchart maker . You can use it to create UML, entity relationship,
+    <meta itemprop="name" content="diagrams.net - free flowchart maker and diagrams online">
+	<meta itemprop="description" content="diagrams.net is a free online diagramming application  and flowchart maker . You can use it to create UML, entity relationship,
 		org charts, BPMN and BPM, database schema and networks. Also possible are telecommunication network, workflow, flowcharts, maps overlays and GIS, electronic 
 		circuit and social network diagrams.">
 	<meta itemprop="image" content="https://lh4.googleusercontent.com/-cLKEldMbT_E/Tx8qXDuw6eI/AAAAAAAAAAs/Ke0pnlk8Gpg/w500-h344-k/BPMN%2Bdiagram%2Brc2f.png">
@@ -18,7 +18,6 @@
 	<meta name="theme-color" content="#d89000">
 	<script type="text/javascript">
 		var mxIsElectron = window && window.process && window.process.type;
-		var mxIsElectron5 = mxIsElectron && parseInt(process.versions.electron) >= 5;
 
 		/**
 		 * URL Parameters and protocol description are here:
@@ -102,11 +101,6 @@
 						window.location.href = href;
 					}
 				}
-				else if (!mxIsElectron5)
-				{
-					// It's electron, but v3 or lower
-					window.location.href = 'https://about.draw.io/updates-to-draw-io-desktop/';
-				}
 			})();
 		}
 		
@@ -142,17 +136,11 @@
 				}
 			};
 			
-			var name = 'draw.io';
-
-			if (urlParams['offline'] === '1')
-			{
-				name += ' app';
-			}
-			
+			var name = 'diagrams.net';
 			addMeta('apple-mobile-web-app-title', name);
 			addMeta('application-name', name);
 
-			if (mxIsElectron5)
+			if (mxIsElectron)
 			{
 				addMeta(null, 'default-src \'self\' \'unsafe-inline\'; connect-src \'self\' https://*.draw.io https://fonts.googleapis.com https://fonts.gstatic.com; img-src * data:; media-src *; font-src *; style-src-elem \'self\' \'unsafe-inline\' https://fonts.googleapis.com', 'Content-Security-Policy');
 			}
@@ -165,7 +153,7 @@
 	<link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#d89000">
 	<link rel="stylesheet" type="text/css" href="js/croppie/croppie.min.css">
     <link rel="stylesheet" type="text/css" href="styles/grapheditor.css">
-    <link rel="canonical" href="https://www.draw.io">
+    <link rel="canonical" href="https://app.diagrams.net">
 	<link rel="manifest" href="images/manifest.json">
 	<link rel="shortcut icon" href="favicon.ico">
 	<style type="text/css">
@@ -390,7 +378,7 @@
 	<div class="geBlock" style="text-align:center;min-width:50%;">
 		<h1>Flowchart Maker and Online Diagram Software</h1>
 		<p>
-			draw.io (formerly Diagramly) is free online diagram software. You can use it as a flowchart maker, network diagram software, to create UML online, as an ER diagram tool, 
+			diagrams.net (formerly draw.io) is free online diagram software. You can use it as a flowchart maker, network diagram software, to create UML online, as an ER diagram tool, 
 			to design database schema, to build BPMN online, as a circuit diagram maker, and more. draw.io can import .vsdx, Gliffy&trade; and Lucidchart&trade; files .
 		</p>
 		<h2 id="geStatus">Loading...</h2>

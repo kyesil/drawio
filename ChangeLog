@@ -1,3 +1,72 @@
+24-MAR:2020: 12.9.1
+
+- Fixes insert HTML table from text panel
+
+23-MAR:2020: 12.9.0
+
+- Fixes encoding errors in stencils.min.js
+- Moves resize live preview to front
+- Adds Threat Modeling shapes
+- Uses mxGraph 4.1.1 beta 14
+
+23-MAR:2020: 12.8.9
+
+- Adds Lucidchart import feedback
+- Adds search for all pages
+- Adds new polygon shapes
+
+18-MAR:2020: 12.8.8
+
+- Improvements to localStorage migration
+- Improvements to AWS shapes
+
+17-MAR:2020: 12.8.7
+
+- Improvements to localStorage migration
+- Fixes align and distribute buttons in Arrange panel
+- Improvements for Lucidchart import
+
+17-MAR-2020: 12.8.6
+
+- Migrates localStorage from draw.io to diagrams.net
+- Fixes XML embedding within PDFs
+
+14-MAR-2020: 12.8.5
+
+- Fixes drag and drop of images to containers in Firefox
+- Adds (Alt+)Shift+Tab for outdent/indent while editing
+- No longer selects moved cells after undo/redo
+- Reduces number of automatic layout runs
+- Merges PWA into online app
+- Uses mxGraph 4.1.1 beta 13
+
+11-MAR-2020: 12.8.4
+
+- Changes canonical URL to app.diagrams.net
+
+11-MAR-2020: 12.8.3
+
+- Switches to PlantUML build 1.2020.2
+- Adds app.diagrams.net support for onedrive and cache responses
+- Fixes infinite resizing of viewer in conf cloud
+- Uses all layers for drop target selection
+- Uses mxGraph 4.1.1 beta 12
+
+09-MAR-2020: 12.8.2
+
+- Fixes Confluence Cloud lightbox and Jira Cloud editor iFrame resize
+
+05-MAR-2020: 12.8.1
+
+- Fixes Confluence Cloud editor iFrame resize
+
+05-MAR-2020: 12.8.0
+
+- Fixes PDF export for multiple page formats
+- Fixes PDF export page variable placeholder
+- Disables drop shadow in Safari browser
+- Changes name to diagrams.net
+
 27-FEB-2020: 12.7.9
 
 - Fixes update of indicator shapes
