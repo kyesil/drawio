@@ -73,7 +73,7 @@
 
 			var script = document.createElement('script');
 			script.type = 'text/javascript';
-			script.src = 'https://www.draw.io/math/MathJax.js?config=TeX-MML-AM_HTMLorMML';
+			script.src = 'https://app.diagrams.net/math/MathJax.js?config=TeX-MML-AM_HTMLorMML';
 			document.getElementsByTagName('head')[0].appendChild(script);
 		}
 	};
@@ -112,7 +112,7 @@
 					key = key.substring(1, key.length);
 				}
 				
-				key = 'https://www.draw.io/' + key;
+				key = 'https://app.diagrams.net/' + key;
 			}
 			
 			return key;
@@ -509,7 +509,8 @@
 						try
 						{
 							// Workaround for unsupported CORS in IE9 XHR
-							var xhr = (navigator.userAgent.indexOf('MSIE 9') > 0) ? new XDomainRequest() : new XMLHttpRequest();
+							var xhr = (navigator.userAgent != null && navigator.userAgent.indexOf('MSIE 9') > 0) ?
+								new XDomainRequest() : new XMLHttpRequest();
 							xhr.open('GET', url);
 							
 						    xhr.onload = mxUtils.bind(this, function()
@@ -736,7 +737,7 @@
 							{
 								if (url != null)
 								{
-									window.open('https://www.draw.io/#U' + encodeURIComponent(url));
+									window.open('https://app.diagrams.net/#U' + encodeURIComponent(url));
 								}
 								else
 								{
@@ -752,7 +753,7 @@
 									};
 									
 									window.addEventListener('message', receive);
-									wnd = window.open('https://www.draw.io/?client=1');
+									wnd = window.open('https://app.diagrams.net/?client=1');
 								}
 							}
 							else

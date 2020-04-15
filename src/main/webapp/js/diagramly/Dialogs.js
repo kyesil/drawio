@@ -1956,69 +1956,6 @@ var BackgroundImageDialog = function(editorUi, applyFn)
 	{
 		btns.appendChild(cancelBtn);
 	}
-	
-	if (!editorUi.isOffline())
-	{
-		// Dialogs not allowed inside iframes
-		if (typeof(google) != 'undefined' && typeof(google.picker) != 'undefined' && window.self === window.top)
-		{
-			var searchBtn = mxUtils.button(mxResources.get('search'), function()
-			{
-				// Creates one picker and reuses it to avoid polluting the DOM
-				if (editorUi.imageSearchPicker == null)
-				{
-					var picker = new google.picker.PickerBuilder()
-						.setLocale(mxLanguage)
-						.addView(google.picker.ViewId.IMAGE_SEARCH)
-						.enableFeature(google.picker.Feature.NAV_HIDDEN);
-					
-					editorUi.imageSearchPicker = picker.setCallback(function(data)
-					{
-						ImageDialog.filePicked(data);
-				    }).build();
-				}
-				
-				editorUi.imageSearchPicker.setVisible(true);
-			});
-			
-			searchBtn.className = 'geBtn';
-			btns.appendChild(searchBtn);
-	
-			if (editorUi.drive != null && urlParams['photos'] == '1')
-			{
-				var gpBtn = mxUtils.button(mxResources.get('googlePlus'), function()
-				{
-					if (editorUi.spinner.spin(document.body, mxResources.get('authorizing')))
-					{
-						editorUi.drive.checkToken(mxUtils.bind(this, function()
-						{
-							editorUi.spinner.stop();
-							
-							// Creates one picker and reuses it to avoid polluting the DOM
-							if (editorUi.photoPicker == null)
-							{
-								var picker = new google.picker.PickerBuilder()
-									.setAppId(editorUi.drive.appId)	
-									.setLocale(mxLanguage)
-									.setOAuthToken(editorUi.drive.token)
-						            .addView(google.picker.ViewId.PHOTO_UPLOAD);
-								
-								editorUi.photoPicker = picker.setCallback(function(data)
-								{
-									ImageDialog.filePicked(data);
-							    }).build();
-							}
-							
-							editorUi.photoPicker.setVisible(true);
-						}));
-					}
-				});
-				
-				gpBtn.className = 'geBtn';
-				btns.appendChild(gpBtn);
-			}
-		}
-	}
 
 	var applyBtn = mxUtils.button(mxResources.get('apply'), function()
 	{
@@ -2147,7 +2084,7 @@ var ParseDialog = function(editorUi, title, defaultType)
 					}
 					
 					tableCell = new mxCell(name, new mxGeometry(dx, 0, 160, 26),
-						'swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#e0e0e0;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;swimlaneFillColor=#ffffff;align=center;');
+						'swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;align=center;');
 					tableCell.vertex = true;
 					cells.push(tableCell);
 					
@@ -2734,7 +2671,7 @@ var NewDialog = function(editorUi, compact, showName, callback, createOnly, canc
 	var nameInput = document.createElement('input');
 	nameInput.setAttribute('value', editorUi.defaultFilename + ext);
 	nameInput.style.marginLeft = '10px';
-	nameInput.style.width = (compact) ? '220px' : '430px';
+	nameInput.style.width = (compact) ? '144px' : '284px';
 	
 	this.init = function()
 	{
@@ -2752,15 +2689,24 @@ var NewDialog = function(editorUi, compact, showName, callback, createOnly, canc
 			}
 		}
 	};
-
+	
+	// Adds filetype dropdown
 	if (showName)
 	{
 		header.appendChild(nameInput);
+
+		if (editorUi.editor.diagramFileTypes != null)
+		{
+			var typeSelect = FilenameDialog.createFileTypes(editorUi, nameInput, editorUi.editor.diagramFileTypes);
+			typeSelect.style.marginLeft = '6px';
+			typeSelect.style.width = (compact) ? '80px' : '140px';
+			header.appendChild(typeSelect);
+		}
 		
 		if (editorUi.editor.fileExtensions != null)
 		{
-			var hint = FilenameDialog.createTypeHint(
-					editorUi, nameInput, editorUi.editor.fileExtensions);
+			var hint = FilenameDialog.createTypeHint(editorUi,
+				nameInput, editorUi.editor.fileExtensions);
 			hint.style.marginTop = '12px';
 			
 			header.appendChild(hint);
@@ -3600,11 +3546,11 @@ var CreateDialog = function(editorUi, title, createFn, cancelFn, dlgTitle, btnLa
 
 	var nameInput = document.createElement('input');
 	nameInput.setAttribute('value', title);
-	nameInput.style.width = '280px';
+	nameInput.style.width = '200px';
 	nameInput.style.marginLeft = '10px';
 	nameInput.style.marginBottom = '20px';
 	nameInput.style.maxWidth = '70%';
-		
+	
 	this.init = function()
 	{
 		nameInput.focus();
@@ -3623,6 +3569,14 @@ var CreateDialog = function(editorUi, title, createFn, cancelFn, dlgTitle, btnLa
 
 	if (hints != null)
 	{
+		if (editorUi.editor.diagramFileTypes != null)
+		{
+			var typeSelect = FilenameDialog.createFileTypes(editorUi, nameInput, editorUi.editor.diagramFileTypes);
+			typeSelect.style.marginLeft = '6px';
+			typeSelect.style.width = '80px';
+			div.appendChild(typeSelect);
+		}
+		
 		div.appendChild(FilenameDialog.createTypeHint(editorUi, nameInput, hints));
 	}
 	
@@ -4452,63 +4406,6 @@ var ImageDialog = function(editorUi, title, initialValue, fn, ignoreExisting, co
 		cropBtn.className = 'geBtn';
 		btns.appendChild(cropBtn);
 	}
-	
-	if (typeof(google) != 'undefined' && typeof(google.picker) != 'undefined' && window.self === window.top)
-	{
-		var searchBtn = mxUtils.button(mxResources.get('search'), function()
-		{
-			// Creates one picker and reuses it to avoid polluting the DOM
-			if (editorUi.imageSearchPicker == null)
-			{
-				var picker = new google.picker.PickerBuilder()
-					.setLocale(mxLanguage)
-					.addView(google.picker.ViewId.IMAGE_SEARCH)
-					.enableFeature(google.picker.Feature.NAV_HIDDEN);
-				
-				editorUi.imageSearchPicker = picker.setCallback(function(data)
-				{
-					ImageDialog.filePicked(data);
-			    }).build();
-			}
-			
-			editorUi.imageSearchPicker.setVisible(true);
-		});
-		searchBtn.className = 'geBtn';
-		btns.appendChild(searchBtn);
-
-		if (editorUi.drive != null && urlParams['photos'] == '1')
-		{
-			var gpBtn = mxUtils.button(mxResources.get('googlePlus'), function()
-			{
-				if (editorUi.spinner.spin(document.body, mxResources.get('authorizing')))
-				{
-					editorUi.drive.checkToken(mxUtils.bind(this, function()
-					{
-						editorUi.spinner.stop();
-						
-						// Creates one picker and reuses it to avoid polluting the DOM
-						if (editorUi.photoPicker == null)
-						{
-							var picker = new google.picker.PickerBuilder()
-								.setAppId(editorUi.drive.appId)	
-								.setLocale(mxLanguage)
-								.setOAuthToken(editorUi.drive.token)
-					            .addView(google.picker.ViewId.PHOTO_UPLOAD);
-							
-							editorUi.photoPicker = picker.setCallback(function(data)
-							{
-								ImageDialog.filePicked(data);
-						    }).build();
-						}
-						
-						editorUi.photoPicker.setVisible(true);
-					}));
-				}
-			});
-			gpBtn.className = 'geBtn';
-			btns.appendChild(gpBtn);
-		}
-	}
 
 	mxEvent.addListener(linkInput, 'keypress', function(e)
 	{
@@ -4897,16 +4794,8 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 						    .addView(view)
 							.addView(view2)
 							.addView(view21)
-							.addView(google.picker.ViewId.RECENTLY_PICKED)
-				            .addView(google.picker.ViewId.IMAGE_SEARCH)
-				            .addView(google.picker.ViewId.VIDEO_SEARCH)
-				            .addView(google.picker.ViewId.MAPS);
-						
-						if (urlParams['photos'] == '1')
-						{
-							picker.addView(google.picker.ViewId.PHOTO_UPLOAD)
-						}
-						
+							.addView(google.picker.ViewId.RECENTLY_PICKED);
+
 						editorUi.linkPicker = picker.setCallback(function(data)
 						{
 							LinkDialog.filePicked(data);
@@ -5051,7 +4940,10 @@ var FeedbackDialog = function(editorUi, subject, emailOptional, diagramData)
 		var diagram = textarea.value +
 			((cb.checked) ? '\nDiagram:\n' + ((diagramData != null) ?
 			diagramData : mxUtils.getXml(editorUi.getXmlFileData())) : '') +
-			'\nBrowser:\n' + navigator.userAgent;
+			'\nuserAgent:\n' + navigator.userAgent +
+			'\nappVersion:\n' + navigator.appVersion +
+			'\nappName:\n' + navigator.appName +
+			'\nplatform:\n' + navigator.platform;
 		
 		if (diagram.length > FeedbackDialog.maxAttachmentSize)
 		{
@@ -6107,7 +5999,7 @@ var DraftDialog = function(editorUi, title, xml, editFn, discardFn, editLabel, d
 				
 				if (bg == null || bg == '' || bg == mxConstants.NONE)
 				{
-					bg = '#ffffff';
+					bg = (uiTheme == 'dark') ? 'transparent' : '#ffffff';
 				}
 				
 				container.style.backgroundColor = bg;

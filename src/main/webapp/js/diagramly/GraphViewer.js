@@ -16,12 +16,12 @@ mxUtils.extend(GraphViewer, mxEventSource);
 /**
  * Redirects editing to absolue URLs.
  */
-GraphViewer.prototype.editBlankUrl = 'https://www.draw.io/';
+GraphViewer.prototype.editBlankUrl = 'https://app.diagrams.net/';
 
 /**
  * Base URL for relative images.
  */
-GraphViewer.prototype.imageBaseUrl = 'https://www.draw.io/';
+GraphViewer.prototype.imageBaseUrl = 'https://app.diagrams.net/';
 
 /**
  * Redirects editing to absolue URLs.
@@ -1400,7 +1400,7 @@ GraphViewer.prototype.showLightbox = function(editable, closable, target)
 				param.data = encodeURIComponent(this.xml);
 			}
 			
-			var domain = 'www.draw.io';
+			var domain = 'app.diagrams.net';
 			
 			if (urlParams['dev'] == '1')
 			{
@@ -1843,7 +1843,8 @@ GraphViewer.getUrl = function(url, onload, onerror)
 	}
 	else
 	{
-		var xhr = (navigator.userAgent.indexOf('MSIE 9') > 0) ? new XDomainRequest() : new XMLHttpRequest();
+		var xhr = (navigator.userAgent != null && navigator.userAgent.indexOf('MSIE 9') > 0) ?
+			new XDomainRequest() : new XMLHttpRequest();
 		xhr.open('GET', url);
 		
 	    xhr.onload = function()

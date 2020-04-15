@@ -13,10 +13,12 @@ window.isLocalStorage = window.isLocalStorage || false;
 window.mxLoadSettings = window.mxLoadSettings || urlParams['configure'] != '1';
 
 // Checks for SVG support
-window.isSvgBrowser = window.isSvgBrowser || (navigator.userAgent.indexOf('MSIE') < 0 || document.documentMode >= 9);
+window.isSvgBrowser = window.isSvgBrowser || navigator.userAgent == null ||
+	navigator.userAgent.indexOf('MSIE') < 0 || document.documentMode >= 9;
 
 // CUSTOM_PARAMETERS - URLs for save and export
-window.DRAWIO_BASE_URL = window.DRAWIO_BASE_URL || 'https://app.diagrams.net';
+window.DRAWIO_BASE_URL = window.DRAWIO_BASE_URL || ((/.*\.draw\.io$/.test(window.location.hostname)) ?
+	window.location.protocol + '//' + window.location.hostname : 'https://app.diagrams.net');
 window.EXPORT_URL = window.EXPORT_URL || 'https://exp.draw.io/ImageExport4/export';
 window.PLANT_URL = window.PLANT_URL || 'https://exp-plant.draw.io/plantuml-1-2020-2';
 window.DRAW_MATH_URL = window.DRAW_MATH_URL || window.DRAWIO_BASE_URL + '/math';
@@ -26,7 +28,7 @@ window.REALTIME_URL = window.REALTIME_URL || 'cache';
 window.DRAWIO_GITLAB_URL = window.DRAWIO_GITLAB_URL || 'https://gitlab.com';
 window.DRAWIO_GITLAB_ID = window.DRAWIO_GITLAB_ID || '5cdc018a32acddf6eba37592d9374945241e644b8368af847422d74c8709bc44';
 window.SAVE_URL = window.SAVE_URL || 'save';
-window.OPEN_URL = window.OPEN_URL || 'open';
+window.OPEN_URL = window.OPEN_URL || 'import';
 window.PROXY_URL = window.PROXY_URL || 'proxy';
 window.DRAWIO_VIEWER_URL = window.DRAWIO_VIEWER_URL || null;
 
@@ -34,7 +36,7 @@ window.DRAWIO_VIEWER_URL = window.DRAWIO_VIEWER_URL || null;
 window.SHAPES_PATH = window.SHAPES_PATH || 'shapes';
 // Path for images inside the diagram
 window.GRAPH_IMAGE_PATH = window.GRAPH_IMAGE_PATH || 'img';
-window.ICONSEARCH_PATH = window.ICONSEARCH_PATH || ((navigator.userAgent.indexOf('MSIE') >= 0 ||
+window.ICONSEARCH_PATH = window.ICONSEARCH_PATH || (((navigator.userAgent != null && navigator.userAgent.indexOf('MSIE') >= 0) ||
 	urlParams['dev']) && window.location.protocol != 'file:' ? 'iconSearch' : 'https://app.diagrams.net/iconSearch');
 window.TEMPLATE_PATH = window.TEMPLATE_PATH || 'templates';
 window.NEW_DIAGRAM_CATS_PATH = window.NEW_DIAGRAM_CATS_PATH || 'newDiagramCats';

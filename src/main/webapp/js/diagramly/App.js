@@ -237,7 +237,7 @@ App.DROPBOX_APPKEY = 'libwls2fa9szdji';
 /**
  * Sets URL to load the Dropbox SDK from
  */
-App.DROPBOX_URL = 'js/dropbox/Dropbox-sdk.min.js';
+App.DROPBOX_URL = window.DRAWIO_BASE_URL + '/js/dropbox/Dropbox-sdk.min.js';
 
 /**
  * Sets URL to load the Dropbox dropins JS from.
@@ -248,7 +248,7 @@ App.DROPINS_URL = 'https://www.dropbox.com/static/api/2/dropins.js';
  * OneDrive Client JS (file/folder picker). This is a slightly modified version to allow using accessTokens
  * But it doesn't work for IE11, so we fallback to the original one
  */
-App.ONEDRIVE_URL = mxClient.IS_IE11? 'https://js.live.net/v7.2/OneDrive.js' : 'js/onedrive/OneDrive.js';
+App.ONEDRIVE_URL = mxClient.IS_IE11? 'https://js.live.net/v7.2/OneDrive.js' : window.DRAWIO_BASE_URL + '/js/onedrive/OneDrive.js';
 
 /**
  * Trello URL
@@ -442,7 +442,8 @@ App.getStoredMode = function()
 				// Loads OneDrive for all browsers but IE6/IOS if not disabled or if enabled and in embed mode
 				if (typeof window.OneDriveClient === 'function')
 				{
-					if (urlParams['od'] != '0' && (navigator.userAgent.indexOf('MSIE') < 0 || document.documentMode >= 10))
+					if (urlParams['od'] != '0' && (navigator.userAgent == null ||
+						navigator.userAgent.indexOf('MSIE') < 0 || document.documentMode >= 10))
 					{
 						// Immediately loads client
 						if (App.mode == App.MODE_ONEDRIVE || (window.location.hash != null &&
@@ -788,7 +789,8 @@ App.main = function(callback, createUi)
 				if (typeof window.OneDriveClient === 'function' &&
 					(typeof OneDrive === 'undefined' && window.DrawOneDriveClientCallback != null &&
 					(((urlParams['embed'] != '1' && urlParams['od'] != '0') || (urlParams['embed'] == '1' &&
-					urlParams['od'] == '1')) && (navigator.userAgent.indexOf('MSIE') < 0 || document.documentMode >= 10))))
+					urlParams['od'] == '1')) && (navigator.userAgent == null ||
+					navigator.userAgent.indexOf('MSIE') < 0 || document.documentMode >= 10))))
 				{
 					mxscript(App.ONEDRIVE_URL, window.DrawOneDriveClientCallback);
 				}
@@ -802,7 +804,8 @@ App.main = function(callback, createUi)
 				if (typeof window.TrelloClient === 'function' &&
 					(typeof window.Trello === 'undefined' && window.DrawTrelloClientCallback != null &&
 					(((urlParams['embed'] != '1' && urlParams['tr'] != '0') || (urlParams['embed'] == '1' &&
-					urlParams['tr'] == '1')) && (navigator.userAgent.indexOf('MSIE') < 0 || document.documentMode >= 10))))
+					urlParams['tr'] == '1')) && (navigator.userAgent == null ||
+					navigator.userAgent.indexOf('MSIE') < 0 || document.documentMode >= 10))))
 				{
 					mxscript(App.TRELLO_JQUERY_URL, function()
 					{
@@ -1554,7 +1557,8 @@ App.prototype.init = function()
  */
 App.prototype.scheduleSanityCheck = function()
 {
-	if (this.sanityCheckThread == null)
+	if (!mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp &&
+		this.sanityCheckThread == null)
 	{
 		this.sanityCheckThread = window.setTimeout(mxUtils.bind(this, function()
 		{
@@ -1744,7 +1748,7 @@ App.prototype.checkLicense = function()
 		if (at >= 0)
 		{
 			domain = email.substring(at + 1);
-			email = this.crc32(email.substring(0, at)) + '@' + domain;
+			email = Editor.crc32(email.substring(0, at)) + '@' + domain;
 		}
 
 		// Timestamp is workaround for cached response in certain environments
@@ -1949,31 +1953,14 @@ App.prototype.updateDocumentTitle = function()
 			title = filename + ' - ' + title;
 		}
 		
-		document.title = title;
+		if (document.title != title)
+		{
+			document.title = title;
+			var graph = this.editor.graph;
+			graph.invalidateDescendantsWithPlaceholders(graph.model.getRoot());
+			graph.view.validate();
+		}
 	}
-};
-
-/**
- * Authorizes the client, gets the userId and calls <open>.
- */
-App.prototype.createCrcTable = function()
-{
-    var crcTable = [];
-    var c;
-
-	for (var n = 0; n < 256; n++)
-	{
-        c = n;
-        
-        for (var k = 0; k < 8; k++)
-        {
-            c = ((c&1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
-        }
-	        
-        crcTable[n] = c;
-    }
-	
-    return crcTable;
 };
 
 /**
@@ -2049,7 +2036,7 @@ App.prototype.getThumbnail = function(width, fn)
 		// Uses client-side canvas export
 		if (mxClient.IS_CHROMEAPP || this.useCanvasForExport)
 		{
-		   	this.exportToCanvas(mxUtils.bind(this, function(canvas)
+		   	this.editor.exportToCanvas(mxUtils.bind(this, function(canvas)
 		   	{
 		   		try
 		   		{
@@ -3936,7 +3923,7 @@ App.prototype.loadTemplate = function(url, onload, onerror, templateFilename)
 
 	var filterFn = (templateFilename != null) ? templateFilename : url;
 	
-	this.loadUrl(realUrl, mxUtils.bind(this, function(responseData)
+	this.editor.loadUrl(realUrl, mxUtils.bind(this, function(responseData)
 	{
 		try
 		{
@@ -5686,7 +5673,7 @@ App.prototype.convertFile = function(url, filename, mimeType, extension, success
 		}
 		else
 		{
-			this.loadUrl(url, handleData, error, binary, null, null, null, headers);
+			this.editor.loadUrl(url, handleData, error, binary, null, null, null, headers);
 		}
 	}
 };

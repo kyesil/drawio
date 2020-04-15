@@ -38,11 +38,6 @@ DriveClient = function(editorUi)
 	this.mimeTypes = this.xmlMimeType + ',application/mxe,application/mxr,' +
 		'application/vnd.jgraph.mxfile.realtime,application/vnd.jgraph.mxfile.rtlegacy';
 	
-	if (urlParams['photos'] == '1')
-	{
-		this.scopes.push('https://www.googleapis.com/auth/photos.upload');
-	}
-	
 	var authInfo = JSON.parse(this.token);
 	
 	if (authInfo != null && authInfo.current != null)
@@ -780,7 +775,7 @@ DriveClient.prototype.updateUser = function(success, error)
 		var url = 'https://www.googleapis.com/oauth2/v2/userinfo?alt=json';
 		var headers = {'Authorization': 'Bearer ' + this.token};
 		
-		this.ui.loadUrl(url, mxUtils.bind(this, function(data)
+		this.ui.editor.loadUrl(url, mxUtils.bind(this, function(data)
 		{
 	    	var info = JSON.parse(data);
 	    	
@@ -832,7 +827,7 @@ DriveClient.prototype.copyFile = function(id, title, success, error)
 	if (id != null && title != null)
 	{
 		this.executeRequest({url: '/files/' + id + '/copy?fields=' + encodeURIComponent(this.allFields)
-				+ '&supportsAllDrives=true', //&alt=json
+				+ '&supportsAllDrives=true&enforceSingleParent=true', //&alt=json
 				method: 'POST',
 				params: {'title': title, 'properties':
 					[{'key': 'channel', 'value': Editor.guid()}]}
@@ -1031,7 +1026,7 @@ DriveClient.prototype.getXmlFile = function(resp, success, error, ignoreMime, re
 		var url = resp.downloadUrl;
 		
 		// Loads XML to initialize realtime document if realtime is empty
-		this.ui.loadUrl(url, mxUtils.bind(this, function(data)
+		this.ui.editor.loadUrl(url, mxUtils.bind(this, function(data)
 		{
 			try
 			{
@@ -1244,7 +1239,10 @@ DriveClient.prototype.saveFile = function(file, revision, success, errFn, noChec
 				
 				EditorUi.sendReport('Critical error in DriveClient.saveFile ' +
 					new Date().toISOString() + ':' +
-					'\n\nBrowser=' + navigator.userAgent +
+					'\n\nUserAgent=' + navigator.userAgent +
+					'\nAppVersion=' + navigator.appVersion +
+					'\nAppName=' + navigator.appName +
+					'\nPlatform=' + navigator.platform +
 					'\nFile=' + file.desc.id + '.' + file.desc.headRevisionId +
 					'\nMime=' + file.desc.mimeType +
 					'\nUser=' + ((this.user != null) ? this.user.id : 'nouser') +
@@ -1926,7 +1924,7 @@ DriveClient.prototype.createUploadRequest = function(id, metadata, data, revisio
 	var reqObj = 
 	{
 		'fullUrl': 'https://content.googleapis.com/upload/drive/v2/files' + (id != null ? '/' + id : '') +
-			'?uploadType=multipart&supportsAllDrives=true&fields=' + this.allFields,
+			'?uploadType=multipart&supportsAllDrives=true&enforceSingleParent=true&fields=' + this.allFields,
 		'method': (id != null) ? 'PUT' : 'POST',
 		'headers': headers,
 		'params': delim + 'Content-Type: application/json\r\n\r\n' + JSON.stringify(metadata) + delim +
