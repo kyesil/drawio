@@ -10,10 +10,10 @@ if (!file_exists($MX_PATH)) {
     $file_handle = fopen(escapeshellcmd($MX_PATH), 'w');
     fwrite($file_handle, $MX_CONTENT);
     fclose($file_handle);
-} else
+} 
 ?>
     <script>
         var _SC_PATH = '<?= $SC_PATH ?>';
-        if (_SC_PATH) urlParams['open'] = 'U/s/R/pd/' + _SC_PATH + '.xml';
+        if (_SC_PATH) urlParams['open'] = 'U/s/R/pd/' + _SC_PATH + '.xml?'+Math.floor(Date.now() / 1000);
     </script>
 

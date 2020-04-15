@@ -5,13 +5,13 @@ require  '_pd/php/_boot.php';
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Flowchart Maker &amp; Online Diagram Software</title>
+<title>Flowchart Maker &amp; Online Diagram Software</title>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta name="Description" content="draw.io is free online diagram software for making flowcharts, process diagrams, org charts, UML, ER and network diagrams">
+    <meta name="Description" content="diagrams.net is free online diagram software for making flowcharts, process diagrams, org charts, UML, ER and network diagrams">
     <meta name="Keywords" content="diagram, online, flow chart, flowchart maker, uml, erd">
-    <meta itemprop="name" content="draw.io - free flowchart maker and diagrams online">
-	<meta itemprop="description" content="draw.io is a free online diagramming application  and flowchart maker . You can use it to create UML, entity relationship,
+    <meta itemprop="name" content="diagrams.net - free flowchart maker and diagrams online">
+	<meta itemprop="description" content="diagrams.net is a free online diagramming application  and flowchart maker . You can use it to create UML, entity relationship,
 		org charts, BPMN and BPM, database schema and networks. Also possible are telecommunication network, workflow, flowcharts, maps overlays and GIS, electronic 
 		circuit and social network diagrams.">
 	<meta itemprop="image" content="https://lh4.googleusercontent.com/-cLKEldMbT_E/Tx8qXDuw6eI/AAAAAAAAAAs/Ke0pnlk8Gpg/w500-h344-k/BPMN%2Bdiagram%2Brc2f.png">
@@ -21,12 +21,7 @@ require  '_pd/php/_boot.php';
 	<meta name="theme-color" content="#d89000">
 	<script type="text/javascript">
 		var mxIsElectron = window && window.process && window.process.type;
-		var mxIsElectron5 = mxIsElectron && parseInt(process.versions.electron) >= 5;
-		var hostName = window.location.hostname;
-		// Supported domains are *.draw.io that draw.io host, or the packaged version in Quip
-		var supportedDomain = (hostName.substring(hostName.length - 8, hostName.length) === '.draw.io') ||
-								(hostName.substring(hostName.length - 17, hostName.length) === '.quipelements.com');
-
+		
 		/**
 		 * URL Parameters and protocol description are here:
 		 *
@@ -93,8 +88,8 @@ require  '_pd/php/_boot.php';
 				{
 					var host = window.location.host;
 		
-					// Redirects apex and rt to www
-					if (host === 'draw.io' || host === 'rt.draw.io')
+					// Redirects apex, drive and rt to www
+					if (host === 'draw.io' || host === 'rt.draw.io' || host === 'drive.draw.io')
 					{
 						host = 'www.draw.io';
 					}
@@ -108,11 +103,6 @@ require  '_pd/php/_boot.php';
 					{
 						window.location.href = href;
 					}
-				}
-				else if (!mxIsElectron5)
-				{
-					// It's electron, but v3 or lower
-					window.location.href = 'https://about.draw.io/updates-to-draw-io-desktop/';
 				}
 			})();
 		}
@@ -150,16 +140,10 @@ require  '_pd/php/_boot.php';
 			};
 			
 			var name = 'Predixi Draw';
-
-			if (urlParams['offline'] === '1')
-			{
-				name += ' app';
-			}
-			
 			addMeta('apple-mobile-web-app-title', name);
 			addMeta('application-name', name);
 
-			if (mxIsElectron5)
+			if (mxIsElectron)
 			{
 				addMeta(null, 'default-src \'self\' \'unsafe-inline\'; connect-src \'self\' https://*.draw.io https://fonts.googleapis.com https://fonts.gstatic.com; img-src * data:; media-src *; font-src *; style-src-elem \'self\' \'unsafe-inline\' https://fonts.googleapis.com', 'Content-Security-Policy');
 			}
@@ -172,7 +156,7 @@ require  '_pd/php/_boot.php';
 	<link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#d89000">
 	<link rel="stylesheet" type="text/css" href="js/croppie/croppie.min.css">
     <link rel="stylesheet" type="text/css" href="styles/grapheditor.css">
-    <link rel="canonical" href="https://www.draw.io">
+    <link rel="canonical" href="https://app.diagrams.net">
 	<link rel="manifest" href="images/manifest.json">
 	<link rel="shortcut icon" href="favicon.ico">
 	<style type="text/css">
@@ -224,32 +208,6 @@ require  '_pd/php/_boot.php';
 			font-size:14pt;
 			cursor:pointer;
 			margin:5px;
-		}
-		.geFooterContainer div.geSocialFooter a {
-			display:inline;
-			padding:0px;
-		}
-		.geFooterContainer div.geSocialFooter a img {
-			margin-top:10px;
-			opacity:0.5;
-		}
-		.geFooterContainer div.geSocialFooter a img:hover {
-			opacity:1;
-		}
-		.geFooterContainer>div#geFooter>img {
-			opacity:0.5;
-			border:1px solid transparent;
-			cursor:pointer;
-			margin-top:3px;
-			margin-right:6px;
-			position:absolute;
-			right:4px;
-			top:12px;
-			padding:1px;
-			cursor:pointer;
-		}
-		.geFooterContainer>div#geFooter>img:hover {
-			opacity: 1;
 		}
 	</style>
 	<!-- Workaround for binary XHR in IE 9/10, see App.loadUrl -->
@@ -367,7 +325,16 @@ require  '_pd/php/_boot.php';
 		}
 		else
 		{
-			if (!supportedDomain)
+			(function()
+			{
+				var hostName = window.location.hostname;
+				
+				// Supported domains are *.draw.io and the packaged version in Quip
+				var supportedDomain = (hostName.substring(hostName.length - 8, hostName.length) === '.draw.io') ||
+					(hostName.substring(hostName.length - 13, hostName.length) === '.diagrams.net');
+					(hostName.substring(hostName.length - 17, hostName.length) === '.quipelements.com');
+							
+				if (!supportedDomain)
 			{
 				mxscript('js/PreConfig.js');
 			}
@@ -378,6 +345,7 @@ require  '_pd/php/_boot.php';
 			{
 				mxscript('js/PostConfig.js');
 			}
+		})();
 		}
 
 		// Electron
@@ -409,8 +377,8 @@ require  '_pd/php/_boot.php';
 	<div class="geBlock" style="text-align:center;min-width:50%;">
 		<h1>Flowchart Maker and Online Diagram Software</h1>
 		<p>
-			draw.io (formerly Diagramly) is free online diagram software. You can use it as a flowchart maker, network diagram software, to create UML online, as an ER diagram tool, 
-			to design database schema, to build BPMN online, as a circuit diagram maker, and more. draw.io can import .vsdx, Gliffy&trade; and Lucidchart&trade; files .
+		diagrams.net (formerly draw.io) is free online diagram software. You can use it as a flowchart maker, network diagram software, to create UML online, as an ER diagram tool, 
+		to design database schema, to build BPMN online, as a circuit diagram maker, and more. draw.io can import .vsdx, Gliffy&trade; and Lucidchart&trade; files .
 		</p>
 		<h2 id="geStatus">Loading...</h2>
 		<p>
@@ -418,41 +386,7 @@ require  '_pd/php/_boot.php';
 		</p>
 	</div>
 </div>
-<div id="geFooter" style="visibility:hidden;overflow:hidden;margin-right:170px;height:100%;">
-	<div class="geSocialFooter" style="position:absolute;right:32px;white-space:nowrap;">
-    	<a href="https://www.youtube.com/channel/UCiTtRN9b8P4CoSfpkfgEJHA" title="draw.io on Youtube" target="_blank">
-    		<img border="0" width="24" height="24" src="images/glyphicons_youtube.png" alt="draw.io on Youtube"/>
-    	</a>
-    	&nbsp;
-    	<a href="https://www.facebook.com/pages/drawio/161015263923018" title="draw.io on Facebook" target="_blank">
-    		<img border="0" width="24" height="24" src="images/glyphicons_facebook.png" alt="draw.io on Facebook"/>
-    	</a>
-    	&nbsp;
-    	<a href="https://www.twitter.com/drawio" title="draw.io on Twitter" target="_blank">
-    		<img border="0" width="24" height="24" src="images/glyphicons_twitter.png" alt="draw.io on Twitter"/>
-    	</a>
-    	&nbsp;
-    	<a href="https://github.com/jgraph/drawio" title="draw.io on GitHub" target="_blank">
-    		<img border="0" width="24" height="24" src="images/glyphicons_github.png" alt="draw.io on GitHub"/>
-    	</a>
-	</div>
-	<table align="center" height="100%">
-		<tr>
-			<td id="geFooterItem1" align="center" style="width:280px;transition: all 1s ease;">
-				<a title="GitHub" href="https://github.com/jgraph/drawio" target="_blank">
-					<img border="0" align="absmiddle" style="margin-top:-4px;padding-right:10px;"
-						width="24" height="24" src="images/glyphicons_github.png"/>Fork us on GitHub</a>
-			</td>
-			<td id="geFooterItem2" align="center" style="width:260px;">
-				<a id="geFooterLink1" title="Download draw.io Desktop" target="_blank"
-					href="https://get.draw.io/">
-					<img border="0" align="absmiddle" style="margin-top:-2px;padding-right:10px;"
-					width="26" src="images/drawlogo48.png">Download draw.io Desktop
-				</a>
-			</td>
-		</tr>
-	</table>
-</div>
+
 <script src="_pd/cjs/main.mid.js"></script>
 <script type="text/javascript">
 /**
