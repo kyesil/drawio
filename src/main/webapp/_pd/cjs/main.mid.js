@@ -15,7 +15,7 @@ window.OPEN_URL = '_pd/php/action.php?open';
 mxSettings.settings.pageFormat = new mxRectangle(0, 0, 1900, 1000);//wecan set default file look _top.php
 //mxSettings.settings.unit = mxConstants.POINTS; // does not matter
 
-mxSettings.settings.customLibraries.push("U_pd/cjs/predixi_water.xml");
+mxSettings.settings.customLibraries.push("U_pd/clibs/predixi_water.xml");
 
 function fileloaded(app) {
 	app.fname.innerHTML = _SC_PATH;

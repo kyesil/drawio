@@ -12,25 +12,50 @@ Graph.prototype.createSvgImageExport = function () {
 		var svgDoc = canvas.root.ownerDocument;
 		var g = (svgDoc.createElementNS != null) ?
 			svgDoc.createElementNS(mxConstants.NS_SVG, 'g') : svgDoc.createElement('g');
-		g.setAttribute('id', 'cell-' + state.cell.id);
+		//g.setAttribute('id', 'cell-' + state.cell.id);
 
 		// Temporary replaces root for content rendering
 		var prev = canvas.root;
 		prev.appendChild(g);
 		canvas.root = g;
-
 		expDrawCellState.apply(this, arguments);
 
 		// Adds metadata if group is not empty
+		///state çizim ekranından gelen veri 
+
 		if (g.firstChild == null) {
 			g.parentNode.removeChild(g);
 		}
 		else if (mxUtils.isNode(state.cell.value)) {
 			//g.setAttribute('content', mxUtils.getXml(state.cell.value));
+			if (state.style.image) {
+				let ss = state.style.image.split('data:image/svg+xml;base64,');
+				if (ss.length > 1) {
+					ss=Base64.decode(ss[1]);
+					let img =g.firstChild;
+					img.removeAttribute('xlink:href');
+					/*let w=img.getAttribute('width');
+					let h=img.getAttribute('height');
+					let x=img.x;
+					let y=img.y;*/
+					let attrs=img.attributes;
+					g.innerHTML=ss; 
+					let ssvg=g.firstChild;
+					
+					//ssvg.removeAttribute('viewBox');
+					ssvg.removeAttribute('id');
+					for (var i = 0; i < attrs.length; i++) {
+						var a = attrs[i];
+						ssvg.setAttribute( a.name, a.value);
+					}
+				
+					//ssvg.setAttribute('viewBox' ,'0 0 '+w+' '+h);
 
+				}
+			}
 			for (var i = 0; i < state.cell.value.attributes.length; i++) {
 				var attrib = state.cell.value.attributes[i];
-				g.setAttribute('' + attrib.name, attrib.value);
+				g.setAttribute(attrib.name, attrib.value);
 			}
 		}
 
@@ -53,7 +78,7 @@ App.prototype.saveFile = function (forceDialog, success) {
 	/*var graph = this.editor.graph;
 	var svgRoot = graph.getSvg(null, null, null, null, null, true)
 	mxUtils.getXml(svgRoot);*/
-if (forceDialog)  return PsaveFile.apply(this, arguments); // if coming from save as
+	if (forceDialog) return PsaveFile.apply(this, arguments); // if coming from save as
 
 	if (!_SC_PATH) return this.showAlert('Error: No file path');
 
