@@ -57,6 +57,37 @@ App.prototype.appIconClicked = function (evt) {
 	document.location.href="/panel/node/"+urlParams["nscreen"]+"/"+urlParams["npage"];
 }
 
+
+var PshowDD=EditorUi.prototype.showDataDialog;
+EditorUi.prototype.showDataDialog = function(cell)
+{
+	if (cell != null)
+	{
+		let dlg;
+		console.log(new Date().getTime());
+		if (cell.style) {
+			let ss = cell.style.split('data:image/svg+xml,');
+			if (ss.length > 1) {
+				ss=ss[1].split(';')
+				ss=Base64.decode(ss[0]);
+				let esvg=document.createElement('svg');
+				esvg.innerHTML=ss;
+				esvg=esvg.firstChild;
+				let shapetype=esvg.getAttribute('id');
+				
+
+
+				dlg = new MyDataDialog(this, cell);
+			}
+		}
+		if(!dlg) dlg = new EditDataDialog(this, cell);
+		this.showDialog(dlg.container, 480, 420, true, false, null, false);
+	
+		dlg.init();
+		console.log(new Date().getTime());
+	}
+};
+
 /*
 //init app override we use descriptorChanged:file loaded
 var Pinit = App.prototype.init;
@@ -71,37 +102,133 @@ App.prototype.init = function()
 
 
 
-var DevTagsDialog = function(ui, cell)
+
+function autocomplete(inp, arr) {
+    /*the autocomplete function takes two arguments,
+    the text field element and an array of possible autocompleted values:*/
+    var currentFocus;
+    /*execute a function when someone writes in the text field:*/
+    inp.addEventListener("input", function(e) {
+		var a, b, i, vals = this.value.split(',');
+		if(vals.length>1) val=vals[vals.length-1];
+		else val=vals[0];
+        /*close any already open lists of autocompleted values*/
+        closeAllLists();
+        if (!val) { return false;}
+        currentFocus = -1;
+        /*create a DIV element that will contain the items (values):*/
+        a = document.createElement("DIV");
+        a.setAttribute("id", this.id + "autocomplete-list");
+        a.setAttribute("class", "autocomplete-items");
+        /*append the DIV element as a child of the autocomplete container:*/
+        this.parentNode.appendChild(a);
+        /*for each item in the array...*/
+        for (i = 0; i < arr.length; i++) {
+          /*check if the item starts with the same letters as the text field value:*/
+          if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+            /*create a DIV element for each matching element:*/
+            b = document.createElement("DIV");
+            /*make the matching letters bold:*/
+            b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+            b.innerHTML += arr[i].substr(val.length);
+            /*insert a input field that will hold the current array item's value:*/
+            b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+            /*execute a function when someone clicks on the item value (DIV element):*/
+            b.addEventListener("click", function(e) {
+                /*insert the value for the autocomplete text field:*/
+                inp.value += this.getElementsByTagName("input")[0].value.substr(val.length)+',';
+                /*close the list of autocompleted values,
+                (or any other open lists of autocompleted values:*/
+                closeAllLists();
+            });
+            a.appendChild(b);
+          }
+        }
+    });
+    /*execute a function presses a key on the keyboard:*/
+    inp.addEventListener("keydown", function(e) {
+        var x = document.getElementById(this.id + "autocomplete-list");
+        if (x) x = x.getElementsByTagName("div");
+        if (e.keyCode == 40) {
+          /*If the arrow DOWN key is pressed,
+          increase the currentFocus variable:*/
+          currentFocus++;
+          /*and and make the current item more visible:*/
+          addActive(x);
+        } else if (e.keyCode == 38) { //up
+          /*If the arrow UP key is pressed,
+          decrease the currentFocus variable:*/
+          currentFocus--;
+          /*and and make the current item more visible:*/
+          addActive(x);
+        } else if (e.keyCode == 13) {
+          /*If the ENTER key is pressed, prevent the form from being submitted,*/
+          e.preventDefault();
+          if (currentFocus > -1) {
+            /*and simulate a click on the "active" item:*/
+            if (x) x[currentFocus].click();
+          }else if(x.length==1) if (x) x[0].click();
+        }
+    });
+    function addActive(x) {
+      /*a function to classify an item as "active":*/
+      if (!x) return false;
+      /*start by removing the "active" class on all items:*/
+      removeActive(x);
+      if (currentFocus >= x.length) currentFocus = 0;
+      if (currentFocus < 0) currentFocus = (x.length - 1);
+      /*add class "autocomplete-active":*/
+      x[currentFocus].classList.add("autocomplete-active");
+    }
+    function removeActive(x) {
+      /*a function to remove the "active" class from all autocomplete items:*/
+      for (var i = 0; i < x.length; i++) {
+        x[i].classList.remove("autocomplete-active");
+      }
+    }
+    function closeAllLists(elmnt) {
+      /*close all autocomplete lists in the document,
+      except the one passed as an argument:*/
+      var x = document.getElementsByClassName("autocomplete-items");
+      for (var i = 0; i < x.length; i++) {
+        if (elmnt != x[i] && elmnt != inp) {
+          x[i].parentNode.removeChild(x[i]);
+        }
+      }
+    }
+    /*execute a function when someone clicks in the document:*/
+    document.addEventListener("click", function (e) {
+        closeAllLists(e.target);
+    });
+  }
+
+var MyDataDialog = function(ui, cell)
 {
 	var div = document.createElement('div');
 	var graph = ui.editor.graph;
 	
-	var hd = document.createElement('div');
-		hd.className = 'geDialogTitle';
-		mxUtils.write(hd, 'Tag Manage');
-		hd.style.position = 'relative';
-		hd.style.width = '100%';
-		hd.style.lineHeight = '40px';
-		hd.style.height = '40px';
-		div.appendChild(hd);
-
-
 	var value = graph.getModel().getValue(cell);
 	
-	
+	// Converts the value to an XML node
+	if (!mxUtils.isNode(value))
+	{
+		var doc = mxUtils.createXmlDocument();
+		var obj = doc.createElement('object');
+		obj.setAttribute('label', value || '');
+		value = obj;
+	}
 
 	// Creates the dialog contents
 	var form = new mxForm('properties');
 	form.table.style.width = '100%';
-	form.table.style.top="22px";
 
-	var attrs = []; //value.attributes;
+	var attrs = value.attributes;
 	var names = [];
 	var texts = [];
 	var count = 0;
 
-
-	form.addText('deneme:', 'denememe'); // form. add custom yapılabilir
+	var id = (EditDataDialog.getDisplayIdForCell != null) ?
+		EditDataDialog.getDisplayIdForCell(ui, cell) : null;
 	
 	var addRemoveButton = function(text, name)
 	{
@@ -160,21 +287,29 @@ var DevTagsDialog = function(ui, cell)
 		parent.appendChild(wrapper);
 	};
 	
-	var addTextArea = function(index, name, value)
+	var addTextArea = function(index, name, value,cl="")
 	{
 		names[index] = name;
-		texts[index] = form.addTextarea(names[count] + ':', value, 2);
-		texts[index].style.width = '100%';
+		let tx=texts[index] = form.addTextarea(names[index] + ':', value, 2);
+		tx.style.width = '100%';
 		
-		addRemoveButton(texts[index], name);
+		
+		if (value.indexOf('\n') > 0)
+		{
+			tx.setAttribute('rows', '2');
+		}
+		
+		addRemoveButton(tx, name);
+		tx.parentNode.className=cl;
+		return tx;
 	};
 	
 	var temp = [];
-	
+	var isLayer = graph.getModel().getParent(cell) == graph.getModel().getRoot();
 
 	for (var i = 0; i < attrs.length; i++)
 	{
-		if ((attrs[i].nodeName != 'label') && attrs[i].nodeName != 'placeholders')
+		if ((isLayer || attrs[i].nodeName != 'label') && attrs[i].nodeName != 'placeholders')
 		{
 			temp.push({name: attrs[i].nodeName, value: attrs[i].nodeValue});
 		}
@@ -197,7 +332,28 @@ var DevTagsDialog = function(ui, cell)
 	    }
 	});
 
+	if (id != null)
+	{	
+		var text = document.createElement('div');
+		text.style.width = '100%';
+		text.style.fontSize = '11px';
+		text.style.textAlign = 'center';
+		mxUtils.write(text, id);
+		
+		form.addField(mxResources.get('id') + ':', text);
+	}
+	
+	let atx=addTextArea(count++,'tags','','autocomplete'); 
+	autocomplete(atx,['ali','veli','ahmet'])
+	//buradan eklendiğinde aşayıdaki tempden eklenmeye çalışılacak  bazı namelere autocomplete ekle 
+	for (var i = 0; i < temp.length; i++)
+	{
+		addTextArea(count, temp[i].name, temp[i].value);
+		count++;
+	}
 
+	
+	
 	var top = document.createElement('div');
 	top.style.cssText = 'position:absolute;left:30px;right:30px;overflow-y:auto;top:30px;bottom:80px;';
 	top.appendChild(form.table);
@@ -353,7 +509,8 @@ var DevTagsDialog = function(ui, cell)
 	};
 
 	mxEvent.addListener(nameInput, 'keyup', updateAddBtn);
-
+	
+	// Catches all changes that don't fire a keyup (such as paste via mouse)
 	mxEvent.addListener(nameInput, 'change', updateAddBtn);
 	
 	var buttons = document.createElement('div');
@@ -388,15 +545,44 @@ var DevTagsDialog = function(ui, cell)
 		replace.appendChild(input);
 		mxUtils.write(replace, mxResources.get('placeholders'));
 		
+		if (EditDataDialog.placeholderHelpLink != null)
+		{
+			var link = document.createElement('a');
+			link.setAttribute('href', EditDataDialog.placeholderHelpLink);
+			link.setAttribute('title', mxResources.get('help'));
+			link.setAttribute('target', '_blank');
+			link.style.marginLeft = '8px';
+			link.style.cursor = 'help';
+			
+			var icon = document.createElement('img');
+			mxUtils.setOpacity(icon, 50);
+			icon.style.height = '16px';
+			icon.style.width = '16px';
+			icon.setAttribute('border', '0');
+			icon.setAttribute('valign', 'middle');
+			icon.style.marginTop = (mxClient.IS_IE11) ? '0px' : '-4px';
+			icon.setAttribute('src', Editor.helpImage);
+			link.appendChild(icon);
+			
+			replace.appendChild(link);
+		}
 		
 		buttons.appendChild(replace);
 	}
 	
-
+	if (ui.editor.cancelFirst)
+	{
+		buttons.appendChild(cancelBtn);
+		buttons.appendChild(applyBtn);
+	}
+	else
+	{
 		buttons.appendChild(applyBtn);
 		buttons.appendChild(cancelBtn);
-	
+	}
+
 	div.appendChild(buttons);
 	this.container = div;
 };
+
 

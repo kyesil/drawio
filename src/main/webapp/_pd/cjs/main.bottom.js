@@ -1,7 +1,6 @@
 
 
 var graphCreateSvgImageExport = Graph.prototype.createSvgImageExport;
-
 Graph.prototype.createSvgImageExport = function () {
 	var exp = graphCreateSvgImageExport.apply(this, arguments);
 
@@ -32,29 +31,31 @@ Graph.prototype.createSvgImageExport = function () {
 				let ss = state.style.image.split('data:image/svg+xml;base64,');
 				if (ss.length > 1) {
 					ss=Base64.decode(ss[1]);
-					let img =g.firstChild;
-					img.removeAttribute('xlink:href');
-					/*let w=img.getAttribute('width');
-					let h=img.getAttribute('height');
-					let x=img.x;
-					let y=img.y;*/
-					let attrs=img.attributes;
-					g.innerHTML=ss; 
-					let ssvg=g.firstChild;
-					
-					//ssvg.removeAttribute('viewBox');
-					ssvg.removeAttribute('id');
-					for (var i = 0; i < attrs.length; i++) {
-						var a = attrs[i];
-						ssvg.setAttribute( a.name, a.value);
-					}
+					let eimg =g.firstChild;
+					eimg.removeAttribute('xlink:href');
+					let w=eimg.getAttribute('width');
+					let h=eimg.getAttribute('height');
+					let x=eimg.getAttribute('x');
+					let y=eimg.getAttribute('y');
+					let t=eimg.getAttribute('transform');
 				
-					//ssvg.setAttribute('viewBox' ,'0 0 '+w+' '+h);
+					g.innerHTML=ss; 
+					let esvg=g.firstChild;
+
+					esvg.removeAttribute('id');
+					esvg.setAttribute('width',w);
+					esvg.setAttribute('height',h);
+					esvg.setAttribute('x',x);
+					esvg.setAttribute('y',y);
+
+					g.setAttribute('transform',t); //we can't transform svg :(
+				
+					//esvg.setAttribute('viewBox' ,'0 0 '+w+' '+h);
 
 				}
 			}
-			for (var i = 0; i < state.cell.value.attributes.length; i++) {
-				var attrib = state.cell.value.attributes[i];
+			for (let i = 0; i < state.cell.value.attributes.length; i++) {
+				let attrib = state.cell.value.attributes[i];
 				g.setAttribute(attrib.name, attrib.value);
 			}
 		}

@@ -224,6 +224,7 @@ require  '_pd/php/_boot.php';
 		</script>
 	<!--<![endif]-->
 
+	<link rel="stylesheet" type="text/css" href="_pd/css/main.css"></style>
 	<script src="_pd/cjs/main.top.js"></script>
 	<?php  require  PDPHP.'/_top.php'; ?>
 	<script type="text/javascript">
