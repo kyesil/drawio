@@ -1,7 +1,13 @@
 
+.properties td{
+  font-size: 17px;
+  padding: 5px 0 5px 0;
+  border-bottom: 1px solid #dadce0;
+}
 .autocomplete {
     position: relative;
-    
+    display: inline-block;
+    width: 98%;
   }
 .autocomplete-items {
     position: absolute;
