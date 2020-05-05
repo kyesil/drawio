@@ -523,14 +523,17 @@ app.on('ready', e =>
     	    
     	    win.webContents.on('did-finish-load', function()
     	    {
-    	    	//Open the file if new app request is from opening a file
-    	    	var potFile = commandLine.pop();
-    	    	
-    	    	if (fs.existsSync(potFile))
-    	    	{
-    	    		win.webContents.send('args-obj', {args: [potFile]});
-    	    	}
-    	    	
+    	    	ipcMain.once('app-load-finished', (evt, data) =>
+    			{
+	    	    	//Open the file if new app request is from opening a file
+	    	    	var potFile = commandLine.pop();
+	    	    	
+	    	    	if (fs.existsSync(potFile))
+	    	    	{
+	    	    		win.webContents.send('args-obj', {args: [potFile]});
+	    	    	}
+    			});
+    			
     	        win.webContents.zoomFactor = 1;
     	        win.webContents.setVisualZoomLevelLimits(1, 1);
     	        win.webContents.setLayoutZoomLevelLimits(0, 0);
@@ -556,8 +559,11 @@ app.on('ready', e =>
     	
     	firstWinLoaded = true;
     	
-        win.webContents.send('args-obj', program);
-        
+    	ipcMain.once('app-load-finished', (evt, data) =>
+		{
+			win.webContents.send('args-obj', program);
+		});
+    	
         win.webContents.zoomFactor = 1;
         win.webContents.setVisualZoomLevelLimits(1, 1);
         win.webContents.setLayoutZoomLevelLimits(0, 0);
@@ -640,19 +646,16 @@ app.on('ready', e =>
 	      ]
 	    }, {
 	      label: 'Edit',
-	      submenu: [{
-	        label: 'Cut',
-	        accelerator: 'CmdOrCtrl+X',
-	        selector: 'cut:'
-	      }, {
-	        label: 'Copy',
-	        accelerator: 'CmdOrCtrl+C',
-	        selector: 'copy:'
-	      }, {
-	        label: 'Paste',
-	        accelerator: 'CmdOrCtrl+V',
-	        selector: 'paste:'
-	      }]
+	      submenu: [
+			{ role: 'undo' },
+			{ role: 'redo' },
+			{ type: 'separator' },
+			{ role: 'cut' },
+			{ role: 'copy' },
+			{ role: 'paste' },
+			{ role: 'pasteAndMatchStyle' },
+			{ role: 'selectAll' }
+	      ]
 	    }]
 	    
 	    if (disableUpdate)
@@ -720,15 +723,18 @@ app.on('will-finish-launching', function()
 	app.on("open-file", function(event, path) 
 	{
 	    event.preventDefault();
-	    
+
 	    if (firstWinLoaded)
 	    {
 		    let win = createWindow();
 		    
 		    win.webContents.on('did-finish-load', function()
 		    {
-		        win.webContents.send('args-obj', {args: [path]});
-		        
+		    	ipcMain.once('app-load-finished', (evt, data) =>
+		    	{
+		    		win.webContents.send('args-obj', {args: [path]});
+		    	});
+		    	
 		        win.webContents.zoomFactor = 1;
 		        win.webContents.setVisualZoomLevelLimits(1, 1);
 		        win.webContents.setLayoutZoomLevelLimits(0, 0);

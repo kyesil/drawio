@@ -35,7 +35,13 @@ async function handleRequest(request)
 	if (email != null)
 	{
 		let msg = encodeURIComponent(('license:GWE:' + email));
-		let url = "https://log.draw.io/" + msg;
+		let url = "https://log.diagrams.net/" + msg;
+		fetch(url);
+	}
+	else if (domain != null)
+	{
+		let msg = encodeURIComponent(('license:atlas-cloud:' + domain));
+		let url = "https://log.diagrams.net/" + msg;
 		fetch(url);
 	}
 	
