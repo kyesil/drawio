@@ -1,0 +1,52 @@
+[
+  {
+    "tag": "S_WaterFlow",
+    "val": 47.36,
+    "title": "Debi"
+  },  
+  {
+    "tag": "S_WaterLevel",
+    "val": 47.36,
+    "title": "Su Seviye"
+  },  
+  {
+    "tag": "An_Power",
+    "val": 47.36,
+    "title": "Güç"
+  },  
+  {
+    "tag": "S_Pressure",
+    "val": 47.36,
+    "title": "Çıkış Basınc"
+  },  
+  {
+    "tag": "VFD_Freq",
+    "val": 47.36,
+    "title": "Sürücü Frekansı"
+  },  
+  {
+    "tag": "P_1_Run",
+    "val": 47.36,
+    "title": "Pompa Çalışma"
+  },  
+  {
+    "tag": "P_1_OtoWr",
+    "val": 47.36,
+    "title": "Pompa Oto"
+  },  
+  {
+    "tag": "P_1_StartStopWr",
+    "val": 47.36,
+    "title": "Pompa Start/Stop"
+  },  
+  {
+    "tag": "S_StoreLevel",
+    "val": 47.36,
+    "title": "Depo Seviyesi"
+  },  
+  {
+    "tag": "XD_StoreHeight",
+    "val": 47.36,
+    "title": "Depo Seviyesi"
+  }
+]

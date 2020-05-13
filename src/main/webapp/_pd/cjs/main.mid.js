@@ -58,48 +58,50 @@ App.prototype.appIconClicked = function (evt) {
 }
 
 
+
 var PshowDD = EditorUi.prototype.showDataDialog;
 EditorUi.prototype.showDataDialog = function (cell) {
-	if (cell != null) {
-		console.log(new Date().getTime());
-		let dlg;
-
+	if (!cell) return;
+	console.log(new Date().getTime());
+	let dlg;
+	let str;
+	if (typeof (cell.value) === 'string') str = cell.value;
+	else if (typeof (cell.value) === 'object') str = cell.value.getAttribute('label');
+	if (str) {
+		//	const regex = /(?<!\\)(#+(\.)?#+)/gm;
+		const regex = /(#+\.?#*)/gm; //lorem###.# ipsum # dolor### \# .###.#### sitamet
 		let matchs = [];
-
-		if (typeof (cell.value) === 'string') {
-			//	const regex = /(?<!\\)(#+(\.)?#+)/gm;
-			const regex = /(#+\.?#*)/gm; //lorem###.# ipsum # dolor### \# .###.#### sitamet
-
-			//matchs = cell.value.match(regex); //get all match
-			let match;
-			while ((match = regex.exec(cell.value)) !== null)
-				console.log(`Found ${match[0]} start=${match.index} end=${regex.lastIndex}.`);
+		let match;
+		//matchs = cell.value.match(regex); //get all match
+		while ((match = regex.exec(str)) !== null) {
+			matchs.push({ match: match, start: match.start, end: regex.lastIndex })
+			console.log(`Found ${match[0]} start=${match.index} end=${regex.lastIndex}.`);
 		}
-		if (matchs.length > 0) dlg = new MyDataDialog(this, cell);
-		else
-			if (cell.style) {
-				let ss = cell.style.split('data:image/svg+xml,');
-				if (ss.length > 1) {
-					ss = ss[1].split(';')
-					ss = Base64.decode(ss[0]);
-					let esvg = document.createElement('svg');
-					esvg.innerHTML = ss;
-					esvg = esvg.firstChild;
-					let shapetype = esvg.getAttribute('id');
 
+		if (matchs.length > 0) dlg = new MyDataDialog(this, cell, 'text', matchs);
 
-
-					dlg = new MyDataDialog(this, cell);
-				}
+	} else
+		if (cell.style) {
+			let ss = cell.style.split('data:image/svg+xml,');
+			if (ss.length > 1) {
+				ss = ss[1].split(';')
+				ss = Base64.decode(ss[0]);
+				let esvg = document.createElement('svg');
+				esvg.innerHTML = ss;
+				esvg = esvg.firstChild;
+				let stype = esvg.getAttribute('id');
+				let sdata = esvg.getAttribute('data');
+				dlg = new MyDataDialog(this, cell, stype, sdata);
 			}
-		if (!dlg) dlg = new EditDataDialog(this, cell);
-		this.showDialog(dlg.container, 480, 420, true, false, null, false);
+		}
+	if (!dlg) dlg = new EditDataDialog(this, cell);//normal dialog
+	this.showDialog(dlg.container, 480, 420, true, false, null, false);
 
-		dlg.init();
-		console.log(new Date().getTime());
-	}
+	dlg.init();
+	console.log(new Date().getTime());
+
 };
-Graph.prototype.addForeignObjectWarning = function (canvas, root) { }
+Graph.prototype.addForeignObjectWarning = function (canvas, root) { }//we don't want this
 
 /*
 //init app override we use descriptorChanged:file loaded
@@ -117,17 +119,17 @@ App.prototype.init = function()
 var Pcreatecanvas = Graph.prototype.createSvgCanvas;
 Graph.prototype.createSvgCanvas = function (node) {
 	var canvas = Pcreatecanvas.apply(this, arguments);
-	canvas.foEnabled = false;
-	return r;
+	canvas.foEnabled = false;//disable fo
+	return canvas;
 };
 
 //text input to autocomplete text input for dtag selection
-function autocomplete(inp, acarr) {
+function autocomplete(inp, acarr, aprop) {
     /*the autocomplete function takes two arguments,
 	the text field element and an array of possible autocompleted values:*/
-	if(!acarr||acarr.length<1) return;
-	if(inp.tagName.toLowerCase()=='textarea')
-	inp.setAttribute('rows',1+Math.floor(inp.value.length/37));
+	if (!acarr || acarr.length < 1) return;
+	if (inp.tagName.toLowerCase() == 'textarea')
+		inp.setAttribute('rows', 1 + Math.floor(inp.value.length / 37));
 	var currentFocus;
 	var wrapper = document.createElement('div'), eiwrapper, eitems;
 	// insert wrapper before el in the DOM tree
@@ -137,10 +139,10 @@ function autocomplete(inp, acarr) {
 	wrapper.className = 'acin';
 	/*execute a function when someone writes in the text field:*/
 	inp.addEventListener("input", function (e) {
-		var arrpos=0, vals = this.value.split(',');
+		var arrpos = 0, vals = this.value.split(',');
 		if (vals.length > 1) {
 			let curpos = this.value.slice(0, this.selectionStart).length;
-			let arrcount=0;
+			let arrcount = 0;
 			for (let j = 0; j < vals.length; j++) {
 				const v = vals[j];
 				arrcount += v.length + 1;
@@ -152,14 +154,14 @@ function autocomplete(inp, acarr) {
 		/*close any already open lists of autocompleted values*/
 		closeAllLists();
 		if (!val) { return false; }
-		 var arr=acarr.filter((ar)=>{
-			 return ar.toLowerCase().indexOf(val.toLowerCase())>-1;
-			});
-		 if(arr.length<1) return false;
+		var arr = acarr.filter((ar) => {
+			return ar[aprop].toLowerCase().indexOf(val.toLowerCase()) > -1;
+		});
+		if (arr.length < 1) return false;
 		currentFocus = -1;
 		/*create a DIV element that will contain the items (values):*/
-		 eiwrapper = document.createElement("DIV");
-		
+		eiwrapper = document.createElement("DIV");
+
 		eiwrapper.setAttribute("class", "acin-items");
 		/*append the DIV element as a child of the autocomplete container:*/
 		this.parentNode.appendChild(eiwrapper);
@@ -168,38 +170,38 @@ function autocomplete(inp, acarr) {
 			/*check if the item starts with the same letters as the text field value:*/
 			//if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) 
 			{
-				
+
 				/*create a DIV element for each matching element:*/
 				var eitem = document.createElement("DIV");
-				eitem.setAttribute('data',arr[i]);
+				eitem.setAttribute('data', arr[i][aprop]);
 				/*make the matching letters bold:*/
 				//b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
-				eitem.innerHTML = arr[i].replace(val,'<b>' + val + '</b>');
+				eitem.innerHTML = arr[i][aprop].replace(val, '<b>' + val + '</b>');
 				/*insert a input field that will hold the current array item's value:*/
 				//b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
 				/*execute a function when someone clicks on the item value (DIV element):*/
 				eitem.addEventListener("click", function (e) {
 					/*insert the value for the autocomplete text field:*/
-					
-					vals[arrpos]=this.getAttribute("data");
+
+					vals[arrpos] = this.getAttribute("data");
 					inp.value = vals.join(',')
-					if(inp.value&& inp.value[inp.value.length-1]!==',')
-					inp.value+=',';
+					if (inp.value && inp.value[inp.value.length - 1] !== ',')
+						inp.value += ',';
 					/*close the list of autocompleted values,
 					(or any other open lists of autocompleted values:*/
 					closeAllLists();
-					if(inp.tagName.toLowerCase()=='textarea')
-					inp.setAttribute('rows',1+Math.floor(inp.value.length/37));
+					if (inp.tagName.toLowerCase() == 'textarea')
+						inp.setAttribute('rows', 1 + Math.floor(inp.value.length / 37));
 				});
 				eiwrapper.appendChild(eitem);
 			}
 		}
 
-		eitems= wrapper.querySelectorAll(".acin-items div");
+		eitems = wrapper.querySelectorAll(".acin-items div");
 	});
 	/*execute a function presses a key on the keyboard:*/
 	inp.addEventListener("keydown", function (e) {
-		if(e.keyCode>40)return;
+		if (e.keyCode > 40) return;
 		if (!eitems) return false;
 		if (e.keyCode == 40) {
 			currentFocus++;
@@ -210,10 +212,10 @@ function autocomplete(inp, acarr) {
 		} else if (e.keyCode == 13) {
 			/*If the ENTER key is pressed, prevent the form from being submitted,*/
 			e.preventDefault();
-			if (currentFocus > -1 ) {
+			if (currentFocus > -1) {
 				/*and simulate a click on the "active" item:*/
 				eitems[currentFocus].click();
-			} else if (eitems.length == 1)  eitems[0].click();
+			} else if (eitems.length == 1) eitems[0].click();
 		}
 	});
 	function addActive() {
@@ -226,7 +228,7 @@ function autocomplete(inp, acarr) {
 		eitems[currentFocus].classList.add("acin-active");
 	}
 	function closeAllLists() {
-		if(eiwrapper)eiwrapper.innerHTML="";
+		if (eiwrapper) eiwrapper.innerHTML = "";
 	}
 	/*execute a function when someone clicks in the document:*/
 	document.addEventListener("click", function (e) {
@@ -234,11 +236,21 @@ function autocomplete(inp, acarr) {
 	});
 }
 
-var MyDataDialog = function (ui, cell) {
+
+var dtags = [];
+var MyDataDialog = function (ui, cell, ctype, cdata) {
 	var div = document.createElement('div');
 	var graph = ui.editor.graph;
-	var tags = ['S_WaterLevel', 'S_WaterFlow', 'S_Pressure', 'An_Power', 'An_Freq', 'VFD_Freq', 'P_1_Run']
+	var dtags = []
 	var value = graph.getModel().getValue(cell);
+
+	var names = [];
+	var texts = [];
+	var count = 0;
+	var id = (EditDataDialog.getDisplayIdForCell != null) ?
+		EditDataDialog.getDisplayIdForCell(ui, cell) : null;
+
+
 
 	// Converts the value to an XML node
 	if (!mxUtils.isNode(value)) {
@@ -247,18 +259,14 @@ var MyDataDialog = function (ui, cell) {
 		obj.setAttribute('label', value || '');
 		value = obj;
 	}
+	var attrs = value.attributes;
+
 
 	// Creates the dialog contents
 	var form = new mxForm('properties');
 	form.table.style.width = '100%';
 
-	var attrs = value.attributes;
-	var names = [];
-	var texts = [];
-	var count = 0;
 
-	var id = (EditDataDialog.getDisplayIdForCell != null) ?
-		EditDataDialog.getDisplayIdForCell(ui, cell) : null;
 
 	var addRemoveButton = function (text, name) {
 		var wrapper = document.createElement('div');
@@ -319,22 +327,23 @@ var MyDataDialog = function (ui, cell) {
 		if (value.indexOf('\n') > 0) {
 			tx.setAttribute('rows', '2');
 		}
-		if (name === 'tags') autocomplete(tx, tags)
-		else addRemoveButton(tx, name);
+		if (name != "tags") addRemoveButton(tx, name);
 		return tx;
 	};
 
-	var temp = [];
+	var fields = [];
 	var isLayer = graph.getModel().getParent(cell) == graph.getModel().getRoot();
 
 	for (var i = 0; i < attrs.length; i++) {
 		if ((isLayer || attrs[i].nodeName != 'label') && attrs[i].nodeName != 'placeholders') {
-			temp.push({ name: attrs[i].nodeName, value: attrs[i].nodeValue });
+			fields.push({ name: attrs[i].nodeName, value: attrs[i].nodeValue });
 		}
 	}
 
+
+
 	// Sorts by name
-	temp.sort(function (a, b) {
+	fields.sort(function (a, b) {
 		if (a.name < b.name) {
 			return -1;
 		}
@@ -356,16 +365,32 @@ var MyDataDialog = function (ui, cell) {
 		form.addField(mxResources.get('id') + ':', text);
 	}
 
-	if (!temp.some(t => t.name === 'tags')) {
+	if (!fields.some(t => t.name === 'tags')) {
 		addTextArea(count++, 'tags', '');
 	}
-
-
-	//buradan eklendiğinde aşayıdaki tempden eklenmeye çalışılacak  bazı namelere autocomplete ekle 
-	for (var i = 0; i < temp.length; i++) {
-		addTextArea(count, temp[i].name, temp[i].value);
+	for (var i = 0; i < fields.length; i++) {
+		addTextArea(count, fields[i].name, fields[i].value);
 		count++;
 	}
+
+
+	var getDTags = function (f) {
+		fetch('./_pd/json/dtags.json?nscreen=' + urlParams['nscreen'])
+			.then(response => {
+				return response.json();
+			}).then(json => {
+				dtags = json;
+				for (let i = 0; i < texts.length; i++) {
+					const tx = texts[i];
+
+					if (names[i] == 'tags') autocomplete(tx, dtags, 'tag');
+				}
+			})
+			.catch(err => {
+				throw err;
+			});
+	}
+	getDTags();
 
 
 

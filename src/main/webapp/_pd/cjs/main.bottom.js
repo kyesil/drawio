@@ -31,8 +31,12 @@ Graph.prototype.createSvgImageExport = function () {
 				let ss = state.style.image.split('data:image/svg+xml;base64,');
 				if (ss.length > 1) {
 					ss=Base64.decode(ss[1]);
+					
+					let gi=  getNodeIndex(g);
+					ss=ss.replace(/\.cls-/g,'.cls'+gi+'-');
+					ss=ss.replace(/\"cls-/g,'"cls'+gi+'-');
 					let eimg =g.firstChild;
-					eimg.removeAttribute('xlink:href');
+					//eimg.removeAttribute('xlink:href');
 					let w=eimg.getAttribute('width');
 					let h=eimg.getAttribute('height');
 					let x=eimg.getAttribute('x');
@@ -48,7 +52,7 @@ Graph.prototype.createSvgImageExport = function () {
 					esvg.setAttribute('x',x);
 					esvg.setAttribute('y',y);
 
-					g.setAttribute('transform',t); //we can't transform svg :(
+				//	g.setAttribute('transform',t); //we can't transform svg :(
 				
 					//esvg.setAttribute('viewBox' ,'0 0 '+w+' '+h);
 
