@@ -30,39 +30,70 @@ Graph.prototype.createSvgImageExport = function () {
 			if (state.style.image) {
 				let ss = state.style.image.split('data:image/svg+xml;base64,');
 				if (ss.length > 1) {
-					ss=Base64.decode(ss[1]);
-					
-					let gi=  getNodeIndex(g);
-					ss=ss.replace(/\.cls-/g,'.cls'+gi+'-');
-					ss=ss.replace(/\"cls-/g,'"cls'+gi+'-');
-					let eimg =g.firstChild;
-					//eimg.removeAttribute('xlink:href');
-					let w=eimg.getAttribute('width');
-					let h=eimg.getAttribute('height');
-					let x=eimg.getAttribute('x');
-					let y=eimg.getAttribute('y');
-					let t=eimg.getAttribute('transform');
-				
-					g.innerHTML=ss; 
-					let esvg=g.firstChild;
+					ss = Base64.decode(ss[1]);
+
+					let gi = getNodeIndex(g);
+					ss = ss.replace(/\.cls-/g, '.cls' + gi + '-').replace(/\"cls-/g, '"cls' + gi + '-').
+						replace(/\"clip-path/g, '"clip-path' + gi).replace(/\#clip-path/g, '#clip-path' + gi).
+						replace(/\"radial-gradient/g, '"radial-gradient' + gi).replace(/\#radial-gradient/g, '#radial-gradient' + gi).
+						replace(/\&#xa;/g, '');
+					let eimg = g.firstChild;
+
+					let w = eimg.getAttribute('width');
+					let h = eimg.getAttribute('height');
+					let x = eimg.getAttribute('x');
+					let y = eimg.getAttribute('y');
+					let t = eimg.getAttribute('transform');
+
+					g.innerHTML = ss;
+					let esvg = g.firstChild;
 
 					esvg.removeAttribute('id');
-					esvg.setAttribute('width',w);
-					esvg.setAttribute('height',h);
-					esvg.setAttribute('x',x);
-					esvg.setAttribute('y',y);
+					esvg.removeAttribute('xmlns:xlink');
+					esvg.removeAttribute('xmlns');
 
-				//	g.setAttribute('transform',t); //we can't transform svg :(
-				
+					esvg.setAttribute('width', w);
+					esvg.setAttribute('height', h);
+					esvg.setAttribute('x', x);
+					esvg.setAttribute('y', y);
+
+					//	g.setAttribute('transform',t); //we can't transform svg :(
+
 					//esvg.setAttribute('viewBox' ,'0 0 '+w+' '+h);
 
 				}
+			} else {
+				g.innerHTML = decodeHTMLEntities(g.innerHTML);
+				let espan = g.getElementsByTagName('span');
+			
+				if (espan.length > 0) {
+					espan = espan[0];
+					let sstyle = espan.getAttribute('style');
+					if(sstyle) sstyle=sstyle.replace('color','fill');
+					let sparent = espan.parentNode;
+					sparent.innerHTML=espan.innerHTML;
+					sparent.setAttribute('style',sstyle);
+					console.log(sparent.innerHTML);
+				}
+				/*//<span(.)+<?span>
+						const regex = /\<span *style="(.*)" *\>(.*)\<\/span\>/gm; //lorem###.# ipsum # dolor### \# .###.#### sitamet
+						let matchs = [];
+						while ((match = regex.exec(ghtml)) !== null) {
+							matchs.push({ match: match, start: match.start, end: regex.lastIndex })
+							console.log(`Found ${match[0]} start=${match.index} end=${regex.lastIndex}.`);
+						}
+						//matchs = ghtml.match(regex); //get all match
+						console.log(decodeHTMLEntities(ghtml));
+						console.log(matchs);*/
 			}
+
 			for (let i = 0; i < state.cell.value.attributes.length; i++) {
 				let attrib = state.cell.value.attributes[i];
+				if (attrib.name === 'label') continue;
 				g.setAttribute(attrib.name, attrib.value);
 			}
 		}
+		
 
 		// Restores previous root
 		canvas.root = prev;
@@ -89,8 +120,7 @@ App.prototype.saveFile = function (forceDialog, success) {
 
 	var name = this.currentFile.title;
 	var xml = mxUtils.getXml(this.editor.getGraphXml());
-	var svg = mxUtils.getXml(this.editor.graph.getSvg(null, 1, 0))
-
+	var svg = decodeHTMLEntities(this.editor.graph.getSvg(null, 1, 0).outerHTML);
 	new mxXmlRequest(SAVE_URL + '&path=' + _SC_PATH + '&',
 		'&xml=' + encodeURIComponent(xml) + '&svg=' + encodeURIComponent(svg)).send();
 
