@@ -25,7 +25,7 @@ Graph.prototype.createSvgImageExport = function () {
 		if (g.firstChild == null) {
 			g.parentNode.removeChild(g);
 		}
-		else if (mxUtils.isNode(state.cell.value)) {
+		else if (mxUtils.isNode(state.cell.value) || typeof(state.cell.value)==="string") {
 			//g.setAttribute('content', mxUtils.getXml(state.cell.value));
 			if (state.style.image) {
 				let ss = state.style.image.split('data:image/svg+xml;base64,');
@@ -65,16 +65,17 @@ Graph.prototype.createSvgImageExport = function () {
 			} else {
 				g.innerHTML = decodeHTMLEntities(g.innerHTML);
 				let espan = g.getElementsByTagName('span');
-			
-				if (espan.length > 0) {
-					espan = espan[0];
-					let sstyle = espan.getAttribute('style');
+				console.log(g.innerHTML);
+				for (let i = 0; i < espan.length; i++) {
+					const e = espan[i];
+					let sstyle = e.getAttribute('style');
 					if(sstyle) sstyle=sstyle.replace('color','fill');
-					let sparent = espan.parentNode;
-					sparent.innerHTML=espan.innerHTML;
+					let sparent = e.parentNode;
+					sparent.innerHTML=e.innerHTML;
 					sparent.setAttribute('style',sstyle);
 					console.log(sparent.innerHTML);
 				}
+			
 				/*//<span(.)+<?span>
 						const regex = /\<span *style="(.*)" *\>(.*)\<\/span\>/gm; //lorem###.# ipsum # dolor### \# .###.#### sitamet
 						let matchs = [];
@@ -86,7 +87,7 @@ Graph.prototype.createSvgImageExport = function () {
 						console.log(decodeHTMLEntities(ghtml));
 						console.log(matchs);*/
 			}
-
+if(state.cell.value.attributes)
 			for (let i = 0; i < state.cell.value.attributes.length; i++) {
 				let attrib = state.cell.value.attributes[i];
 				if (attrib.name === 'label') continue;
