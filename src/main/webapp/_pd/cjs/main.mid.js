@@ -13,8 +13,6 @@ window.OPEN_URL = '_pd/php/action.php?open';
 
 
 mxSettings.settings.pageFormat = new mxRectangle(0, 0, 1900, 1000);//wecan set default file look _top.php
-//mxSettings.settings.unit = mxConstants.POINTS; // does not matter
-
 mxSettings.settings.customLibraries.push("U_pd/clibs/predixi_water.xml");
 
 function fileloaded(app) {
@@ -29,7 +27,7 @@ function fileloaded(app) {
 	app.appIcon.removeEventListener(iconevents[3].name, iconevents[3].f);
 
 
-	app.appIcon.style.backgroundImage = "url('./_pd/css/img/back.svg')"; //mmanipulate this 
+	app.appIcon.style.backgroundImage = "url('./_pd/css/img/back.svg')"; //mmanipulate header icon 
 	app.appIcon.style.cursor = "pointer";
 
 };
@@ -123,118 +121,7 @@ Graph.prototype.createSvgCanvas = function (node) {
 	return canvas;
 };
 
-//text input to autocomplete text input for dtag selection
-function autocomplete(inp, acarr, aprop) {
-    /*the autocomplete function takes two arguments,
-	the text field element and an array of possible autocompleted values:*/
-	if (!acarr || acarr.length < 1) return;
-	if (inp.tagName.toLowerCase() == 'textarea')
-		inp.setAttribute('rows', 1 + Math.floor(inp.value.length / 37));
-	var currentFocus;
-	var wrapper = document.createElement('div'), eiwrapper, eitems;
-	// insert wrapper before el in the DOM tree
-	inp.parentNode.insertBefore(wrapper, inp);
-	// move el into wrapper
-	wrapper.appendChild(inp);
-	wrapper.className = 'acin';
-	/*execute a function when someone writes in the text field:*/
-	inp.addEventListener("input", function (e) {
-		var arrpos = 0, vals = this.value.split(',');
-		if (vals.length > 1) {
-			let curpos = this.value.slice(0, this.selectionStart).length;
-			let arrcount = 0;
-			for (let j = 0; j < vals.length; j++) {
-				const v = vals[j];
-				arrcount += v.length + 1;
-				if (arrcount > curpos) { arrpos = j; break; }
-			}
-			val = vals[arrpos];
-		}
-		else val = vals[0];
-		/*close any already open lists of autocompleted values*/
-		closeAllLists();
-		if (!val) { return false; }
-		var arr = acarr.filter((ar) => {
-			return ar[aprop].toLowerCase().indexOf(val.toLowerCase()) > -1;
-		});
-		if (arr.length < 1) return false;
-		currentFocus = -1;
-		/*create a DIV element that will contain the items (values):*/
-		eiwrapper = document.createElement("DIV");
 
-		eiwrapper.setAttribute("class", "acin-items");
-		/*append the DIV element as a child of the autocomplete container:*/
-		this.parentNode.appendChild(eiwrapper);
-		/*for each item in the array...*/
-		for (let i = 0; i < arr.length; i++) {
-			/*check if the item starts with the same letters as the text field value:*/
-			//if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) 
-			{
-
-				/*create a DIV element for each matching element:*/
-				var eitem = document.createElement("DIV");
-				eitem.setAttribute('data', arr[i][aprop]);
-				/*make the matching letters bold:*/
-				//b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
-				eitem.innerHTML = arr[i][aprop].replace(val, '<b>' + val + '</b>');
-				/*insert a input field that will hold the current array item's value:*/
-				//b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
-				/*execute a function when someone clicks on the item value (DIV element):*/
-				eitem.addEventListener("click", function (e) {
-					/*insert the value for the autocomplete text field:*/
-
-					vals[arrpos] = this.getAttribute("data");
-					inp.value = vals.join(',')
-					if (inp.value && inp.value[inp.value.length - 1] !== ',')
-						inp.value += ',';
-					/*close the list of autocompleted values,
-					(or any other open lists of autocompleted values:*/
-					closeAllLists();
-					if (inp.tagName.toLowerCase() == 'textarea')
-						inp.setAttribute('rows', 1 + Math.floor(inp.value.length / 37));
-				});
-				eiwrapper.appendChild(eitem);
-			}
-		}
-
-		eitems = wrapper.querySelectorAll(".acin-items div");
-	});
-	/*execute a function presses a key on the keyboard:*/
-	inp.addEventListener("keydown", function (e) {
-		if (e.keyCode > 40) return;
-		if (!eitems) return false;
-		if (e.keyCode == 40) {
-			currentFocus++;
-			addActive();
-		} else if (e.keyCode == 38) { //up	
-			currentFocus--;
-			addActive();
-		} else if (e.keyCode == 13) {
-			/*If the ENTER key is pressed, prevent the form from being submitted,*/
-			e.preventDefault();
-			if (currentFocus > -1) {
-				/*and simulate a click on the "active" item:*/
-				eitems[currentFocus].click();
-			} else if (eitems.length == 1) eitems[0].click();
-		}
-	});
-	function addActive() {
-		for (var i = 0; i < eitems.length; i++) {
-			eitems[i].classList.remove("acin-active");
-		}
-		if (currentFocus >= eitems.length) currentFocus = 0;
-		if (currentFocus < 0) currentFocus = (eitems.length - 1);
-		/*add class "autocomplete-active":*/
-		eitems[currentFocus].classList.add("acin-active");
-	}
-	function closeAllLists() {
-		if (eiwrapper) eiwrapper.innerHTML = "";
-	}
-	/*execute a function when someone clicks in the document:*/
-	document.addEventListener("click", function (e) {
-		closeAllLists();
-	});
-}
 
 
 var dtags = [];
@@ -325,7 +212,7 @@ var MyDataDialog = function (ui, cell, ctype, cdata) {
 		tx.style.width = '100%';
 
 		if (value.indexOf('\n') > 0) {
-			tx.setAttribute('rows', '2');
+			tx.setAttribute('rows', '3');
 		}
 		if (name != "tags") addRemoveButton(tx, name);
 		return tx;
@@ -375,11 +262,11 @@ var MyDataDialog = function (ui, cell, ctype, cdata) {
 
 
 	var getDTags = function (f) {
-		fetch('./_pd/json/dtags.json?nscreen=' + urlParams['nscreen'])
+		fetch('/svcpdraw/gettags?nscreen=' + urlParams['nscreen'])
 			.then(response => {
 				return response.json();
 			}).then(json => {
-				dtags = json;
+				dtags = json.data;
 				for (let i = 0; i < texts.length; i++) {
 					const tx = texts[i];
 

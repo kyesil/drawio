@@ -25,7 +25,7 @@ Graph.prototype.createSvgImageExport = function () {
 		if (g.firstChild == null) {
 			g.parentNode.removeChild(g);
 		}
-		else if (mxUtils.isNode(state.cell.value) || typeof(state.cell.value)==="string") {
+		else if (mxUtils.isNode(state.cell.value) || typeof (state.cell.value) === "string") {
 			//g.setAttribute('content', mxUtils.getXml(state.cell.value));
 			if (state.style.image) {
 				let ss = state.style.image.split('data:image/svg+xml;base64,');
@@ -33,6 +33,7 @@ Graph.prototype.createSvgImageExport = function () {
 					ss = Base64.decode(ss[1]);
 
 					let gi = getNodeIndex(g);
+					//replace unique name for illustrator  exported libs
 					ss = ss.replace(/\.cls-/g, '.cls' + gi + '-').replace(/\"cls-/g, '"cls' + gi + '-').
 						replace(/\"clip-path/g, '"clip-path' + gi).replace(/\#clip-path/g, '#clip-path' + gi).
 						replace(/\"radial-gradient/g, '"radial-gradient' + gi).replace(/\#radial-gradient/g, '#radial-gradient' + gi).
@@ -63,39 +64,20 @@ Graph.prototype.createSvgImageExport = function () {
 
 				}
 			} else {
+				//replace html tag in svg file because foreing object disabled
 				g.innerHTML = decodeHTMLEntities(g.innerHTML);
-				let espan = g.getElementsByTagName('span');
 				console.log(g.innerHTML);
-				for (let i = 0; i < espan.length; i++) {
-					const e = espan[i];
-					let sstyle = e.getAttribute('style');
-					if(sstyle) sstyle=sstyle.replace('color','fill');
-					let sparent = e.parentNode;
-					sparent.innerHTML=e.innerHTML;
-					sparent.setAttribute('style',sstyle);
-					console.log(sparent.innerHTML);
-				}
-			
-				/*//<span(.)+<?span>
-						const regex = /\<span *style="(.*)" *\>(.*)\<\/span\>/gm; //lorem###.# ipsum # dolor### \# .###.#### sitamet
-						let matchs = [];
-						while ((match = regex.exec(ghtml)) !== null) {
-							matchs.push({ match: match, start: match.start, end: regex.lastIndex })
-							console.log(`Found ${match[0]} start=${match.index} end=${regex.lastIndex}.`);
-						}
-						//matchs = ghtml.match(regex); //get all match
-						console.log(decodeHTMLEntities(ghtml));
-						console.log(matchs);*/
-			}
-if(state.cell.value.attributes)
-			for (let i = 0; i < state.cell.value.attributes.length; i++) {
-				let attrib = state.cell.value.attributes[i];
-				if (attrib.name === 'label') continue;
-				g.setAttribute(attrib.name, attrib.value);
-			}
-		}
-		
+				clearSvg(g);
+				console.log(g.innerHTML);
 
+			}
+			if (state.cell.value.attributes)
+				for (let i = 0; i < state.cell.value.attributes.length; i++) {
+					let attrib = state.cell.value.attributes[i];
+					if (attrib.name === 'label') continue;
+					g.setAttribute(attrib.name, attrib.value);
+				}
+		}
 		// Restores previous root
 		canvas.root = prev;
 	};
@@ -122,6 +104,7 @@ App.prototype.saveFile = function (forceDialog, success) {
 	var name = this.currentFile.title;
 	var xml = mxUtils.getXml(this.editor.getGraphXml());
 	var svg = decodeHTMLEntities(this.editor.graph.getSvg(null, 1, 0).outerHTML);
+	svg=svg.replace(/xmlns="http:\/\/www.w3.org\/2000\/svg"/ig,'');
 	new mxXmlRequest(SAVE_URL + '&path=' + _SC_PATH + '&',
 		'&xml=' + encodeURIComponent(xml) + '&svg=' + encodeURIComponent(svg)).send();
 
