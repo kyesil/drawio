@@ -309,6 +309,27 @@ App.pluginRegistry = {'4xAKTrabTpTzahoLthkwPNUn': '/plugins/explore.js',
 	'page': '/plugins/page.js', 'gd': '/plugins/googledrive.js',
 	'tags': '/plugins/tags.js'};
 
+App.publicPlugin = [
+	'ex',
+	'voice',
+	'tips',
+	'svgdata',
+	'number',
+	'sql',
+	'props',
+	'text',
+	'anim',
+	'update',
+	'trees',
+//	'import',
+	'replay',
+	'anon',
+	'tickets',
+	'flow',
+	'webcola',
+//	'rnd', 'page', 'gd',
+	'tags'
+];
 /**
  * Function: authorize
  * 
@@ -553,6 +574,7 @@ App.main = function(callback, createUi)
 					mxscript('js/shapes.min.js');
 					mxscript('js/stencils.min.js');
 					mxscript('js/extensions.min.js');
+					mxStencilRegistry.allowEval = false;
 		
 					// Use the window load event to keep the page load performant
 					window.addEventListener('load', function()
@@ -1164,6 +1186,14 @@ App.prototype.initializeEmbedMode = function()
 {
 	if (urlParams['embed'] == '1')
 	{
+		if (window.location.hostname == 'app.diagrams.net')
+		{
+			if (window.console != null)
+			{
+				console.warn('[Deprecation] app.diagrams.net will stop working for embed mode. Please use embed.diagrams.net.');
+			}
+		}
+		
 		if (App.embedModePluginsCount > 0 || this.initEmbedDone)
 		{
 			return; //Wait for plugins to load, or this is a duplicate call due to timeout
@@ -1458,8 +1488,8 @@ App.prototype.init = function()
 		}
 		
 		if (!mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp && !this.isOffline() &&
-			!mxClient.IS_ANDROID && !mxClient.IS_IOS &&
-			urlParams['open'] == null && (!this.editor.chromeless || this.editor.editable))
+			!mxClient.IS_ANDROID && !mxClient.IS_IOS && urlParams['open'] == null &&
+			(!this.editor.chromeless || this.editor.editable))
 		{
 			this.editor.addListener('fileLoaded', mxUtils.bind(this, function()
 			{
@@ -2727,7 +2757,7 @@ App.prototype.start = function()
 				}
 
 				if (!mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp && !this.isOfflineApp() &&
-					/.*\.draw\.io$/.test(window.location.hostname) &&
+					urlParams['open'] == null && /.*\.draw\.io$/.test(window.location.hostname) &&
 					(!this.editor.chromeless || this.editor.editable))
 				{
 					this.showNameChangeBanner();
@@ -3036,6 +3066,14 @@ App.prototype.start = function()
 				}
 				else
 				{
+					// Removes open URL parameter. Hash is also updated in Init to load client.
+					if (urlParams['open'] != null && window.history && window.history.replaceState)
+					{
+						window.history.replaceState(null, null, window.location.pathname +
+							this.getSearch(['open']));
+						window.location.hash = urlParams['open'];
+					}
+					
 					done();
 				}
 			}

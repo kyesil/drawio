@@ -1,3 +1,91 @@
+17-JUN-2020: 13.2.5
+
+- Adds embed.diagrams.net for embed mode
+- Adds Alt+Shift to toggle child cells
+- Fixes toggle selection for groups
+- Uses mxGraph 4.2.0 beta 10
+
+13-JUN-2020: 13.2.4
+
+- Uses tables in Misc and ER sidebar
+- Adds table size in Arrange panel
+- Uses mxGraph 4.2.0 beta 9
+
+11-JUN-2020: 13.2.3
+
+- Uses base for fonts in SVG export
+- Fixes font URL trimming
+
+11-JUN-2020: 13.2.2
+
+- Fixes relative fonts in SVG export
+- Uses mxGraph 4.2.0 beta 8
+- Parsing improvements
+- Adds table shape
+
+09-JUN-2020: 13.2.1
+
+- Fixes bug when pasting HTML
+- Parsing improvements
+
+09-JUN-2020: 13.2.0
+
+- Fixes WebKitBlobResource on iOS
+- Parsing improvements
+
+03-JUN-2020: 13.1.14
+
+- Fixes math font weight for PDF export
+- Stability improvements
+
+02-JUN-2020: 13.1.13
+
+- Fixes caching for HTML embed code
+- Fixes copy paste from other apps
+- Fixes math client-side printing
+- Adds math-output URL parameter
+- Adds custom table properties
+- Uses mxGraph 4.2.0 beta 7
+
+01-JUN-2020: 13.1.12
+
+- Uses mxGraph 4.2.0 beta 6
+- Adds tables to Misc sidebar
+- Fixes OS clipboard in Firefox
+
+31-MAY-2020: 13.1.11
+
+- Stability improvements and bug fixes
+
+31-MAY-2020: 13.1.10
+
+- Fixes minor bugs for tables
+
+30-MAY-2020: 13.1.9
+
+- Fixes insert tables on touch devices
+- Adds Feature-Policy header
+
+29-MAY-2020: 13.1.8
+
+- Removes CSP from GAE config
+
+29-MAY-2020: 13.1.7
+
+- Adds multiple edge labels in CSV import
+- Adds experimental support for tables
+- Adds Content-Security-Policy header
+- Adds link button in library dialog
+- Uses mxGraph 4.2.0 beta 5
+
+27-MAY-2020: 13.1.6
+
+- Fixes Gliffy popup issue
+
+27-MAY-2020: 13.1.5
+
+- Adds CSP restrictions
+
 27-MAY-2020: 13.1.4
 
 - Adds dark export option in dark mode

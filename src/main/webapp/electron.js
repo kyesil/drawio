@@ -7,7 +7,6 @@ const ipcMain = electron.ipcMain
 const dialog = electron.dialog
 const app = electron.app
 const BrowserWindow = electron.BrowserWindow
-const globalShortcut = electron.globalShortcut;
 const crc = require('crc');
 const zlib = require('zlib');
 const log = require('electron-log')
@@ -16,7 +15,6 @@ const {autoUpdater} = require("electron-updater")
 const Store = require('electron-store');
 const store = new Store();
 const ProgressBar = require('electron-progressbar');
-const { systemPreferences } = require('electron')
 const disableUpdate = require('./disableUpdate').disableUpdate() || 
 						process.env.DRAWIO_DISABLE_UPDATE === 'true' || 
 						fs.existsSync('/.flatpak-info'); //This file indicates running in flatpak sandbox
@@ -41,7 +39,9 @@ function createWindow (opt = {})
 		'web-security': true,
 		webPreferences: {
 			// preload: path.resolve('./preload.js'),
-			nodeIntegration: true
+			nodeIntegration: true,
+			enableRemoteModule: true,
+			nodeIntegrationInWorker: true
 		}
 	}, opt)
 
@@ -375,7 +375,7 @@ app.on('ready', e =>
 							
 							if (ext === '.png')
 							{
-								expArgs.xml = new Buffer(expArgs.xml).toString('base64');
+								expArgs.xml = Buffer.from(expArgs.xml).toString('base64');
 							}
 							
 							var mockEvent = {
@@ -536,7 +536,6 @@ app.on('ready', e =>
     			
     	        win.webContents.zoomFactor = 1;
     	        win.webContents.setVisualZoomLevelLimits(1, 1);
-    	        win.webContents.setLayoutZoomLevelLimits(0, 0);
     	    });
     	})
     }
@@ -561,12 +560,12 @@ app.on('ready', e =>
     	
     	ipcMain.once('app-load-finished', (evt, data) =>
 		{
-			win.webContents.send('args-obj', program);
+			//Sending entire program is not allowed in Electron 9 as it is not native JS object
+			win.webContents.send('args-obj', {args: program.args, create: program.create});
 		});
     	
         win.webContents.zoomFactor = 1;
         win.webContents.setVisualZoomLevelLimits(1, 1);
-        win.webContents.setLayoutZoomLevelLimits(0, 0);
     });
 	
     let updateNoAvailAdded = false;
@@ -737,7 +736,6 @@ app.on('will-finish-launching', function()
 		    	
 		        win.webContents.zoomFactor = 1;
 		        win.webContents.setVisualZoomLevelLimits(1, 1);
-		        win.webContents.setLayoutZoomLevelLimits(0, 0);
 		    });
 	    }
 	    else
@@ -1018,44 +1016,47 @@ function exportVsdx(event, args, directFinalize)
 	let win = createWindow({
 		show : false
 	});
-    
+
     win.webContents.on('did-finish-load', function()
     {
-        win.webContents.send('export-vsdx', args);
-        
-        ipcMain.once('export-vsdx-finished', (evt, data) =>
+    	ipcMain.once('app-load-finished', (evt, data) =>
 		{
-			var hasError = false;
-			
-			if (data == null)
+	    	win.webContents.send('export-vsdx', args);
+	    	
+	        ipcMain.once('export-vsdx-finished', (evt, data) =>
 			{
-				hasError = true;
-			}
-			
-			//Set finalize here since it is call in the reply below
-			function finalize()
-			{
-				win.destroy();
-			};
-			
-			if (directFinalize === true)
-			{
-				event.finalize = finalize;
-			}
-			else
-			{
-				//Destroy the window after response being received by caller
-				ipcMain.once('export-finalize', finalize);
-			}
-			
-			if (hasError)
-			{
-				event.reply('export-error');
-			}
-			else
-			{
-				event.reply('export-success', data);
-			}
+				var hasError = false;
+				
+				if (data == null)
+				{
+					hasError = true;
+				}
+				
+				//Set finalize here since it is call in the reply below
+				function finalize()
+				{
+					win.destroy();
+				};
+				
+				if (directFinalize === true)
+				{
+					event.finalize = finalize;
+				}
+				else
+				{
+					//Destroy the window after response being received by caller
+					ipcMain.once('export-finalize', finalize);
+				}
+				
+				if (hasError)
+				{
+					event.reply('export-error');
+				}
+				else
+				{
+					event.reply('export-success', data);
+				}
+			});
 		});
     });
 };
@@ -1093,6 +1094,8 @@ function exportDiagram(event, args, directFinalize)
 	    {
 			ipcMain.once('render-finished', (evt, bounds) =>
 			{
+				//For some reason, Electron 9 doesn't send this object as is without stringifying. Usually when variable is external to function own scope
+				bounds = JSON.parse(bounds.bounds);
 				var pdfOptions = {pageSize: 'A4'};
 				var hasError = false;
 				

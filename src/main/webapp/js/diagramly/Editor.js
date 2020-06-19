@@ -5,6 +5,15 @@
 (function()
 {
 	/**
+	 * Enables paste from Lucidchart
+	 */
+	if (typeof html4 !== 'undefined')
+	{
+		html4.ATTRIBS["span::data-lucid-content"] = 0;
+		html4.ATTRIBS["span::data-lucid-type"] = 0;
+	}
+
+	/**
 	 * Specifies the app name. Default is document.title.
 	 */
 	Editor.prototype.appName = 'diagrams.net';
@@ -207,6 +216,34 @@
 	 */
 	Editor.commonVertexProperties = [
         {type: 'separator'},
+        {name: 'resizeLastRow', dispName: 'Resize Last Row', type: 'bool', getDefaultValue: function(state, format)
+        {
+        	var cell = (state.vertices.length == 1 && state.edges.length == 0) ? state.vertices[0] : null;
+        	var graph = format.editorUi.editor.graph;
+        	var style = graph.getCellStyle(cell);
+        	
+        	return mxUtils.getValue(style, 'resizeLastRow', '0') == '1';
+        }, isVisible: function(state, format)
+        {
+        	var graph = format.editorUi.editor.graph;
+        	
+    		return state.vertices.length == 1 && state.edges.length == 0 &&
+    			graph.isTable(state.vertices[0]);
+        }},
+        {name: 'resizeLast', dispName: 'Resize Last Column', type: 'bool', getDefaultValue: function(state, format)
+        {
+        	var cell = (state.vertices.length == 1 && state.edges.length == 0) ? state.vertices[0] : null;
+        	var graph = format.editorUi.editor.graph;
+        	var style = graph.getCellStyle(cell);
+        	
+        	return mxUtils.getValue(style, 'resizeLast', '0') == '1';
+        }, isVisible: function(state, format)
+        {
+        	var graph = format.editorUi.editor.graph;
+        	
+    		return state.vertices.length == 1 && state.edges.length == 0 &&
+    			graph.isTable(state.vertices[0]);
+        }},
         {name: 'fillOpacity', dispName: 'Fill Opacity', type: 'int', min: 0, max: 100, defVal: 100},
         {name: 'strokeOpacity', dispName: 'Stroke Opacity', type: 'int', min: 0, max: 100, defVal: 100},
         {name: 'overflow', dispName: 'Text Overflow', defVal: 'visible', type: 'enum',
@@ -221,7 +258,16 @@
         	enumList: [{val: 'none', dispName: 'None'}, {val: 'north', dispName: 'North'}, {val: 'east', dispName: 'East'}, {val: 'south', dispName: 'South'}, {val: 'west', dispName: 'West'}]
         },
         {name: 'portConstraintRotation', dispName: 'Rotate Constraint', type: 'bool', defVal: false},
-        {name: 'connectable', dispName: 'Connectable', type: 'bool', defVal: true},
+        {name: 'connectable', dispName: 'Connectable', type: 'bool', getDefaultValue: function(state, format)
+        {
+        	var cell = (state.vertices.length == 1 && state.edges.length == 0) ? state.vertices[0] : null;
+        	var graph = format.editorUi.editor.graph;
+        	
+        	return graph.isCellConnectable(cell);
+        }, isVisible: function(state, format)
+        {
+    		return state.vertices.length == 1 && state.edges.length == 0;
+        }},
         {name: 'allowArrows', dispName: 'Allow Arrows', type: 'bool', defVal: true},
         {name: 'snapToPoint', dispName: 'Snap to Point', type: 'bool', defVal: false},
         {name: 'perimeter', dispName: 'Perimeter', defVal: 'none', type: 'enum',
@@ -372,6 +418,9 @@
 		'## In addition to label, an optional fromlabel and tolabel can be used to name the column\n' +
 		'## that contains the text for the label in the edges source or target (invert ignored).\n' +
 		'## The label is concatenated in the form fromlabel + label + tolabel if all are defined.\n' +
+		'## Additional labels can be added by using an optional labels array with entries of the\n' +
+		'## form {"label": string, "x": number, "y": number, "dx": number, "dy": number} where\n' +
+		'## x is from -1 to 1 along the edge, y is orthogonal, and dx/dy are offsets in pixels.\n' +
 		'## The target column may contain a comma-separated list of values.\n' +
 		'## Multiple connect entries are allowed.\n' +
 		'#\n' +
@@ -1040,16 +1089,10 @@
 				// Preloads fonts where supported
 				var parts = fontCss.split('url(');
 				
-				// Strips leading and trailing quotes and spaces
-				function trimString(str)
-				{
-				    return str.replace(new RegExp("^[\\s\"']+", "g"), "").replace(new RegExp("[\\s\"']+$", "g"), "");
-				};
-				
 				for (var i = 1; i < parts.length; i++)
 				{
 				    var idx = parts[i].indexOf(')');
-				    var url = trimString(parts[i].substring(0, idx));
+				    var url = Editor.trimCssUrl(parts[i].substring(0, idx));
 				    
 				    var l = document.createElement('link');
 					l.setAttribute('rel', 'preload');
@@ -1062,7 +1105,15 @@
 			}
 		}
 	};
-	
+			
+	/**
+	 * Strips leading and trailing quotes and spaces
+	 */
+    Editor.trimCssUrl = function(str)
+    {
+    	return str.replace(new RegExp("^[\\s\"']+", "g"), "").replace(new RegExp("[\\s\"']+$", "g"), "");
+    }
+    
 	Editor.GOOGLE_FONTS =  'https://fonts.googleapis.com/css?family=';
 	
 	/**
@@ -1365,6 +1416,37 @@
 				}
 			}, 0);
 		};
+		
+		var font = (urlParams['math-font'] != null) ?
+			decodeURIComponent(urlParams['math-font']) :
+			'TeX';
+		
+		config = (config != null) ? config :
+		{
+			jax: ['input/TeX', 'input/MathML', 'input/AsciiMath'].concat(
+				[(urlParams['math-output'] == 'html') ?
+					'output/HTML-CSS' : 'output/SVG']),
+			extensions: ['tex2jax.js', 'mml2jax.js', 'asciimath2jax.js'],
+			TeX: {
+				extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js', 'noUndefined.js']
+			},
+			'HTML-CSS': {
+				availableFonts: [font],
+				imageFont: null
+			},
+			SVG: {
+				font: font,
+				// Needed for client-side export to work
+				useFontCache: false
+			},
+			// Ignores math in in-place editor
+			tex2jax: {
+				ignoreClass: 'mxCellEditor'
+		  	},
+		  	asciimath2jax: {
+				ignoreClass: 'mxCellEditor'
+		  	}
+		};
 
 		// Disables global typesetting and messages on startup, adds queue for
 		// asynchronous rendering while MathJax is loading
@@ -1375,35 +1457,14 @@
 			messageStyle: 'none',
 			AuthorInit: function ()
 			{
-				// Specification recommends using SVG over HTML-CSS if browser is known
-				// Check if too inconsistent with image export and print output
-				MathJax.Hub.Config(config || {
-					jax: ['input/TeX', 'input/MathML', 'input/AsciiMath', 'output/SVG'],
-					extensions: ['tex2jax.js', 'mml2jax.js', 'asciimath2jax.js'],
-					TeX: {
-						extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js', 'noUndefined.js']
-					},
-					// Needed for client-side export to work
-					SVG: {
-						font: (urlParams['math-font'] != null) ?
-							decodeURIComponent(urlParams['math-font']) :
-							'TeX',
-						useFontCache: false
-					},
-					// Ignores math in in-place editor
-					tex2jax: {
-						ignoreClass: 'mxCellEditor'
-				  	},
-				  	asciimath2jax: {
-						ignoreClass: 'mxCellEditor'
-				  	}
-				});
-				MathJax.Hub.Register.StartupHook('Begin', function()
-				{
-					for (var i = 0; i < Editor.mathJaxQueue.length; i++)
-					{
-						Editor.doMathJaxRender(Editor.mathJaxQueue[i]);
-					}
+				MathJax.Hub.Config(config);
+				
+				MathJax.Hub.Register.StartupHook('Begin', function()	
+				{	
+					for (var i = 0; i < Editor.mathJaxQueue.length; i++)	
+					{	
+						Editor.doMathJaxRender(Editor.mathJaxQueue[i]);	
+					}	
 				});
 		    }
 		};
@@ -1480,17 +1541,18 @@
 	};
 
 	/**
-	 * Returns true if the given URL is known to have CORS headers.
+	 * Returns true if the given URL is known to have CORS headers and is
+	 * allowed by CSP.
 	 */
 	Editor.prototype.isCorsEnabledForUrl = function(url)
 	{
-		//Disable proxy for electron since it doesn't exist (it is served locally) and it works with most of the sites
-		//The same with Chrome App, never use proxy
+		// Disables proxy for desktop and chrome app as it is served locally
 		if (mxClient.IS_CHROMEAPP || EditorUi.isElectronApp)
 		{
 			return true;
 		}
 		
+		// Blocked by CSP in production but allowed for hosted deployment
 		if (urlParams['cors'] != null && this.corsRegExp == null)
 		{
 			this.corsRegExp = new RegExp(decodeURIComponent(urlParams['cors']));
@@ -1499,14 +1561,9 @@
 		// No access-control-allow-origin for some Iconfinder images, add this when fixed:
 		// /^https?:\/\/[^\/]*\.iconfinder.com\//.test(url) ||
 		return (this.corsRegExp != null && this.corsRegExp.test(url)) ||
-			url.substring(0, 34) === 'https://raw.githubusercontent.com/' ||
-			url.substring(0, 23) === 'https://cdn.rawgit.com/' ||
-			url.substring(0, 19) === 'https://rawgit.com/' ||
-			/^https?:\/\/[^\/]*\.blob.core.windows.net\//.test(url) ||
-			/^https?:\/\/[^\/]*\.diagrams\.net\/proxy/.test(url) ||
-			/^https?:\/\/[^\/]*\.draw\.io\/proxy/.test(url) ||
-			/^https?:\/\/[^\/]*\.github\.io\//.test(url);
+			url.substring(0, 34) === 'https://raw.githubusercontent.com/';
 	};
+	
 	
 	/**
 	 * Converts all images in the SVG output to data URIs for immediate rendering
@@ -1867,6 +1924,70 @@
 			}
 		}
 	};
+
+	/**
+	 * Makes all relative font URLs absolute in the given font CSS.
+	 */
+    Editor.prototype.absoluteCssFonts = function(fontCss)
+    {
+    	var result = null;
+    	
+    	if (fontCss != null)
+    	{
+    		var parts = fontCss.split('url(');
+    		
+    		if (parts.length > 0)
+    		{
+    			result = [parts[0]];
+    		
+    			// Gets path for URL
+    			var path = window.location.pathname;
+    			var idx = (path != null) ? path.lastIndexOf('/') : -1;
+    			
+    			if (idx >= 0)
+    			{
+    				path = path.substring(0, idx + 1);
+    			}
+    			
+    			// Gets base tag from head
+    			var temp = document.getElementsByTagName('base');
+    			var base = null;
+    			
+    			if (temp != null && temp.length > 0)
+    			{
+    				base = temp[0].getAttribute('href');
+    			}
+    		
+    			for (var i = 1; i < parts.length; i++)
+    			{
+    				var idx = parts[i].indexOf(')');
+    				
+    				if (idx > 0)
+    				{
+	    				var url = Editor.trimCssUrl(parts[i].substring(0, idx));
+	    				
+	    				if (this.graph.isRelativeUrl(url))
+	    				{
+	                        url = (base != null) ? base + url : (window.location.protocol + '//' + window.location.hostname +
+	                        	((url.charAt(0) == '/') ? '' : path) + url);
+	                    }
+	    				
+	    				result.push('url("' + url + '"' + parts[i].substring(idx));
+    				}
+    				else
+    				{
+    					result.push(parts[i]);
+    				}
+    			}
+    		}
+    		else
+    		{
+    			result = [fontCss]
+    		}
+    	}
+    	
+    	return (result != null) ? result.join('') : null;
+	};
 	
 	/**
 	 * For the fonts in CSS to be applied when rendering images on canvas, the actual
@@ -1882,12 +2003,6 @@
         	this.cachedFonts = {};
         }
 
-        // Strips leading and trailing quotes and spaces
-        function trimString(str)
-        {
-            return str.replace(new RegExp("^[\\s\"']+", "g"), "").replace(new RegExp("[\\s\"']+$", "g"), "");
-        };
-        
         var finish = mxUtils.bind(this, function()
         {
             if (waiting == 0)
@@ -1899,7 +2014,7 @@
                 {
                     var idx = parts[j].indexOf(')');
                     result.push('url("');
-                    result.push(this.cachedFonts[trimString(parts[j].substring(0, idx))]);
+                    result.push(this.cachedFonts[Editor.trimCssUrl(parts[j].substring(0, idx))]);
                     result.push('"' + parts[j].substring(idx));
                 }
                 
@@ -1919,7 +2034,7 @@
                 
                 if (fmtIdx > 0)
                 {
-                    format = trimString(parts[i].substring(fmtIdx + 7, parts[i].indexOf(')', fmtIdx)));
+                    format = Editor.trimCssUrl(parts[i].substring(fmtIdx + 7, parts[i].indexOf(')', fmtIdx)));
                 }
 
                 (mxUtils.bind(this, function(url)
@@ -1978,7 +2093,7 @@
                             finish();
                         }), true, null, 'data:' + mime + ';charset=utf-8;base64,');
                     }
-                }))(trimString(parts[i].substring(0, idx)), format);
+                }))(Editor.trimCssUrl(parts[i].substring(0, idx)), format);
             }
             
             //In case all fonts are cached
@@ -2109,8 +2224,8 @@
 	 */
 	Editor.prototype.addFontCss = function(svgRoot, fontCss)
 	{
-		fontCss = (fontCss != null) ? fontCss : this.fontCss;
-		
+		fontCss = (fontCss != null) ? fontCss : this.absoluteCssFonts(this.fontCss);
+
 		// Creates defs element if not available
 		if (fontCss != null)
 		{
@@ -3080,6 +3195,14 @@
 	        {name: 'separatorColor', dispName: 'Separator Color', type: 'color', defVal: null},
 	    ];
 		
+		mxCellRenderer.defaultShapes['table'].prototype.customProperties = [
+			{name: 'rowLines', dispName: 'Row Lines', type: 'bool', defVal: true},
+			{name: 'columnLines', dispName: 'Column Lines', type: 'bool', defVal: true},
+			{name: 'fixedRows', dispName: 'Fixed Rows', type: 'bool', defVal: false},
+			{name: 'resizeLast', dispName: 'Resize Last Column', type: 'bool', defVal: false},
+			{name: 'resizeLastRow', dispName: 'Resize Last Row', type: 'bool', defVal: false}].
+			concat(mxCellRenderer.defaultShapes['swimlane'].prototype.customProperties);
+		
 		mxCellRenderer.defaultShapes['doubleEllipse'].prototype.customProperties = [
 	        {name: 'margin', dispName: 'Indent', type: 'float', min:0, defVal:4}
 	    ];
@@ -3695,6 +3818,7 @@
 				else
 				{
 					td.innerHTML = pValue;
+					
 					mxEvent.addListener(td, 'click', mxUtils.bind(that, function()
 					{
 						var input = document.createElement('input');
@@ -3796,6 +3920,7 @@
 			div.style.position = 'relative';
 			div.style.padding = '0';
 			var grid = document.createElement('table');
+			grid.className = 'geProperties';
 			grid.style.whiteSpace = 'nowrap';
 			grid.style.width = '100%';
 			//create header row
@@ -4876,7 +5001,7 @@
 		if (this.isHtmlLabel(cell))
 		{
 			var temp = document.createElement('div');
-			temp.innerHTML = this.getLabel(cell);
+			temp.innerHTML = this.sanitizeHtml(this.getLabel(cell));
 			var links = temp.getElementsByTagName('a');
 			var changed = false;
 			
@@ -5803,6 +5928,16 @@
 					{
 						writeHead.apply(this, arguments);
 						
+						// Fixes font weight for PDF export in Chrome
+						if (mxClient.IS_GC)
+						{
+							doc.writeln('<style type="text/css">');
+							doc.writeln('@media print {');
+							doc.writeln('span.MathJax_SVG svg { shape-rendering: crispEdges; }');
+							doc.writeln('}');
+							doc.writeln('</style>');
+						}
+
 						if (editorUi.editor.fontCss != null)
 						{
 							doc.writeln('<style type="text/css">');
@@ -6041,39 +6176,16 @@
 				if (pv.mathEnabled)
 				{
 					var doc = pv.wnd.document;
-			
-					doc.writeln('<script type="text/x-mathjax-config">');
-					doc.writeln('MathJax.Hub.Config({');
-					doc.writeln('showMathMenu: false,');
-					doc.writeln('messageStyle: "none",');
-					doc.writeln('jax: ["input/TeX", "input/MathML", "input/AsciiMath", "output/SVG"],');
-					doc.writeln('extensions: ["tex2jax.js", "mml2jax.js", "asciimath2jax.js"],');
-					doc.writeln('TeX: {');
-					doc.writeln('extensions: ["AMSmath.js", "AMSsymbols.js", "noErrors.js", "noUndefined.js"]');
-					doc.writeln('},');
-					doc.writeln('SVG: {');
-					doc.writeln('font: "' + ((urlParams['math-font'] != null) ?
-						decodeURIComponent(urlParams['math-font']) :
-						'TeX') + '"');
-					doc.writeln('},');
-					doc.writeln('tex2jax: {');
-					doc.writeln('ignoreClass: "geDisableMathJax"');
-				  	doc.writeln('},');
-				  	doc.writeln('asciimath2jax: {');
-					doc.writeln('ignoreClass: "geDisableMathJax"');
-				  	doc.writeln('}');
-					doc.writeln('});');
 					
-					// Adds asynchronous printing when MathJax finished rendering
+					// Adds asynchronous printing when MathJax finishes rendering
+					// via global variable that is checked in math-print.js to
+					// avoid generating unsafe-inline script or adding SHA to CSP
 					if (print)
 					{
-						doc.writeln('MathJax.Hub.Queue(function () {');
-						doc.writeln('window.print();');
-						doc.writeln('});');
+						pv.wnd.IMMEDIATE_PRINT = true;
 					}
-					
-					doc.writeln('</script>');
-					doc.writeln('<script type="text/javascript" src="' + DRAW_MATH_URL + '/MathJax.js"></script>');
+
+					doc.writeln('<script type="text/javascript" src="' + DRAWIO_BASE_URL + '/js/math-print.js"></script>');
 				}
 				
 				pv.closeDocument();

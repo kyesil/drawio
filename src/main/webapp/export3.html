@@ -9,6 +9,7 @@
 	<!-- CSS for print output is needed for using current window -->
 	<style type="text/css">
 		@media print {
+		  span.MathJax_SVG svg { shape-rendering: crispEdges; }
 		  table.mxPageSelector { display: none; }
 		  hr.mxPageBreak { display: none; }
 		}
@@ -202,8 +203,8 @@
 							try 
 							{
 								const { ipcRenderer } = require('electron');
-								
-								ipcRenderer.send('render-finished', bounds);
+								//For some reason, Electron 9 doesn't send this object as is without stringifying. Usually when variable is external to function own scope
+								ipcRenderer.send('render-finished', {bounds: JSON.stringify(bounds)});
 							}
 							catch(e)
 							{

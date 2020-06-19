@@ -3554,19 +3554,19 @@
 	/**
 	 * Hides the current menu.
 	 */
-	EditorUi.prototype.showBackgroundImageDialog = function(apply)
+	EditorUi.prototype.showBackgroundImageDialog = function(apply, img)
 	{
-		apply = (apply != null) ? apply : mxUtils.bind(this, function(image)
+		apply = (apply != null) ? apply : mxUtils.bind(this, function(image, failed)
 		{
-			var change = new ChangePageSetup(this, null, image);
-			change.ignoreColor = true;
-			
-			this.editor.graph.model.execute(change);
+			if (!failed)
+			{
+				var change = new ChangePageSetup(this, null, image);
+				change.ignoreColor = true;
+				
+				this.editor.graph.model.execute(change);
+			}
 		});
-		var dlg = new BackgroundImageDialog(this, mxUtils.bind(this, function(image)
-		{
-			apply(image);
-		}));
+		var dlg = new BackgroundImageDialog(this, apply, img);
 		this.showDialog(dlg.container, 360, 200, true, true);
 		dlg.init();
 	};
@@ -3968,7 +3968,7 @@
 			banner.style.paddingBottom = '30px';
 			banner.appendChild(div);
 			
-			var onclose = mxUtils.bind(this, function(showAgain)
+			var onclose = mxUtils.bind(this, function()
 			{
 				if (banner.parentNode != null)
 				{
@@ -3994,15 +3994,30 @@
 				onclose();
 			}));
 			
+			var hide = mxUtils.bind(this, function()
+			{
+				mxUtils.setPrefixedStyle(banner.style, 'transform', 'translate(-50%,120%)');
+				
+				window.setTimeout(mxUtils.bind(this, function()
+				{
+					onclose();
+				}), 1000);
+			});
+			
 			mxEvent.addListener(banner, 'click', mxUtils.bind(this, function(e)
 			{
 				var source = mxEvent.getSource(e);
 				
 				if (source != chk && source != label)
 				{
-					mxEvent.consume(e);
 					onclick();
 					onclose();
+				
+					mxEvent.consume(e);
+				}
+				else
+				{
+					hide();
 				}
 			}));
 			
@@ -4011,16 +4026,7 @@
 				mxUtils.setPrefixedStyle(banner.style, 'transform', 'translate(-50%,0%)');
 			}), 500);
 			
-			window.setTimeout(mxUtils.bind(this, function()
-			{
-				mxUtils.setPrefixedStyle(banner.style, 'transform', 'translate(-50%,120%)');
-				
-				window.setTimeout(mxUtils.bind(this, function()
-				{
-					onclose(true);
-				}), 1000);
-			}), 30000);
-			
+			window.setTimeout(hide, 30000);
 			result = true;
 		}
 		
@@ -4190,7 +4196,7 @@
 			// and for "WebKitBlobResource error 1" for all browsers on iOS.
 			var useDownload = (navigator.userAgent == null ||
 				navigator.userAgent.indexOf("PaleMoon/") < 0) &&
-				!mxClient.IS_IOS && typeof a.download !== 'undefined';
+				typeof a.download !== 'undefined';
 			
 			// Workaround for Chromium 65 cross-domain anchor download issue
 			if (mxClient.IS_GC && navigator.userAgent != null)
@@ -4223,7 +4229,7 @@
 					window.setTimeout(function()
 					{
 						URL.revokeObjectURL(a.href);
-					}, 0);
+					}, 20000);
 
 					a.click();
 					a.parentNode.removeChild(a);
@@ -6555,7 +6561,7 @@
 		
 		if (graph.isHtmlLabel(cell))
 		{
-			temp.innerHTML = graph.getLabel(cell);
+			temp.innerHTML = graph.sanitizeHtml(graph.getLabel(cell));
 			var links = temp.getElementsByTagName('a');
 			var changed = false;
 			
@@ -9092,7 +9098,7 @@
 					    {
 				    		var html = evt.dataTransfer.getData('text/html');
 				    		var div = document.createElement('div');
-				    		div.innerHTML = html;
+				    		div.innerHTML = graph.sanitizeHtml(html);
 				    		
 				    		// The default is based on the extension
 				    		var asImage = null;
@@ -9103,6 +9109,11 @@
 				    		if (imgs != null && imgs.length == 1)
 				    		{
 				    			html = imgs[0].getAttribute('src');
+				    			
+				    			if (html == null)
+				    			{
+				    				html = imgs[0].getAttribute('srcset');
+				    			}
 				    			
 				    			// Handles special case where the src attribute has no valid extension
 				    			// in which case the text would be inserted as text with a link
@@ -9139,7 +9150,7 @@
 				    			graph.setSelectionCells(this.insertTextAt(html, x, y, true, asImage, null, resizeImages));
 				    		});
 				    		
-				    		if (asImage && html.length > this.resampleThreshold)
+				    		if (asImage && html != null && html.length > this.resampleThreshold)
 				    		{
 				    			this.confirmImageResize(function(doResize)
 		    					{
@@ -9712,8 +9723,10 @@
 				
 				if (data != null && data.length > 0)
 				{
+					var hasMeta = data.substring(0, 6) == '<meta ';
 					elt = document.createElement('div');
-					elt.innerHTML = data;
+					elt.innerHTML = ((hasMeta) ? '<meta charset="utf-8">' : '') +
+						this.editor.graph.sanitizeHtml(data);
 					asHtml = true;
 					
 					// Workaround for innerText not ignoring style elements in Chrome
@@ -9744,7 +9757,26 @@
 						}
 					}
 					
-					Graph.removePasteFormatting(elt);
+					// Extracts single image source address
+					var img = (hasMeta && elt.firstChild != null) ? elt.firstChild.nextSibling : elt.firstChild;
+					
+					if (img != null && img.nextSibling == null &&
+						img.nodeType == mxConstants.NODETYPE_ELEMENT &&
+						img.nodeName == 'IMG')
+					{
+						var temp = img.getAttribute('src');
+						
+						if (temp != null)
+						{
+							mxUtils.setTextContent(elt, temp);
+							asHtml = false;
+						}
+					}
+					
+					if (asHtml)
+					{
+						Graph.removePasteFormatting(elt);
+					}
 				}
 				else
 				{
@@ -9859,12 +9891,24 @@
 						}
 						else if (pasteAsLabel && graph.getSelectionCount() == 1)
 						{
-							graph.labelChanged(graph.getSelectionCell(), xml);
-
-							if (Graph.isLink(xml))
+							var cell = graph.getStartEditingCell(graph.getSelectionCell(), evt);
+							
+							if ((/\.(gif|jpg|jpeg|tiff|png|svg)$/i).test(xml) &&
+								graph.getCurrentCellStyle(cell)[mxConstants.STYLE_SHAPE] == 'image')
 							{
-								graph.setLinkForCell(graph.getSelectionCell(), xml);
+								graph.setCellStyles(mxConstants.STYLE_IMAGE, xml, [cell]);
 							}
+							else
+							{
+								graph.labelChanged(cell, xml);
+	
+								if (Graph.isLink(xml))
+								{
+									graph.setLinkForCell(cell, xml);
+								}
+							}
+							
+							graph.setSelectionCell(cell);
 						}
 						else
 						{
@@ -10006,7 +10050,7 @@
 								    	
 								    	if (mxUtils.indexOf(provider.types, 'text/uri-list') >= 0)
 								    	{
-								    		var data = evt.dataTransfer.getData('text/uri-list');
+								    		data = evt.dataTransfer.getData('text/uri-list');
 								    	}
 								    	else
 								    	{
@@ -10016,7 +10060,7 @@
 										if (data != null && data.length > 0)
 										{
 											var div = document.createElement('div');
-								    		div.innerHTML = data;
+								    		div.innerHTML = this.editor.graph.sanitizeHtml(data);
 		
 								    		// Extracts single image
 								    		var imgs = div.getElementsByTagName('img');
@@ -12003,8 +12047,36 @@
 				    								graph.replacePlaceholders(placeholders, edge.style) :
 				    								graph.createCurrentEdgeStyle();
 
-				    							select.push(graph.insertEdge(null, null, label || '', (edge.invert) ?
-				    								ref : realCell, (edge.invert) ? realCell : ref, style));
+				    							var edgeCell = graph.insertEdge(null, null, label || '', (edge.invert) ?
+				    								ref : realCell, (edge.invert) ? realCell : ref, style);
+				    							
+				    							// Adds additional edge labels
+				    							if (edge.labels != null)
+				    							{
+				    								for (var k = 0; k < edge.labels.length; k++)
+				    								{
+				    									var def = edge.labels[k];
+				    									var elx = (def.x != null) ? def.x : 0;
+				    									var ely = (def.y != null) ? def.y : 0;
+				    									var st = 'resizable=0;html=1;';
+				    									var el = new mxCell(def.label || k,
+				    										new mxGeometry(elx,  ely, 0, 0), st);
+				    									el.vertex = true;
+				    									el.connectable = false;
+				    									el.geometry.relative = true;
+				    									
+				    									if (def.dx != null || def.dy != null)
+				    									{
+				    										el.geometry.offset = new mxPoint(
+				    											(def.dx != null) ? def.dx : 0,
+				    											(def.dy != null) ? def.dy : 0);
+				    									}
+				    									
+				    									edgeCell.insert(el);
+				    								}
+				    							}
+				    							
+				    							select.push(edgeCell);
 				    							mxUtils.remove((edge.invert) ? realCell : ref, roots);
 				    						}
 				        				}

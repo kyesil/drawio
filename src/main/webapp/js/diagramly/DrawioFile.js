@@ -111,6 +111,11 @@ DrawioFile.prototype.opened = null;
 DrawioFile.prototype.modified = false;
 
 /**
+ * Stores a shadow of the modified state.
+ */
+DrawioFile.prototype.shadowModified = false;
+
+/**
  * Holds a copy of the current file data.
  */
 DrawioFile.prototype.data = null;
@@ -951,6 +956,16 @@ DrawioFile.prototype.isModified = function()
 	return this.modified;
 };
 
+DrawioFile.prototype.getShadowModified = function()
+{
+	return this.shadowModified;
+};
+
+DrawioFile.prototype.setShadowModified = function(value)
+{
+	this.shadowModified = value;
+};
+
 /**
  * Translates this point by the given vector.
  * 
@@ -960,6 +975,7 @@ DrawioFile.prototype.isModified = function()
 DrawioFile.prototype.setModified = function(value)
 {
 	this.modified = value;
+	this.shadowModified = value;
 };
 
 /**
@@ -1521,7 +1537,15 @@ DrawioFile.prototype.addUnsavedStatus = function(err)
 			
 			if (EditorUi.enableDrafts && this.getMode() == null)
 			{
-				this.saveDraft();
+				if (this.saveDraftThread != null)
+				{
+					window.clearTimeout(this.saveDraftThread);
+				}
+				
+				this.saveDraftThread = window.setTimeout(mxUtils.bind(this, function()
+				{
+					this.saveDraft();
+				}), 0);
 			}
 		}
 	}

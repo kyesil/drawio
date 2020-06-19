@@ -299,6 +299,7 @@
 					if (allPages != this && this.checked)
 					{
 						crop.removeAttribute('disabled');
+						crop.checked = !graph.pageVisible;
 					}
 					else
 					{
@@ -1314,9 +1315,13 @@
 			{
 				if (!graph.isSelectionEmpty())
 				{
-					editorUi.showTextDialog('Create Sidebar Entry', 'sb.createVertexTemplateFromData(\'' +
-						Graph.compress(mxUtils.getXml(graph.encodeCells(graph.getSelectionCells()))) +
-						'\', width, height, \'Title\');');
+					var cells = graph.cloneCells(graph.getSelectionCells());
+					var bbox = graph.getBoundingBoxFromGeometry(cells);
+					cells = graph.moveCells(cells, -bbox.x, -bbox.y);
+					
+					editorUi.showTextDialog('Create Sidebar Entry', 'this.addDataEntry(\'tag1 tag2\', ' +
+						bbox.width + ', ' + bbox.height + ', \'The Title\', \'' +
+						Graph.compress(mxUtils.getXml(graph.encodeCells(cells))) + '\'),');
 				}
 			}));
 	

@@ -743,8 +743,8 @@ var SplashDialog = function(editorUi)
 			btn.style.marginBottom = '24px';
 			
 			var link = document.createElement('a');
-			link.setAttribute('href', 'javascript:void(0)');
 			link.style.display = 'inline-block';
+			link.style.cursor = 'pointer';
 			link.style.marginTop = '6px';
 			mxUtils.write(link, mxResources.get('signOut'));
 
@@ -871,8 +871,8 @@ var SplashDialog = function(editorUi)
 		
 		mxUtils.br(buttons);
 		var link = document.createElement('a');
-		link.setAttribute('href', 'javascript:void(0)');
 		link.style.display = 'inline-block';
+		link.style.cursor = 'pointer';
 		link.style.marginTop = '8px';
 		mxUtils.write(link, mxResources.get('changeStorage'));
 		
@@ -894,8 +894,9 @@ var SplashDialog = function(editorUi)
 /**
  * Constructs a new embed dialog
  */
-var EmbedDialog = function(editorUi, result, timeout, ignoreSize, previewFn, title)
+var EmbedDialog = function(editorUi, result, timeout, ignoreSize, previewFn, title, tweet)
 {
+	tweet = (tweet != null) ? tweet : 'Check out the diagram I made using @drawio';
 	var div = document.createElement('div');
 	var maxSize = 500000;
 	var maxFbSize = 51200;
@@ -1090,8 +1091,8 @@ var EmbedDialog = function(editorUi, result, timeout, ignoreSize, previewFn, tit
 				try
 				{
 					var url = 'https://twitter.com/intent/tweet?text=' + 
-						encodeURIComponent('Check out the diagram I made using @drawio') +
-						'&url=' + encodeURIComponent(text.value);
+						encodeURIComponent(tweet) + '&url=' +
+						encodeURIComponent(text.value);
 					editorUi.openLink(url);
 				}
 				catch (e)
@@ -1700,14 +1701,16 @@ var CreateGraphDialog = function(editorUi, title, type)
 			div.appendChild(cancelBtn);
 		}
 		
-		var okBtn = mxUtils.button(mxResources.get('insert'), function()
+		var okBtn = mxUtils.button(mxResources.get('insert'), function(evt)
 		{
 			graph.clearCellOverlays();
 			
-			// Computes unscaled, untranslated graph bounds
-			var pt = editorUi.editor.graph.getFreeInsertPoint();
-			var cells = editorUi.editor.graph.importCells(
-				graph.getModel().getChildren(graph.getDefaultParent()), pt.x, pt.y);
+			var cells = graph.getModel().getChildren(graph.getDefaultParent());
+			var pt = (mxEvent.isAltDown(evt)) ?
+				editorUi.editor.graph.getFreeInsertPoint() :
+				editorUi.editor.graph.getCenterInsertPoint(
+				graph.getBoundingBoxFromGeometry(cells, true));
+			cells = editorUi.editor.graph.importCells(cells, pt.x, pt.y);
 			var view = editorUi.editor.graph.view;
 			var temp = view.getBounds(cells);
 			temp.x -= view.translate.x;
@@ -1745,7 +1748,7 @@ CreateGraphDialog.prototype.connectImage = new mxImage((mxClient.IS_SVG) ? 'data
 /**
  * Constructs a new parse dialog.
  */
-var BackgroundImageDialog = function(editorUi, applyFn)
+var BackgroundImageDialog = function(editorUi, applyFn, img)
 {
 	var div = document.createElement('div');
 	div.style.whiteSpace = 'nowrap';
@@ -1758,8 +1761,6 @@ var BackgroundImageDialog = function(editorUi, applyFn)
 	mxUtils.write(div, mxResources.get('image') + ' ' + mxResources.get('url') + ':');
 	mxUtils.br(div);
 	
-	var img = editorUi.editor.graph.backgroundImage;
-	
 	var urlInput = document.createElement('input');
 	urlInput.setAttribute('type', 'text');
 	urlInput.style.marginTop = '4px';
@@ -1768,27 +1769,48 @@ var BackgroundImageDialog = function(editorUi, applyFn)
 	urlInput.value = (img != null) ? img.src : '';
 	
 	var resetting = false;
+	var ignoreEvt = false;
 	
-	var urlChanged = function()
+	var urlChanged = function(evt, done)
 	{
-		if (!resetting && urlInput.value != '' && !editorUi.isOffline())
+		// Skips blur event if called from apply button
+		if (evt == null || !ignoreEvt)
 		{
-			editorUi.loadImage(mxUtils.trim(urlInput.value), function(img)
+			urlInput.value = mxUtils.trim(urlInput.value);
+				
+			if (!resetting && urlInput.value != '' && !editorUi.isOffline())
 			{
-				widthInput.value = img.width;
-				heightInput.value = img.height;
-			}, function()
+				editorUi.loadImage(urlInput.value, function(img)
+				{
+					widthInput.value = img.width;
+					heightInput.value = img.height;
+					
+					if (done != null)
+					{
+						done(urlInput.value);
+					}
+				}, function()
+				{
+					editorUi.showError(mxResources.get('error'), mxResources.get('fileNotFound'), mxResources.get('ok'));
+					widthInput.value = '';
+					heightInput.value = '';
+					
+					if (done != null)
+					{
+						done(null);
+					}
+				});
+			}
+			else
 			{
-				editorUi.showError(mxResources.get('error'), mxResources.get('fileNotFound'), mxResources.get('ok'));
-				urlInput.value = '';
 				widthInput.value = '';
 				heightInput.value = '';
-			});
-		}
-		else
-		{
-			widthInput.value = '';
-			heightInput.value = '';
+				
+				if (done != null)
+				{
+					done('');
+				}
+			}
 		}
 	};
 	
@@ -1910,12 +1932,7 @@ var BackgroundImageDialog = function(editorUi, applyFn)
 		heightInput.value = '';
 		resetting = false;
 	});
-	mxEvent.addListener(resetBtn, 'mousedown', function()
-	{
-		// Blocks processing a image URL while clicking reset
-		resetting = true;
-	});
-	mxEvent.addListener(resetBtn, 'touchstart', function()
+	mxEvent.addGestureListeners(resetBtn, function()
 	{
 		// Blocks processing a image URL while clicking reset
 		resetting = true;
@@ -1952,6 +1969,7 @@ var BackgroundImageDialog = function(editorUi, applyFn)
 	
 	var cancelBtn = mxUtils.button(mxResources.get('cancel'), function()
 	{
+		resetting = true;
 		editorUi.hideDialog();
 	});
 	
@@ -1962,11 +1980,22 @@ var BackgroundImageDialog = function(editorUi, applyFn)
 		btns.appendChild(cancelBtn);
 	}
 
-	var applyBtn = mxUtils.button(mxResources.get('apply'), function()
+	applyBtn = mxUtils.button(mxResources.get('apply'), function()
 	{
 		editorUi.hideDialog();
-		applyFn((urlInput.value != '') ? new mxImage(mxUtils.trim(urlInput.value), widthInput.value, heightInput.value) : null);
+		
+		urlChanged(null, function(url)
+		{
+			applyFn((url != '' && url != null) ? new mxImage(urlInput.value,
+				widthInput.value, heightInput.value) : null, url == null);
+		});
 	});
+	
+	mxEvent.addGestureListeners(applyBtn, function()
+	{
+		ignoreEvt = true;
+	});
+	
 	applyBtn.className = 'geBtn gePrimaryBtn';
 	btns.appendChild(applyBtn);
 	
@@ -1985,9 +2014,10 @@ var BackgroundImageDialog = function(editorUi, applyFn)
  */
 var ParseDialog = function(editorUi, title, defaultType)
 {
+	var plantUmlExample = '@startuml\nskinparam shadowing false\nAlice -> Bob: Authentication Request\nBob --> Alice: Authentication Response\n\nAlice -> Bob: Another authentication Request\nAlice <-- Bob: Another authentication Response\n@enduml';
 	var insertPoint = editorUi.editor.graph.getFreeInsertPoint();
 
-	function parse(text, type)
+	function parse(text, type, evt)
 	{
 		var lines = text.split('\n');
 		
@@ -1998,9 +2028,10 @@ var ParseDialog = function(editorUi, title, defaultType)
 				var graph = editorUi.editor.graph;
 				var format = (type == 'plantUmlTxt') ? 'txt' :
 					((type == 'plantUmlPng') ? 'png' : 'svg');
-				editorUi.generatePlantUmlImage(text, format, function(data, w, h)
+				
+				function insertPlantUmlImage(text, format, data, w, h)
 				{
-					editorUi.spinner.stop();
+					insertPoint = (mxEvent.isAltDown(evt)) ? insertPoint : graph.getCenterInsertPoint(new mxRectangle(0, 0, w, h));
 					var cell = null;
 					
 					graph.getModel().beginUpdate();
@@ -2025,10 +2056,31 @@ var ParseDialog = function(editorUi, title, defaultType)
 						graph.setSelectionCell(cell);
 						graph.scrollCellToVisible(cell);
 					}
-				}, function(e)
+				};
+				
+				// Hardcoded response for default settings
+				if (text == plantUmlExample && format == 'svg')
 				{
-					editorUi.handleError(e);
-				});
+					window.setTimeout(function()
+					{
+						editorUi.spinner.stop();
+						insertPlantUmlImage(text, format, 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBjb250ZW50U2NyaXB0VHlwZT0iYXBwbGljYXRpb24vZWNtYXNjcmlwdCIgY29udGVudFN0eWxlVHlwZT0idGV4dC9jc3MiIGhlaWdodD0iMjEycHgiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiIHN0eWxlPSJ3aWR0aDoyOTVweDtoZWlnaHQ6MjEycHg7IiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAyOTUgMjEyIiB3aWR0aD0iMjk1cHgiIHpvb21BbmRQYW49Im1hZ25pZnkiPjxkZWZzLz48Zz48bGluZSBzdHlsZT0ic3Ryb2tlOiAjQTgwMDM2OyBzdHJva2Utd2lkdGg6IDEuMDsgc3Ryb2tlLWRhc2hhcnJheTogNS4wLDUuMDsiIHgxPSIzMSIgeDI9IjMxIiB5MT0iMzQuNDg4MyIgeTI9IjE3MS43MzA1Ii8+PGxpbmUgc3R5bGU9InN0cm9rZTogI0E4MDAzNjsgc3Ryb2tlLXdpZHRoOiAxLjA7IHN0cm9rZS1kYXNoYXJyYXk6IDUuMCw1LjA7IiB4MT0iMjY0LjUiIHgyPSIyNjQuNSIgeTE9IjM0LjQ4ODMiIHkyPSIxNzEuNzMwNSIvPjxyZWN0IGZpbGw9IiNGRUZFQ0UiIGhlaWdodD0iMzAuNDg4MyIgc3R5bGU9InN0cm9rZTogI0E4MDAzNjsgc3Ryb2tlLXdpZHRoOiAxLjU7IiB3aWR0aD0iNDciIHg9IjgiIHk9IjMiLz48dGV4dCBmaWxsPSIjMDAwMDAwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgbGVuZ3RoQWRqdXN0PSJzcGFjaW5nQW5kR2x5cGhzIiB0ZXh0TGVuZ3RoPSIzMyIgeD0iMTUiIHk9IjIzLjUzNTIiPkFsaWNlPC90ZXh0PjxyZWN0IGZpbGw9IiNGRUZFQ0UiIGhlaWdodD0iMzAuNDg4MyIgc3R5bGU9InN0cm9rZTogI0E4MDAzNjsgc3Ryb2tlLXdpZHRoOiAxLjU7IiB3aWR0aD0iNDciIHg9IjgiIHk9IjE3MC43MzA1Ii8+PHRleHQgZmlsbD0iIzAwMDAwMCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGxlbmd0aEFkanVzdD0ic3BhY2luZ0FuZEdseXBocyIgdGV4dExlbmd0aD0iMzMiIHg9IjE1IiB5PSIxOTEuMjY1NiI+QWxpY2U8L3RleHQ+PHJlY3QgZmlsbD0iI0ZFRkVDRSIgaGVpZ2h0PSIzMC40ODgzIiBzdHlsZT0ic3Ryb2tlOiAjQTgwMDM2OyBzdHJva2Utd2lkdGg6IDEuNTsiIHdpZHRoPSI0MCIgeD0iMjQ0LjUiIHk9IjMiLz48dGV4dCBmaWxsPSIjMDAwMDAwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgbGVuZ3RoQWRqdXN0PSJzcGFjaW5nQW5kR2x5cGhzIiB0ZXh0TGVuZ3RoPSIyNiIgeD0iMjUxLjUiIHk9IjIzLjUzNTIiPkJvYjwvdGV4dD48cmVjdCBmaWxsPSIjRkVGRUNFIiBoZWlnaHQ9IjMwLjQ4ODMiIHN0eWxlPSJzdHJva2U6ICNBODAwMzY7IHN0cm9rZS13aWR0aDogMS41OyIgd2lkdGg9IjQwIiB4PSIyNDQuNSIgeT0iMTcwLjczMDUiLz48dGV4dCBmaWxsPSIjMDAwMDAwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgbGVuZ3RoQWRqdXN0PSJzcGFjaW5nQW5kR2x5cGhzIiB0ZXh0TGVuZ3RoPSIyNiIgeD0iMjUxLjUiIHk9IjE5MS4yNjU2Ij5Cb2I8L3RleHQ+PHBvbHlnb24gZmlsbD0iI0E4MDAzNiIgcG9pbnRzPSIyNTIuNSw2MS43OTg4LDI2Mi41LDY1Ljc5ODgsMjUyLjUsNjkuNzk4OCwyNTYuNSw2NS43OTg4IiBzdHlsZT0ic3Ryb2tlOiAjQTgwMDM2OyBzdHJva2Utd2lkdGg6IDEuMDsiLz48bGluZSBzdHlsZT0ic3Ryb2tlOiAjQTgwMDM2OyBzdHJva2Utd2lkdGg6IDEuMDsiIHgxPSIzMS41IiB4Mj0iMjU4LjUiIHkxPSI2NS43OTg4IiB5Mj0iNjUuNzk4OCIvPjx0ZXh0IGZpbGw9IiMwMDAwMDAiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjEzIiBsZW5ndGhBZGp1c3Q9InNwYWNpbmdBbmRHbHlwaHMiIHRleHRMZW5ndGg9IjE0NyIgeD0iMzguNSIgeT0iNjEuMDU2NiI+QXV0aGVudGljYXRpb24gUmVxdWVzdDwvdGV4dD48cG9seWdvbiBmaWxsPSIjQTgwMDM2IiBwb2ludHM9IjQyLjUsOTEuMTA5NCwzMi41LDk1LjEwOTQsNDIuNSw5OS4xMDk0LDM4LjUsOTUuMTA5NCIgc3R5bGU9InN0cm9rZTogI0E4MDAzNjsgc3Ryb2tlLXdpZHRoOiAxLjA7Ii8+PGxpbmUgc3R5bGU9InN0cm9rZTogI0E4MDAzNjsgc3Ryb2tlLXdpZHRoOiAxLjA7IHN0cm9rZS1kYXNoYXJyYXk6IDIuMCwyLjA7IiB4MT0iMzYuNSIgeDI9IjI2My41IiB5MT0iOTUuMTA5NCIgeTI9Ijk1LjEwOTQiLz48dGV4dCBmaWxsPSIjMDAwMDAwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMyIgbGVuZ3RoQWRqdXN0PSJzcGFjaW5nQW5kR2x5cGhzIiB0ZXh0TGVuZ3RoPSIxNTciIHg9IjQ4LjUiIHk9IjkwLjM2NzIiPkF1dGhlbnRpY2F0aW9uIFJlc3BvbnNlPC90ZXh0Pjxwb2x5Z29uIGZpbGw9IiNBODAwMzYiIHBvaW50cz0iMjUyLjUsMTIwLjQxOTksMjYyLjUsMTI0LjQxOTksMjUyLjUsMTI4LjQxOTksMjU2LjUsMTI0LjQxOTkiIHN0eWxlPSJzdHJva2U6ICNBODAwMzY7IHN0cm9rZS13aWR0aDogMS4wOyIvPjxsaW5lIHN0eWxlPSJzdHJva2U6ICNBODAwMzY7IHN0cm9rZS13aWR0aDogMS4wOyIgeDE9IjMxLjUiIHgyPSIyNTguNSIgeTE9IjEyNC40MTk5IiB5Mj0iMTI0LjQxOTkiLz48dGV4dCBmaWxsPSIjMDAwMDAwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMyIgbGVuZ3RoQWRqdXN0PSJzcGFjaW5nQW5kR2x5cGhzIiB0ZXh0TGVuZ3RoPSIxOTkiIHg9IjM4LjUiIHk9IjExOS42Nzc3Ij5Bbm90aGVyIGF1dGhlbnRpY2F0aW9uIFJlcXVlc3Q8L3RleHQ+PHBvbHlnb24gZmlsbD0iI0E4MDAzNiIgcG9pbnRzPSI0Mi41LDE0OS43MzA1LDMyLjUsMTUzLjczMDUsNDIuNSwxNTcuNzMwNSwzOC41LDE1My43MzA1IiBzdHlsZT0ic3Ryb2tlOiAjQTgwMDM2OyBzdHJva2Utd2lkdGg6IDEuMDsiLz48bGluZSBzdHlsZT0ic3Ryb2tlOiAjQTgwMDM2OyBzdHJva2Utd2lkdGg6IDEuMDsgc3Ryb2tlLWRhc2hhcnJheTogMi4wLDIuMDsiIHgxPSIzNi41IiB4Mj0iMjYzLjUiIHkxPSIxNTMuNzMwNSIgeTI9IjE1My43MzA1Ii8+PHRleHQgZmlsbD0iIzAwMDAwMCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTMiIGxlbmd0aEFkanVzdD0ic3BhY2luZ0FuZEdseXBocyIgdGV4dExlbmd0aD0iMjA5IiB4PSI0OC41IiB5PSIxNDguOTg4MyI+QW5vdGhlciBhdXRoZW50aWNhdGlvbiBSZXNwb25zZTwvdGV4dD48IS0tTUQ1PVs3ZjNlNGQwYzkwMWVmZGJjNTdlYjQ0MjQ5YTNiODE5N10KQHN0YXJ0dW1sDQpza2lucGFyYW0gc2hhZG93aW5nIGZhbHNlDQpBbGljZSAtPiBCb2I6IEF1dGhlbnRpY2F0aW9uIFJlcXVlc3QNCkJvYiAtIC0+IEFsaWNlOiBBdXRoZW50aWNhdGlvbiBSZXNwb25zZQ0KDQpBbGljZSAtPiBCb2I6IEFub3RoZXIgYXV0aGVudGljYXRpb24gUmVxdWVzdA0KQWxpY2UgPC0gLSBCb2I6IEFub3RoZXIgYXV0aGVudGljYXRpb24gUmVzcG9uc2UNCkBlbmR1bWwNCgpQbGFudFVNTCB2ZXJzaW9uIDEuMjAyMC4wMihTdW4gTWFyIDAxIDA0OjIyOjA3IENTVCAyMDIwKQooTUlUIHNvdXJjZSBkaXN0cmlidXRpb24pCkphdmEgUnVudGltZTogT3BlbkpESyBSdW50aW1lIEVudmlyb25tZW50CkpWTTogT3BlbkpESyA2NC1CaXQgU2VydmVyIFZNCkphdmEgVmVyc2lvbjogMTIrMzMKT3BlcmF0aW5nIFN5c3RlbTogTWFjIE9TIFgKRGVmYXVsdCBFbmNvZGluZzogVVRGLTgKTGFuZ3VhZ2U6IGVuCkNvdW50cnk6IFVTCi0tPjwvZz48L3N2Zz4=',
+							295, 212);
+					}, 200);
+					
+				}
+				else
+				{
+					editorUi.generatePlantUmlImage(text, format, function(data, w, h)
+					{
+						editorUi.spinner.stop();
+						insertPlantUmlImage(text, format, data, w, h);
+						
+					}, function(e)
+					{
+						editorUi.handleError(e);
+					});
+				}
 			}
 		}
 		else if (type == 'mermaid')
@@ -2039,6 +2091,7 @@ var ParseDialog = function(editorUi, title, defaultType)
 				
 				editorUi.generateMermaidImage(text, format, function(data, w, h)
 				{
+					insertPoint = (mxEvent.isAltDown(evt)) ? insertPoint : graph.getCenterInsertPoint(new mxRectangle(0, 0, w, h));
 					editorUi.spinner.stop();
 					var cell = null;
 					
@@ -2088,8 +2141,8 @@ var ParseDialog = function(editorUi, title, defaultType)
 						name = name.substring(0, name.lastIndexOf(' '));
 					}
 					
-					tableCell = new mxCell(name, new mxGeometry(dx, 0, 160, 26),
-						'swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;align=center;');
+					tableCell = new mxCell(name, new mxGeometry(dx, 0, 160, 40),
+						'shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;');
 					tableCell.vertex = true;
 					cells.push(tableCell);
 					
@@ -2099,9 +2152,6 @@ var ParseDialog = function(editorUi, title, defaultType)
 		   			{
 		   				tableCell.geometry.width = size.width + 10;
 		   			}
-		   			
-		   			// For primary key lookups
-		   			rows = {};
 				}
 				else if (tableCell != null && tmp.charAt(0) == ')')
 				{
@@ -2116,28 +2166,32 @@ var ParseDialog = function(editorUi, title, defaultType)
 					{
 						var pk = name.toLowerCase().indexOf('primary key');
 						name = name.replace(/primary key/i, '');
-						var rowCell = new mxCell(name, new mxGeometry(0, 0, 90, 26),
-							'shape=partialRectangle;top=0;left=0;right=0;bottom=0;align=left;verticalAlign=top;spacingTop=-2;fillColor=none;spacingLeft=34;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;dropTarget=0;');
-			   			rowCell.vertex = true;
-		
-						var left = sb.cloneCell(rowCell, (pk > 0) ? 'PK' : '');
-			   			left.connectable = false;
-			   			left.style = 'shape=partialRectangle;top=0;left=0;bottom=0;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[];portConstraint=eastwest;part=1;'
-			   			left.geometry.width = 30;
-			   			left.geometry.height = 26;
-			   			rowCell.insert(left);
+						
+						var rowCell = new mxCell('', new mxGeometry(0, 0, 160, 30),
+							'shape=partialRectangle;collapsible=0;dropTarget=0;pointerEvents=0;fillColor=none;' +
+							'points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=' +
+							((pk > 0) ? '1' : '0') + ';');
+						rowCell.vertex = true;
+						
+						var left = new mxCell((pk > 0) ? 'PK' : '', new mxGeometry(0, 0, 30, 30),
+							'shape=partialRectangle;overflow=hidden;connectable=0;fillColor=none;top=0;left=0;bottom=0;right=0;' + ((pk > 0) ? 'fontStyle=1;' : ''));
+						left.vertex = true;
+						rowCell.insert(left);
+						
+						var right = new mxCell(name, new mxGeometry(30, 0, 130, 30),
+							'shape=partialRectangle;overflow=hidden;connectable=0;fillColor=none;top=0;left=0;bottom=0;right=0;align=left;spacingLeft=6;' + ((pk > 0) ? 'fontStyle=5;' : ''));
+						right.vertex = true;
+						rowCell.insert(right);
+						
+			   			var size = editorUi.editor.graph.getPreferredSizeForCell(right);
 			   			
-			   			var size = editorUi.editor.graph.getPreferredSizeForCell(rowCell);
-			   			
-			   			if (size != null && tableCell.geometry.width < size.width + 10)
+			   			if (size != null && tableCell.geometry.width < size.width + 30)
 			   			{
-			   				tableCell.geometry.width = Math.min(220, size.width + 10);
+			   				tableCell.geometry.width = Math.min(320, Math.max(tableCell.geometry.width, size.width + 30));
 			   			}
 			   			
 			   			tableCell.insert(rowCell);
-			   			tableCell.geometry.height += 26;
-			   			
-			   			rows[rowCell.value] = rowCell;
+			   			tableCell.geometry.height += 30;
 					}
 				}
 			}
@@ -2145,14 +2199,9 @@ var ParseDialog = function(editorUi, title, defaultType)
 			if (cells.length > 0)
 			{
 				var graph = editorUi.editor.graph;
-				var view = graph.view;
-				var bds = graph.getGraphBounds();
-				
-				// Computes unscaled, untranslated graph bounds
-				var x = Math.ceil(Math.max(0, bds.x / view.scale - view.translate.x) + 4 * graph.gridSize);
-				var y = Math.ceil(Math.max(0, (bds.y + bds.height) / view.scale - view.translate.y) + 4 * graph.gridSize);
-
-				graph.setSelectionCells(graph.importCells(cells, x, y));
+				insertPoint = (mxEvent.isAltDown(evt)) ? insertPoint :
+					graph.getCenterInsertPoint(graph.getBoundingBoxFromGeometry(cells, true));
+				graph.setSelectionCells(graph.importCells(cells, insertPoint.x, insertPoint.y));
 				graph.scrollCellToVisible(graph.getSelectionCell());
 			}
 		}
@@ -2220,6 +2269,9 @@ var ParseDialog = function(editorUi, title, defaultType)
 				
 				if (cells.length > 0)
 				{
+					insertPoint = (mxEvent.isAltDown(evt)) ? insertPoint :
+						graph.getCenterInsertPoint(graph.getBoundingBoxFromGeometry(cells, true));
+					
 					graph.getModel().beginUpdate();
 					try
 					{
@@ -2330,8 +2382,10 @@ var ParseDialog = function(editorUi, title, defaultType)
 				editorUi.editor.graph.getModel().beginUpdate();
 				try
 				{
-					inserted = editorUi.editor.graph.importCells(graph.getModel().getChildren(
-						graph.getDefaultParent()), insertPoint.x, insertPoint.y)
+					cells = graph.getModel().getChildren(graph.getDefaultParent());
+					insertPoint = (mxEvent.isAltDown(evt)) ? insertPoint :
+						editorUi.editor.graph.getCenterInsertPoint(graph.getBoundingBoxFromGeometry(cells, true));
+					inserted = editorUi.editor.graph.importCells(cells, insertPoint.x, insertPoint.y)
 					editorUi.editor.graph.fireEvent(new mxEventObject('cellsInserted', 'cells', inserted));
 				}
 				finally
@@ -2457,7 +2511,7 @@ var ParseDialog = function(editorUi, title, defaultType)
 		}
 		else if (typeSelect.value == 'plantUmlSvg' || typeSelect.value == 'plantUmlTxt')
 		{
-			return '@startuml\nskinparam shadowing false\nAlice -> Bob: Authentication Request\nBob --> Alice: Authentication Response\n\nAlice -> Bob: Another authentication Request\nAlice <-- Bob: Another authentication Response\n@enduml';
+			return plantUmlExample;
 		}
 		else
 		{
@@ -2551,10 +2605,10 @@ var ParseDialog = function(editorUi, title, defaultType)
 		div.appendChild(cancelBtn);
 	}
 	
-	var okBtn = mxUtils.button(mxResources.get('insert'), function()
+	var okBtn = mxUtils.button(mxResources.get('insert'), function(evt)
 	{
 		editorUi.hideDialog();
-		parse(textarea.value, typeSelect.value);
+		parse(textarea.value, typeSelect.value, evt);
 	});
 	div.appendChild(okBtn);
 	
@@ -4697,7 +4751,7 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 	
 	var helpBtn = mxUtils.button(mxResources.get('help'), function()
 	{
-		editorUi.openLink('https://desk.draw.io/solution/articles/16000080137');
+		editorUi.openLink('https://desk.draw.io/support/solutions/articles/16000080137');
 	});
 
 	helpBtn.style.verticalAlign = 'middle';
@@ -5836,7 +5890,8 @@ var DraftDialog = function(editorUi, title, xml, editFn, discardFn, editLabel, d
 	container.style.position = 'absolute';
 	container.style.border = '1px solid lightGray';
 	container.style.marginTop = '10px';
-	container.style.width = '640px';
+	container.style.left = '40px';
+	container.style.right = '40px';
 	container.style.top = '46px';
 	container.style.bottom = '74px';
 	container.style.overflow = 'hidden';
@@ -5985,7 +6040,7 @@ var DraftDialog = function(editorUi, title, xml, editFn, discardFn, editLabel, d
 	var buttons = document.createElement('div');
 	buttons.style.position = 'absolute';
 	buttons.style.bottom = '30px';
-	buttons.style.width = '640px';
+	buttons.style.right = '40px';
 	buttons.style.textAlign = 'right';
 
 	var tb = document.createElement('div');
@@ -6292,11 +6347,11 @@ var FindWindow = function(ui, x, y, w, h)
 				{
 					if (graph.isHtmlLabel(state.cell))
 					{
-						tmp.innerHTML = graph.getLabel(state.cell);
+						tmp.innerHTML = graph.sanitizeHtml(graph.getLabel(state.cell));
 						label = mxUtils.extractTextWithWhitespace([tmp]);
 					}
 					else
-					{					
+					{
 						label = graph.getLabel(state.cell);
 					}
 		
@@ -7356,7 +7411,7 @@ var MoreShapesDialog = function(editorUi, expanded, entries)
 	this.container = div;
 };
 
-var PluginsDialog = function(editorUi) 
+var PluginsDialog = function(editorUi, addFn, delFn) 
 {
 	var div = document.createElement('div');
 	var inner = document.createElement('div');
@@ -7401,6 +7456,11 @@ var PluginsDialog = function(editorUi)
 					{
 						editorUi.confirm(mxResources.get('delete') + ' "' + plugins[index] + '"?', function()
 						{
+							if (delFn != null) 
+							{
+								delFn(plugins[index]);
+							}
+							
 							plugins.splice(index, 1);
 							refresh();
 						});
@@ -7413,7 +7473,19 @@ var PluginsDialog = function(editorUi)
 	div.appendChild(inner);
 	refresh();
 
-	var addBtn = mxUtils.button(mxResources.get('add'), function()
+	var addBtn = mxUtils.button(mxResources.get('add'), addFn != null? function()
+	{
+		addFn(function(newPlugin)
+		{
+			if (newPlugin && mxUtils.indexOf(plugins, newPlugin) < 0)
+			{
+				plugins.push(newPlugin);
+			}
+			
+			refresh();
+		});
+	}
+	: function()
 	{
 		var tmp = '';
 		var param = urlParams['p'];
@@ -8205,7 +8277,7 @@ var LibraryDialog = function(editorUi, name, library, initialImages, file, mode)
 					label.style.bottom = '-18px';
 					label.style.left = '10px';
 					label.style.right = '10px';
-					label.style.backgroundColor = '#ffffff';
+					label.style.backgroundColor = (uiTheme == 'dark') ? '#2a2a2a' : '#ffffff';
 					label.style.overflow = 'hidden';
 					label.style.textAlign = 'center';
 					
@@ -8589,6 +8661,52 @@ var LibraryDialog = function(editorUi, name, library, initialImages, file, mode)
 		btns.appendChild(cancelBtn);
 	}
 
+	if (editorUi.getServiceName() == 'draw.io' && file != null &&
+		// Limits button to ibraries which are known to have public URLs
+		(file.constructor == DriveLibrary || file.constructor == GitHubLibrary))
+	{
+		var btn = mxUtils.button(mxResources.get('link'), function()
+		{
+			if (editorUi.spinner.spin(document.body, mxResources.get('loading')))
+			{
+		    	file.getPublicUrl(function(url)
+				{
+					editorUi.spinner.stop();
+					
+					if (url != null)
+					{
+						var search = editorUi.getSearch(['create', 'title', 'mode', 'url', 'drive', 'splash', 'state', 'clibs', 'ui']);
+						search += ((search.length == 0) ? '?' : '&') + 'splash=0&clibs=U' + encodeURIComponent(url);
+						var dlg = new EmbedDialog(editorUi, window.location.protocol + '//' +
+							window.location.host + '/' + search, null, null, null, null,
+							'Check out the library I made using @drawio');
+						editorUi.showDialog(dlg.container, 440, 240, true);
+						dlg.init();
+					}
+					else if (file.constructor == DriveLibrary)
+					{
+					    editorUi.showError(mxResources.get('error'), mxResources.get('diagramIsNotPublic'),
+							mxResources.get('share'), mxUtils.bind(this, function()
+							{
+								editorUi.drive.showPermissions(file.getId());
+							}), null, mxResources.get('ok'), mxUtils.bind(this, function()
+							{
+								// Hides dialog
+							})
+						);
+					}
+					else
+					{
+						editorUi.handleError({message: mxResources.get('diagramIsNotPublic')});
+					}
+				});
+			}
+		});
+
+		btn.className = 'geBtn';
+		btns.appendChild(btn);
+	}
+	
 	var btn = mxUtils.button(mxResources.get('export'), function()
 	{
     	var data = editorUi.createLibraryDataFromImages(images);
@@ -8663,7 +8781,7 @@ var LibraryDialog = function(editorUi, name, library, initialImages, file, mode)
 		btns.appendChild(btn);
 	}
 
-	var btn = mxUtils.button(mxResources.get('addImageUrl'), function()
+	var btn = mxUtils.button(mxResources.get('addImages'), function()
 	{
 		if (stopEditing != null)
 		{
@@ -8929,7 +9047,7 @@ var EditShapeDialog = function(editorUi, cell, title, w, h)
 	this.container = table;
 };
 
-var CustomDialog = function(editorUi, content, okFn, cancelFn, okButtonText, helpLink, buttonsContent, hideCancel)
+var CustomDialog = function(editorUi, content, okFn, cancelFn, okButtonText, helpLink, buttonsContent, hideCancel, cancelButtonText)
 {
 	var div = document.createElement('div');
 	div.appendChild(content);
@@ -8954,7 +9072,7 @@ var CustomDialog = function(editorUi, content, okFn, cancelFn, okButtonText, hel
 		btns.appendChild(helpBtn);
 	}
 	
-	var cancelBtn = mxUtils.button(mxResources.get('cancel'), function()
+	var cancelBtn = mxUtils.button(cancelButtonText || mxResources.get('cancel'), function()
 	{
 		editorUi.hideDialog();
 		
@@ -10385,7 +10503,7 @@ AspectDialog.prototype.createPageItem = function(pageId, pageName, pageNode, pag
 	var $listItem = document.createElement('div');
 	$listItem.className = 'geAspectDlgListItem';
 	$listItem.setAttribute('data-page-id', pageId)
-	$listItem.innerHTML = '<div style="max-width: 100%; max-height: 100%;"></div><div class="geAspectDlgListItemText">' + pageName + '</div>';
+	$listItem.innerHTML = '<div style="max-width: 100%; max-height: 100%;"></div><div class="geAspectDlgListItemText">' + mxUtils.htmlEntities(pageName) + '</div>';
 	
 	this.pagesContainer.appendChild($listItem);
 	
@@ -10428,7 +10546,7 @@ AspectDialog.prototype.createLayerItem = function(layer, pageId, graph, pageNode
 	var $listItem = document.createElement('div');
 	$listItem.setAttribute('data-layer-id', layer.id);
 	$listItem.className = 'geAspectDlgListItem';
-	$listItem.innerHTML = '<div style="max-width: 100%; max-height: 100%;"></div><div class="geAspectDlgListItemText">' + layerName + '</div>';
+	$listItem.innerHTML = '<div style="max-width: 100%; max-height: 100%;"></div><div class="geAspectDlgListItemText">' + mxUtils.htmlEntities(layerName) + '</div>';
 	this.layersContainer.appendChild($listItem);
 	
 	this.createViewer($listItem.childNodes[0], pageNode, layer.id);

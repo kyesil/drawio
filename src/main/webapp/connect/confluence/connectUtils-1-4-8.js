@@ -1,5 +1,10 @@
-// Renamed from ac.js. This is the version used for release 1.4.8-AC onwards
+// Sets base path for mxgraph library
+if (typeof window.mxBasePath === 'undefined')
+{
+	window.mxBasePath = '/mxgraph';
+}
 
+// Renamed from ac.js. This is the version used for release 1.4.8-AC onwards
 var AC = {};
 
 AC.autosaveTimeout = 10000;
@@ -173,7 +178,7 @@ AC.initI18nAsync = function(lang, callback)
 		});
 	};
 	
-	script.src = '/js/viewer.min.js';
+	script.src = '/js/viewer-static.min.js';
 	document.getElementsByTagName('head')[0].appendChild(script);
 };
 
@@ -789,10 +794,10 @@ AC.getPageAttachments = function(pageId, success, error)
 {
 	var attachments = [];
 
-	function getAttsChunk(nextUrl)
+	function getAttsChunk(start)
 	{
 		AP.request({
-			url: nextUrl != null? nextUrl : '/rest/api/content/' + pageId + '/child/attachment?limit=100',
+			url: '/rest/api/content/' + pageId + '/child/attachment?limit=100&start=' + start,
 			type: 'GET',
 			contentType: 'application/json;charset=UTF-8',
 			success: function(resp) 
@@ -803,7 +808,8 @@ AC.getPageAttachments = function(pageId, success, error)
 				//Support paging
 				if (resp._links && resp._links.next) 
 				{
-					getAttsChunk(resp._links.next);
+					start += resp.limit; //Sometimes the limit is changed by the server
+					getAttsChunk(start);
 				}
 				else
 				{
@@ -814,7 +820,7 @@ AC.getPageAttachments = function(pageId, success, error)
 		});
 	};
 	
-	getAttsChunk();	
+	getAttsChunk(0);	
 };
 
 AC.searchDiagrams = function(searchStr, success, error)
@@ -1709,6 +1715,19 @@ AC.init = function(baseUrl, location, pageId, editor, diagramName, initialXml, d
 							// Session expired
 							message = mxResources.get('confSessionExpired') +
 								' <a href="' + baseUrl + '/pages/dashboard.action" target="_blank">' + mxResources.get('login') + '</a>';
+						}
+						else if (err.status == 400)
+						{
+							try
+							{
+								var errObj = JSON.parse(err.responseText);
+								
+								if (errObj.message.indexOf('Content body cannot be converted to new editor') > 0)
+								{
+									message = 'A Confluence Bug (CONFCLOUD-69902) prevented saving the page. Please edit the diagram from "Confluence Page Editor" where you can restore you changes from "File -> Revision history".';
+								}	
+							}
+							catch(e){} //Ignore
 						}
 						
 						showError(key, message);
