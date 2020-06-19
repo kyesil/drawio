@@ -1,7 +1,7 @@
 <?php 
 define('PDSC', 'C:/KAPPS/WWW/StaticWeb/www/R/pd/');
 define('PDPHP', __DIR__);
-define('PD', PDPHP.'/../../../../..');
+define('PD', PDPHP.'/../../../..');
 define('KWWW',PD .'/../../../');
 
 define('PDW', PD.'src/main/webapp/');

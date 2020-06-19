@@ -19,9 +19,7 @@ require  '_pd/php/_boot.php';
 	<meta name="msapplication-config" content="images/browserconfig.xml">
     <meta name="mobile-web-app-capable" content="yes">
 	<meta name="theme-color" content="#d89000">
-	<script type="text/javascript">
-		var mxIsElectron = window && window.process && window.process.type;
-		
+	<script type="text/javascript">	
 		/**
 		 * URL Parameters and protocol description are here:
 		 *
@@ -76,6 +74,9 @@ require  '_pd/php/_boot.php';
 				// ignore
 			}
 		}
+
+		// Global variable for desktop
+		var mxIsElectron = window && window.process && window.process.type;
 		
 		// Redirects page if required
 		if (urlParams['dev'] != '1')
@@ -107,13 +108,12 @@ require  '_pd/php/_boot.php';
 			})();
 		}
 		
-		/**
-		 * Adds meta tags with application name (depends on offline URL parameter)
+	/**
+		 * Adds meta tag to the page.
 		 */
-		(function()
+		function mxmeta(name, content, httpEquiv)
 		{
-			function addMeta(name, content, httpEquiv)
-			{
+			return;
 				try
 				{
 					var s = document.createElement('meta');
@@ -139,95 +139,6 @@ require  '_pd/php/_boot.php';
 				}
 			};
 			
-			var name = 'Predixi Draw';
-			addMeta('apple-mobile-web-app-title', name);
-			addMeta('application-name', name);
-
-			if (mxIsElectron)
-			{
-				addMeta(null, 'default-src \'self\' \'unsafe-inline\'; connect-src \'self\' https://*.draw.io https://fonts.googleapis.com https://fonts.gstatic.com; img-src * data:; media-src *; font-src *; style-src-elem \'self\' \'unsafe-inline\' https://fonts.googleapis.com', 'Content-Security-Policy');
-			}
-		})();
-	</script>
-    <link rel="chrome-webstore-item" href="https://chrome.google.com/webstore/detail/plgmlhohecdddhbmmkncjdmlhcmaachm">
-	<link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
-	<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
-	<link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#d89000">
-	<link rel="stylesheet" type="text/css" href="js/croppie/croppie.min.css">
-    <link rel="stylesheet" type="text/css" href="styles/grapheditor.css">
-    <link rel="canonical" href="https://app.diagrams.net">
-	<link rel="manifest" href="images/manifest.json">
-	<link rel="shortcut icon" href="favicon.ico">
-	<style type="text/css">
-		body { overflow:hidden; }
-		div.picker { z-index: 10007; }
-		.geSidebarContainer .geTitle input {
-			font-size:8pt;
-			color:#606060;
-		}
-		.geBlock {
-			z-index:-3;
-			margin:100px;
-			margin-top:40px;
-			margin-bottom:30px;
-			padding:20px;
-		}
-		.geBlock h1, .geBlock h2 {
-			margin-top:0px;
-			padding-top:0px;
-		}
-		.geEditor ::-webkit-scrollbar {
-		    width:14px;
-		    height:14px;
-		}
-		.geEditor ::-webkit-scrollbar-track {
-			background-clip:padding-box;
-			border:solid transparent;
-			border-width:1px;
-		}
-		.geEditor ::-webkit-scrollbar-corner {
-			background-color:transparent;
-		}
-		.geEditor ::-webkit-scrollbar-thumb {
-			background-color:rgba(0,0,0,.1);
-			background-clip:padding-box;
-			border:solid transparent;
-			border-radius:10px;
-		}
-		.geEditor ::-webkit-scrollbar-thumb:hover{
-			background-color:rgba(0,0,0,.4);
-		}
-		.geTemplate {
-			border:1px solid transparent;
-			display:inline-block;
-			_display:inline;
-			vertical-align:top;
-			border-radius:3px;
-			overflow:hidden;
-			font-size:14pt;
-			cursor:pointer;
-			margin:5px;
-		}
-	</style>
-	<!-- Workaround for binary XHR in IE 9/10, see App.loadUrl -->
-	<!--[if (IE 9)|(IE 10)]><!-->
-		<script type="text/vbscript">
-			Function mxUtilsBinaryToArray(Binary)
-				Dim i
-				ReDim byteArray(LenB(Binary))
-				For i = 1 To LenB(Binary)
-					byteArray(i-1) = AscB(MidB(Binary, i, 1))
-				Next
-				mxUtilsBinaryToArray = byteArray
-			End Function
-		</script>
-	<!--<![endif]-->
-
-	<link rel="stylesheet" type="text/css" href="_pd/css/main.css"></style>
-	<script src="_pd/cjs/main.top.js"></script>
-	<?php  require  PDPHP.'/_top.php'; ?>
-	<script type="text/javascript">
 		/**
 		 * Synchronously adds scripts to the page.
 		 */
@@ -281,9 +192,34 @@ require  '_pd/php/_boot.php';
 		 */
 		function mxinclude(src)
 		{
-			var g = document.createElement('script'); g.type = 'text/javascript'; g.async = true; g.src = src;
-		    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(g, s);
+			var g = document.createElement('script');
+			g.type = 'text/javascript';
+			g.async = true;
+			g.src = src;
+			
+		    var s = document.getElementsByTagName('script')[0];
+		    s.parentNode.insertBefore(g, s);
 		};
+		
+	</script>	
+	<link rel="stylesheet" type="text/css" href="_pd/css/main.css"></style>
+	<?php  require  PDPHP.'/_top.php'; ?>
+	<script type="text/javascript" src="_pd/cjs/main.top.js"></script>
+	<script type="text/javascript">
+		/**
+		 * Adds meta tags with application name (depends on offline URL parameter)
+		 */
+		(function()
+		{
+			var name = 'Predixi Draw';
+			mxmeta('apple-mobile-web-app-title', name);
+			mxmeta('application-name', name);
+
+			if (mxIsElectron)
+			{
+				mxmeta(null, 'default-src \'self\' \'unsafe-inline\'; connect-src \'self\' https://*.draw.io https://fonts.googleapis.com https://fonts.gstatic.com; img-src * data:; media-src *; font-src *; style-src-elem \'self\' \'unsafe-inline\' https://fonts.googleapis.com', 'Content-Security-Policy');
+			}
+		})();
 		
 		// Checks for local storage
 		var isLocalStorage = false;
@@ -372,6 +308,80 @@ require  '_pd/php/_boot.php';
 			}
 		};
 	</script>
+	<link rel="chrome-webstore-item" href="https://chrome.google.com/webstore/detail/plgmlhohecdddhbmmkncjdmlhcmaachm">
+	<link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+	<link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#d89000">
+	<link rel="stylesheet" type="text/css" href="js/croppie/croppie.min.css">
+    <link rel="stylesheet" type="text/css" href="styles/grapheditor.css">
+    <link rel="canonical" href="https://app.diagrams.net">
+	<link rel="manifest" href="images/manifest.json">
+	<link rel="shortcut icon" href="favicon.ico">
+	<style type="text/css">
+		body { overflow:hidden; }
+		div.picker { z-index: 10007; }
+		.geSidebarContainer .geTitle input {
+			font-size:8pt;
+			color:#606060;
+		}
+		.geBlock {
+			z-index:-3;
+			margin:100px;
+			margin-top:40px;
+			margin-bottom:30px;
+			padding:20px;
+		}
+		.geBlock h1, .geBlock h2 {
+			margin-top:0px;
+			padding-top:0px;
+		}
+		.geEditor ::-webkit-scrollbar {
+		    width:14px;
+		    height:14px;
+		}
+		.geEditor ::-webkit-scrollbar-track {
+			background-clip:padding-box;
+			border:solid transparent;
+			border-width:1px;
+		}
+		.geEditor ::-webkit-scrollbar-corner {
+			background-color:transparent;
+		}
+		.geEditor ::-webkit-scrollbar-thumb {
+			background-color:rgba(0,0,0,.1);
+			background-clip:padding-box;
+			border:solid transparent;
+			border-radius:10px;
+		}
+		.geEditor ::-webkit-scrollbar-thumb:hover{
+			background-color:rgba(0,0,0,.4);
+		}
+		.geTemplate {
+			border:1px solid transparent;
+			display:inline-block;
+			_display:inline;
+			vertical-align:top;
+			border-radius:3px;
+			overflow:hidden;
+			font-size:14pt;
+			cursor:pointer;
+			margin:5px;
+		}
+	</style>
+	<!-- Workaround for binary XHR in IE 9/10, see App.loadUrl -->
+	<!--[if (IE 9)|(IE 10)]><!-->
+		<script type="text/vbscript">
+			Function mxUtilsBinaryToArray(Binary)
+				Dim i
+				ReDim byteArray(LenB(Binary))
+				For i = 1 To LenB(Binary)
+					byteArray(i-1) = AscB(MidB(Binary, i, 1))
+				Next
+				mxUtilsBinaryToArray = byteArray
+			End Function
+		</script>
+	<!--<![endif]-->
 </head>
 <body class="geEditor">
 <div id="geInfo">
@@ -387,13 +397,27 @@ require  '_pd/php/_boot.php';
 		</p>
 	</div>
 </div>
-
 <script src="_pd/cjs/main.mid.js"></script>
 <script type="text/javascript">
 /**
  * Main
  */
+if (navigator.userAgent != null && navigator.userAgent.toLowerCase().
+	indexOf(' electron/') >= 0 && typeof process !== 'undefined' && process.versions.electron < 5)
+{
+	// Redirects old Electron app to latest version
+	var div = document.getElementById('geInfo');
+	
+	if (div != null)
+	{
+		div.innerHTML = '<center><h2>You are using an out of date version of this app.<br>Please download the latest version ' +
+			'<a href="https://github.com/jgraph/drawio-desktop/releases/latest" target="_blank">here</a>.</h2></center>';
+	}
+}
+else
+{
 App.main();
+}
 </script>
 <script src="_pd/cjs/main.bottom.js"></script>
 </body>

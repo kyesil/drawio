@@ -101,12 +101,14 @@ App.prototype.saveFile = function (forceDialog, success) {
 
 	if (!_SC_PATH) return this.showAlert('Error: No file path');
 
-	var name = this.currentFile.title;
-	var xml = mxUtils.getXml(this.editor.getGraphXml());
-	var svg = decodeHTMLEntities(this.editor.graph.getSvg(null, 1, 0).outerHTML);
-	svg=svg.replace(/xmlns="http:\/\/www.w3.org\/2000\/svg"/ig,'');
+	const name = this.currentFile.title;
+	const xml = mxUtils.getXml(this.editor.getGraphXml());
+	const esvg=this.editor.graph.getSvg(null, 1, 0);
+	esvg.setAttribute('xmlns','http://www.w3.org/2000/svg?');
+	let ssvg = decodeHTMLEntities(esvg.outerHTML);
+	ssvg=ssvg.replace(/xmlns="http:\/\/www.w3.org\/2000\/svg"/ig,'');
 	new mxXmlRequest(SAVE_URL + '&path=' + _SC_PATH + '&',
-		'&xml=' + encodeURIComponent(xml) + '&svg=' + encodeURIComponent(svg)).send();
+		'&xml=' + encodeURIComponent(xml) + '&svg=' + encodeURIComponent(ssvg)).send();
 
 	this.editor.setStatus(mxUtils.htmlEntities(_SC_PATH + ' - saved' + ' ' + new Date()));
 
