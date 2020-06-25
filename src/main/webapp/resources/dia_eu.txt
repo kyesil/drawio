@@ -682,6 +682,7 @@ simple=Arrunta
 simpleArrow=Gezi arrunta
 simpleViewer=Ikusle arrunta
 size=Tamaina
+sketch=Sketch
 solid=Solidoa
 sourceSpacing=Source Spacing
 south=Hegoaldea

@@ -682,6 +682,7 @@ simple=‫ساده‬
 simpleArrow=‫فلش ساده‬
 simpleViewer=Simple Viewer
 size=‫اندازه‬
+sketch=Sketch
 solid=‫ممتد‬
 sourceSpacing=‫فاصله بندی منبع‬
 south=‫جنوب‬

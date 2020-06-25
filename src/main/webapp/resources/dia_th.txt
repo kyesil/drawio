@@ -682,6 +682,7 @@ simple=พื้นฐาน
 simpleArrow=ลูกศรอย่างง่าย
 simpleViewer=Simple Viewer
 size=ขนาด
+sketch=Sketch
 solid=แข็ง
 sourceSpacing=เว้นวรรคแหล่งข้อมูล
 south=ทิศใต้

@@ -682,6 +682,7 @@ simple=Lihtne
 simpleArrow=Lihtne nool
 simpleViewer=Lihtne vaade
 size=Suurus
+sketch=Sketch
 solid=Katkematu
 sourceSpacing=Allika vahekaugus
 south=Lõuna

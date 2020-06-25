@@ -682,6 +682,7 @@ simple=シンプル
 simpleArrow=シンプルな矢印
 simpleViewer=Simple Viewer
 size=サイズ
+sketch=Sketch
 solid=実線
 sourceSpacing=始点の間隔
 south=下

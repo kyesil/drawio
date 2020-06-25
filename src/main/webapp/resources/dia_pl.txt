@@ -682,6 +682,7 @@ simple=Proste
 simpleArrow=Prosta strzałka
 simpleViewer=Simple Viewer
 size=Rozmiar
+sketch=Sketch
 solid=Ciągła
 sourceSpacing=Rozmieszczenie źródła
 south=Południe

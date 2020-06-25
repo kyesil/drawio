@@ -682,6 +682,7 @@ simple=Semplice
 simpleArrow=Freccia semplice
 simpleViewer=Simple Viewer
 size=Dimensione
+sketch=Sketch
 solid=Solido
 sourceSpacing=Spaziatura dell'origine
 south=Sud

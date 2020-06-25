@@ -682,6 +682,7 @@ simple=‫פשוט‬
 simpleArrow=‫חץ פשוט‬
 simpleViewer=Simple Viewer
 size=‫גודל‬
+sketch=Sketch
 solid=‫מוצק‬
 sourceSpacing=‫מרווח מקור‬
 south=‫דרום‬

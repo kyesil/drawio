@@ -682,6 +682,7 @@ simple=Enkel
 simpleArrow=Enkel pil
 simpleViewer=Simple Viewer
 size=Størrelse
+sketch=Sketch
 solid=Solid
 sourceSpacing=Kildeavstand
 south=Sør

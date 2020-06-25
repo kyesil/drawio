@@ -682,6 +682,7 @@ simple=Прост
 simpleArrow=Проста стрелка
 simpleViewer=Simple Viewer
 size=Размер
+sketch=Sketch
 solid=Плътна
 sourceSpacing=Разстояние между точките
 south=Юг

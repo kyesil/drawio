@@ -682,6 +682,7 @@ simple=Eenvoudig
 simpleArrow=Eenvoudige pijl
 simpleViewer=Eenvoudige weergave
 size=Grootte
+sketch=Sketch
 solid=Massief
 sourceSpacing=Bronafstand
 south=Onder

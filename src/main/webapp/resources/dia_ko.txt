@@ -682,6 +682,7 @@ simple=단순
 simpleArrow=단순 화살표
 simpleViewer=Simple Viewer
 size=크기
+sketch=Sketch
 solid=실선
 sourceSpacing=소스 간격
 south=하단

@@ -682,6 +682,7 @@ simple=Simples
 simpleArrow=Seta simples
 simpleViewer=Simple Viewer
 size=Tamanho 
+sketch=Sketch
 solid=Sólido
 sourceSpacing=Espaçamento entre fontes
 south=Sul

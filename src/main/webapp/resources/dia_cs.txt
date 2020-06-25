@@ -682,6 +682,7 @@ simple=Jednoduchý
 simpleArrow=Jednoduchá šipka
 simpleViewer=Simple Viewer
 size=Velikost
+sketch=Sketch
 solid=Plná
 sourceSpacing=Odsazení zdroje
 south=Jih

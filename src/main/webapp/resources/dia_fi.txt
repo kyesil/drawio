@@ -682,6 +682,7 @@ simple=Yksinkertainen
 simpleArrow=Yksinkertainen nuoli
 simpleViewer=Simple Viewer
 size=Koko
+sketch=Sketch
 solid=Kiinteä
 sourceSpacing=Lähteen väli
 south=Etelä 

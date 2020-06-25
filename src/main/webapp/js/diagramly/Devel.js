@@ -50,6 +50,11 @@ if (!mxIsElectron && location.protocol !== 'http:')
 				replace(/%frame-src%/g, 'https://www.lucidchart.com https://app.lucidchart.com').
 				replace(/%style-src%/g, 'https://aui-cdn.atlassian.com https://*.atlassian.net').
 				replace(/  /g, ' '));
+		console.log('jira.draw.io:',
+			csp.replace(/%script-src%/g, 'https://connect-cdn.atl-paas.net').
+				replace(/%frame-src%/g, '').
+				replace(/%style-src%/g, 'https://aui-cdn.atlassian.com https://*.atlassian.net').
+				replace(/  /g, ' '));
 	})();
 }
 			
@@ -60,6 +65,7 @@ mxscript(drawDevUrl + 'js/deflate/base64.js');
 mxscript(drawDevUrl + 'js/jscolor/jscolor.js');
 mxscript(drawDevUrl + 'js/sanitizer/sanitizer.min.js');
 mxscript(drawDevUrl + 'js/croppie/croppie.min.js');
+mxscript(drawDevUrl + 'js/rough/rough.min.js');
 
 // Uses grapheditor from devhost
 mxscript(geBasePath +'/Editor.js');
@@ -191,12 +197,6 @@ mxscript(drawDevUrl + 'js/jszip/jszip.min.js');
 
 // GraphMl Import
 mxscript(drawDevUrl + 'js/diagramly/graphml/mxGraphMlCodec.js');
-
-// Table Layout
-if (urlParams['tableLayout'] == '1')
-{
-  mxscript(drawDevUrl + 'js/diagramly/mxTableLayout.js');
-}
 
 // Org Chart Layout
 if (urlParams['orgChartDev'] == '1')

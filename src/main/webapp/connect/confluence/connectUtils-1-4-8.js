@@ -4,6 +4,9 @@ if (typeof window.mxBasePath === 'undefined')
 	window.mxBasePath = '/mxgraph';
 }
 
+// Sets absolute path for proxy
+window.PROXY_URL = window.PROXY_URL || '/proxy';
+
 // Renamed from ac.js. This is the version used for release 1.4.8-AC onwards
 var AC = {};
 
@@ -2105,7 +2108,7 @@ AC.findMacroInPage = function(pageId, diagramName, lastMacroVer, success, error,
     			var macroDiagName = foundMacros[i].match(AC.findMacroParamRegEx["diagramName"]);
     			var macroRevision = foundMacros[i].match(AC.findMacroParamRegEx["revision"]);
     			
-    			if (macroDiagName != null && macroRevision != null && macroDiagName[1] == diagramName && macroRevision[1] == lastMacroVer)
+    			if (macroDiagName != null && macroRevision != null && macroDiagName[1] == diagramName && (macroRevision[1] == lastMacroVer || lastMacroVer == false))
 				{
     				var macroParams = {};
     				

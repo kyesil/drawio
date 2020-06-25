@@ -682,6 +682,7 @@ simple=Simple
 simpleArrow=Simple Arrow
 simpleViewer=Simple Viewer
 size=Size
+sketch=Sketch
 solid=Solid
 sourceSpacing=Source Spacing
 south=South

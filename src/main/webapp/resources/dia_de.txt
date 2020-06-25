@@ -682,6 +682,7 @@ simple=Einfach
 simpleArrow=Einfacher Pfeil
 simpleViewer=Einfacher Viewer
 size=Größe
+sketch=Skizze
 solid=Durchgehend
 sourceSpacing=Anfangsabstand
 south=Süd

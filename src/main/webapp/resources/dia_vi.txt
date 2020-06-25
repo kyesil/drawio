@@ -682,6 +682,7 @@ simple=Đơn giản
 simpleArrow=Mũi tên đơn giản
 simpleViewer=Simple Viewer
 size=Kích thước
+sketch=Sketch
 solid=Đường liền nét
 sourceSpacing=Khoảng cách nguồn
 south=Hướng Nam

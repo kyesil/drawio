@@ -682,6 +682,7 @@ simple=Звичайний
 simpleArrow=Звичайна стрілка
 simpleViewer=Simple Viewer
 size=Розмір
+sketch=Sketch
 solid=Суцільний
 sourceSpacing=Від початкового вузла
 south=Південь

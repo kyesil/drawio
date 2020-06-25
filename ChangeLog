@@ -1,3 +1,36 @@
+24-JUN-2020: 13.3.4
+
+- Fixes minor bugs
+
+24-JUN-2020: 13.3.3
+
+- Fixes move for tables with selected rows
+- Fixes flex arrow custom handle preview
+- Fixes ignored zoom for step perimeter
+- Uses mxGraph 4.2.1 beta 1
+
+24-JUN-2020: 13.3.2
+
+- Fixes sketch style for partial rectangles
+- No longer replaces comic style
+
+23-JUN-2020: 13.3.1
+
+- Adds rough style and URL parameter
+- Adds support for viewbox in link actions
+- Adds hide-pages, viewbox URL parameters
+- Uses mxGraph 4.2.1
+
+19-JUN-2020: 13.3.0
+
+- Adds ok for prompt JSON message
+- Adds prompt-cancel JSON event
+- Uses mxGraph 4.2.0
+
+17-JUN-2020: 13.2.6
+
+- Fixes caching issues for Confluence Cloud
+
 17-JUN-2020: 13.2.5
 
 - Adds embed.diagrams.net for embed mode

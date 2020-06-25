@@ -682,6 +682,7 @@ simple=Simple
 simpleArrow=Jednostavna strelica
 simpleViewer=Simple Viewer
 size=Veličina
+sketch=Sketch
 solid=Puna linija
 sourceSpacing=Proređivanje izvora
 south=Jug

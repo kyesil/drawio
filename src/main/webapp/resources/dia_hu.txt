@@ -682,6 +682,7 @@ simple=Egyszerű
 simpleArrow=Egyszerű nyíl
 simpleViewer=Simple Viewer
 size=Méret
+sketch=Sketch
 solid=Folytonos
 sourceSpacing=Forrás térköz
 south=Dél

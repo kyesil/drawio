@@ -682,6 +682,7 @@ simple=Απλό
 simpleArrow=Απλό βέλος
 simpleViewer=Simple Viewer
 size=Μέγεθος
+sketch=Sketch
 solid=Συμπαγές
 sourceSpacing=Απόσταση Πηγής
 south=Νότια

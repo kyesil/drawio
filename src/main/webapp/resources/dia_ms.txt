@@ -682,6 +682,7 @@ simple=Ringkas
 simpleArrow=Anak Panah Ringkas
 simpleViewer=Simple Viewer
 size=Saiz
+sketch=Sketch
 solid=Padat
 sourceSpacing=Jarak Sumber
 south=Selatan

@@ -682,6 +682,7 @@ simple=Sederhana
 simpleArrow=Panah Sederhana
 simpleViewer=Simple Viewer
 size=Ukuran
+sketch=Sketch
 solid=Padat
 sourceSpacing=Spasi Sumber
 south=Selatan
