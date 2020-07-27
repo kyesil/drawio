@@ -8,16 +8,9 @@
 	</script>
 	<!-- CSS for print output is needed for using current window -->
 	<style type="text/css">
-		@media print {
-		  span.MathJax_SVG svg { shape-rendering: crispEdges; }
-		  table.mxPageSelector { display: none; }
-		  hr.mxPageBreak { display: none; }
-		}
-		@media screen {
-		  table.mxPageSelector { position: fixed; right: 10px; top: 10px;font-family: Arial; font-size:10pt; border: solid 1px darkgray;background: white; border-collapse:collapse; }
-		  table.mxPageSelector td { border: solid 1px gray; padding:4px; }
-		  body.mxPage { background: gray; }
-		}
+	  	span.MathJax_SVG svg { shape-rendering: crispEdges; }
+	  	table.mxPageSelector { display: none; }
+	  	hr.mxPageBreak { display: none; }
 	</style>
 	<link rel="stylesheet" href="mxgraph/css/common.css" charset="UTF-8" type="text/css">
     <script src="js/app.min.js"></script>
@@ -115,7 +108,31 @@
 			var xmlDoc = node.ownerDocument;
 			var diagrams = null;
 			var from = 0;
-			
+
+			if (mxIsElectron && data.format == 'xml')
+			{
+				const { ipcRenderer } = require('electron');
+
+				try
+				{
+					var xml = mxUtils.getXml(xmlDoc);
+					EditorUi.prototype.createUi = function(){};
+					EditorUi.prototype.addTrees = function(){};
+					EditorUi.prototype.updateActionStates = function(){};
+				 	var editorUi = new EditorUi();
+					var tmpFile = new LocalFile(editorUi, xml);
+					editorUi.setCurrentFile(tmpFile);
+					editorUi.setFileData(xml);
+					ipcRenderer.send('xml-data', mxUtils.getXml(editorUi.getXmlFileData(null, null, data.uncompressed)));
+				}
+				catch(e)
+				{
+					ipcRenderer.send('xml-data-error');
+				}
+				
+				return;
+			}
+
 			// Handles mxfile
 			if (xmlDoc.documentElement.nodeName == 'mxfile')
 			{
@@ -389,24 +406,45 @@
 				var model = graph.getModel();
 				codec.decode(xmlDoc.documentElement, model);
 	
-				// Loads background color
-				var bg = (data.bg != null && data.bg.length > 0 && data.format != 'pdf') ?
-					data.bg : xmlDoc.documentElement.getAttribute('background');
-	
-				// Normalizes values for transparent backgrounds
-				if (bg == 'none' || bg == '')
+				var bg;
+				
+				if (data.format == 'pdf')
 				{
-					bg = null;
+					if (data.bg == 'none')
+					{
+						bg = null;	
+					}
+					else
+					{
+						bg = xmlDoc.documentElement.getAttribute('background');
+						
+						if (bg == 'none' || !bg)
+						{
+							bg = '#ffffff';
+						}
+					}
+				}
+				else
+				{
+					// Loads background color
+					bg = (data.bg != null && data.bg.length > 0) ?
+						data.bg : xmlDoc.documentElement.getAttribute('background');
+		
+					// Normalizes values for transparent backgrounds
+					if (bg == 'none' || bg == '')
+					{
+						bg = null;
+					}
+					
+					// Checks if export format supports transparent backgrounds
+					if (bg == null && data.format != 'gif' && data.format != 'png')
+					{
+						bg = '#ffffff';
+					}	
 				}
 				
-				// Checks if export format supports transparent backgrounds
-				if (bg == null && data.format != 'gif' && data.format != 'png')
-				{
-					bg = '#ffffff';
-				}
-	
 				// Sets background color on page
-				if (bg != null && (data.format != 'pdf' || xmlDoc.documentElement.getAttribute('page') != '1'))
+				if (bg != null)
 				{
 					document.body.style.backgroundColor = bg;
 				}
@@ -447,10 +485,45 @@
 				graph.pdfPageVisible = false;
 				
 				// Handles PDF output where the output should match the page format if the page is visible
-				if (data.format == 'pdf' && xmlDoc.documentElement.getAttribute('page') == '1' && data.w == 0 && data.h == 0 && data.scale == 1)
+				if (data.print || (data.format == 'pdf' && xmlDoc.documentElement.getAttribute('page') == '1' && data.w == 0 && data.h == 0 && data.scale == 1))
 				{
-					var pw = xmlDoc.documentElement.getAttribute('pageWidth');
-					var ph = xmlDoc.documentElement.getAttribute('pageHeight');
+					//Electron printing
+					var printScale = 1;
+					
+					if (data.print)
+					{
+						var gb = graph.getGraphBounds();
+						printScale = data.pageScale;
+				
+						if (isNaN(printScale))
+						{
+							printScale = 1;
+						}
+						
+						// Workaround to match available paper size in actual print output
+						printScale *= 0.75;
+						
+						if (data.fit)
+						{
+							var h = parseInt(data.sheetsAcross);
+							var v = parseInt(data.sheetsDown);
+							
+							data.scale = Math.min((data.pageHeight * v) / (gb.height / graph.view.scale),
+									(data.pageWidth * h) / (gb.width / graph.view.scale));
+						}
+						else
+						{
+							data.scale = data.scale / graph.pageScale;
+							
+							if (isNaN(data.scale))
+							{
+								printScale = 1 / graph.pageScale;
+							}
+						}
+					}
+					
+					var pw = data.pageWidth || xmlDoc.documentElement.getAttribute('pageWidth');
+					var ph = data.pageHeight || xmlDoc.documentElement.getAttribute('pageHeight');
 					graph.pdfPageVisible = true;
 					
 					if (pw != null && ph != null)
@@ -458,7 +531,7 @@
 						graph.pageFormat = new mxRectangle(0, 0, parseFloat(pw), parseFloat(ph));
 					}
 					
-					var ps = xmlDoc.documentElement.getAttribute('pageScale');
+					var ps = data.pageScale || xmlDoc.documentElement.getAttribute('pageScale');
 					
 					if (ps != null)
 					{
@@ -602,8 +675,8 @@
 				if (graph.pdfPageVisible)
 				{
 					var pf = graph.pageFormat || mxConstants.PAGE_FORMAT_A4_PORTRAIT;
-					var scale = 1 / graph.pageScale;
-					var autoOrigin = false;
+					var scale = data.print? data.scale : 1 / graph.pageScale;
+					var autoOrigin = data.fit || false;
 					var border = 0;
 	
 					// Negative coordinates are cropped or shifted if page visible
@@ -613,13 +686,17 @@
 			
 					// Applies print scale
 					pf = mxRectangle.fromRectangle(pf);
-					pf.width = Math.ceil(pf.width) + 1; //The 1 extra pixels to prevent cutting the cells on the right edge of the page
-					pf.height = Math.ceil(pf.height);
+					pf.width = Math.ceil(pf.width * printScale) + 1; //The 1 extra pixels to prevent cutting the cells on the right edge of the page
+					pf.height = Math.ceil(pf.height * printScale);
+					scale *= printScale;
 					
 					// Starts at first visible page
-					var layout = graph.getPageLayout();
-					x0 -= layout.x * pf.width;
-					y0 -= layout.y * pf.height;
+					if (autoOrigin)
+					{
+						var layout = graph.getPageLayout();
+						x0 -= layout.x * pf.width;
+						y0 -= layout.y * pf.height;
+					}
 					
 					if (preview == null)
 					{

@@ -714,13 +714,16 @@
 	};
 	mxUtils.extend(ParallelogramShape, mxActor);
 	ParallelogramShape.prototype.size = 0.2;
+	ParallelogramShape.prototype.fixedSize = 20;
 	ParallelogramShape.prototype.isRoundable = function()
 	{
 		return true;
 	};
 	ParallelogramShape.prototype.redrawPath = function(c, x, y, w, h)
 	{
-		var dx = w * Math.max(0, Math.min(1, parseFloat(mxUtils.getValue(this.style, 'size', this.size))));
+		var fixed = mxUtils.getValue(this.style, 'fixedSize', '0') != '0';
+
+		var dx = (fixed) ? Math.max(0, Math.min(w, parseFloat(mxUtils.getValue(this.style, 'size', this.fixedSize)))) : w * Math.max(0, Math.min(1, parseFloat(mxUtils.getValue(this.style, 'size', this.size))));
 		var arcSize = mxUtils.getValue(this.style, mxConstants.STYLE_ARCSIZE, mxConstants.LINE_ARCSIZE) / 2;
 		this.addPoints(c, [new mxPoint(0, h), new mxPoint(dx, 0), new mxPoint(w, 0), new mxPoint(w - dx, h)],
 				this.isRounded, arcSize, true);
@@ -736,13 +739,17 @@
 	};
 	mxUtils.extend(TrapezoidShape, mxActor);
 	TrapezoidShape.prototype.size = 0.2;
+	TrapezoidShape.prototype.fixedSize = 20;
 	TrapezoidShape.prototype.isRoundable = function()
 	{
 		return true;
 	};
 	TrapezoidShape.prototype.redrawPath = function(c, x, y, w, h)
 	{
-		var dx = w * Math.max(0, Math.min(0.5, parseFloat(mxUtils.getValue(this.style, 'size', this.size))));
+		
+		var fixed = mxUtils.getValue(this.style, 'fixedSize', '0') != '0';
+
+		var dx = (fixed) ? Math.max(0, Math.min(w * 0.5, parseFloat(mxUtils.getValue(this.style, 'size', this.fixedSize)))) : w * Math.max(0, Math.min(0.5, parseFloat(mxUtils.getValue(this.style, 'size', this.size))));
 		var arcSize = mxUtils.getValue(this.style, mxConstants.STYLE_ARCSIZE, mxConstants.LINE_ARCSIZE) / 2;
 		this.addPoints(c, [new mxPoint(0, h), new mxPoint(dx, 0), new mxPoint(w - dx, 0), new mxPoint(w, h)],
 				this.isRounded, arcSize, true);
@@ -933,14 +940,24 @@
 		 this.canvas.arcTo = this.originalArcTo;
 	};
 	
-	// Installs hand jiggle in all shapes
-	var mxShapePaint0 = mxShape.prototype.paint;
-	mxShape.prototype.defaultJiggle = 1.5;
-	mxShape.prototype.paint = function(c)
+	// Installs hand jiggle for comic and sketch style
+	mxShape.prototype.defaultJiggle = 1.5;	
+
+	var shapeBeforePaint = mxShape.prototype.beforePaint;
+	mxShape.prototype.beforePaint = function(c)
 	{
-		// NOTE: getValue does not return a boolean value so !('0') would return true here and below
-		c.handJiggle = this.createHandJiggle(c);
-		mxShapePaint0.apply(this, arguments);
+		shapeBeforePaint.apply(this, arguments);
+		
+		if (c.handJiggle == null)
+		{
+			c.handJiggle = this.createHandJiggle(c);
+		}
+	};
+	
+	var shapeAfterPaint = mxShape.prototype.afterPaint;
+	mxShape.prototype.afterPaint = function(c)
+	{
+		shapeAfterPaint.apply(this, arguments);
 		
 		if (c.handJiggle != null)
 		{
@@ -958,8 +975,7 @@
 	// Overrides to avoid call to rect
 	mxShape.prototype.createHandJiggle = function(c)
 	{
-		if (!this.outline && c.handHiggle == null && this.style != null &&
-			mxUtils.getValue(this.style, 'comic', '0') != '0')
+		if (!this.outline && this.style != null && mxUtils.getValue(this.style, 'comic', '0') != '0')
 		{
 			return this.createComicCanvas(c);
 		}
@@ -982,7 +998,7 @@
 	var mxRectangleShapePaintBackground0 = mxRectangleShape.prototype.paintBackground;
 	mxRectangleShape.prototype.paintBackground = function(c, x, y, w, h)
 	{
-		if (c.handJiggle == null)
+		if (c.handJiggle == null || c.handJiggle.constructor != HandJiggle)
 		{
 			mxRectangleShapePaintBackground0.apply(this, arguments);
 		}
@@ -1211,13 +1227,16 @@
 	};
 	mxUtils.extend(HexagonShape, mxHexagon);
 	HexagonShape.prototype.size = 0.25;
+	HexagonShape.prototype.fixedSize = 20;
 	HexagonShape.prototype.isRoundable = function()
 	{
 		return true;
 	};
 	HexagonShape.prototype.redrawPath = function(c, x, y, w, h)
 	{
-		var s =  w * Math.max(0, Math.min(1, parseFloat(mxUtils.getValue(this.style, 'size', this.size))));
+		var fixed = mxUtils.getValue(this.style, 'fixedSize', '0') != '0';
+		var s = (fixed) ? Math.max(0, Math.min(w * 0.5, parseFloat(mxUtils.getValue(this.style, 'size', this.fixedSize)))) :
+			w * Math.max(0, Math.min(1, parseFloat(mxUtils.getValue(this.style, 'size', this.size))));
 		var arcSize = mxUtils.getValue(this.style, mxConstants.STYLE_ARCSIZE, mxConstants.LINE_ARCSIZE) / 2;
 		this.addPoints(c, [new mxPoint(s, 0), new mxPoint(w - s, 0), new mxPoint(w, 0.5 * h), new mxPoint(w - s, h),
 		                   new mxPoint(s, h), new mxPoint(0, 0.5 * h)], this.isRounded, arcSize, true);
@@ -1789,11 +1808,17 @@
 	// Parallelogram Perimeter
 	mxPerimeter.ParallelogramPerimeter = function (bounds, vertex, next, orthogonal)
 	{
-		var size = ParallelogramShape.prototype.size;
+		var fixed = mxUtils.getValue(vertex.style, 'fixedSize', '0') != '0';
+		var size = (fixed) ? ParallelogramShape.prototype.fixedSize : ParallelogramShape.prototype.size;
 		
 		if (vertex != null)
 		{
 			size = mxUtils.getValue(vertex.style, 'size', size);
+		}
+		
+		if (fixed)
+		{
+			size *= vertex.view.scale;
 		}
 		
 		var x = bounds.x;
@@ -1810,13 +1835,13 @@
 		
 		if (vertical)
 		{
-			var dy = h * Math.max(0, Math.min(1, size));
+			var dy = (fixed) ? Math.max(0, Math.min(h, size)) : h * Math.max(0, Math.min(1, size));
 			points = [new mxPoint(x, y), new mxPoint(x + w, y + dy),
 						new mxPoint(x + w, y + h), new mxPoint(x, y + h - dy), new mxPoint(x, y)];
 		}
 		else
 		{
-			var dx = w * Math.max(0, Math.min(1, size));
+			var dx = (fixed) ? Math.max(0, Math.min(w * 0.5, size)) : w * Math.max(0, Math.min(1, size));
 			points = [new mxPoint(x + dx, y), new mxPoint(x + w, y),
 							new mxPoint(x + w - dx, y + h), new mxPoint(x, y + h), new mxPoint(x + dx, y)];
 		}	
@@ -1846,11 +1871,17 @@
 	// Trapezoid Perimeter
 	mxPerimeter.TrapezoidPerimeter = function (bounds, vertex, next, orthogonal)
 	{
-		var size = TrapezoidShape.prototype.size;
+		var fixed = mxUtils.getValue(vertex.style, 'fixedSize', '0') != '0';
+		var size = (fixed) ? TrapezoidShape.prototype.fixedSize : TrapezoidShape.prototype.size;
 		
 		if (vertex != null)
 		{
 			size = mxUtils.getValue(vertex.style, 'size', size);
+		}
+		
+		if (fixed)
+		{
+			size *= vertex.view.scale;
 		}
 		
 		var x = bounds.x;
@@ -1861,29 +1892,29 @@
 		var direction = (vertex != null) ? mxUtils.getValue(
 				vertex.style, mxConstants.STYLE_DIRECTION,
 				mxConstants.DIRECTION_EAST) : mxConstants.DIRECTION_EAST;
-		var points;
+		var points = [];
 		
 		if (direction == mxConstants.DIRECTION_EAST)
 		{
-			var dx = w * Math.max(0, Math.min(1, size));
+			var dx = (fixed) ? Math.max(0, Math.min(w * 0.5, size)) : w * Math.max(0, Math.min(1, size));
 			points = [new mxPoint(x + dx, y), new mxPoint(x + w - dx, y),
 						new mxPoint(x + w, y + h), new mxPoint(x, y + h), new mxPoint(x + dx, y)];
 		}
 		else if (direction == mxConstants.DIRECTION_WEST)
 		{
-			var dx = w * Math.max(0, Math.min(1, size));
+			var dx = (fixed) ? Math.max(0, Math.min(w, size)) : w * Math.max(0, Math.min(1, size));
 			points = [new mxPoint(x, y), new mxPoint(x + w, y),
 						new mxPoint(x + w - dx, y + h), new mxPoint(x + dx, y + h), new mxPoint(x, y)];
 		}
 		else if (direction == mxConstants.DIRECTION_NORTH)
 		{
-			var dy = h * Math.max(0, Math.min(1, size));
+			var dy = (fixed) ? Math.max(0, Math.min(h, size)) : h * Math.max(0, Math.min(1, size));
 			points = [new mxPoint(x, y + dy), new mxPoint(x + w, y),
 						new mxPoint(x + w, y + h), new mxPoint(x, y + h - dy), new mxPoint(x, y + dy)];
 		}
 		else
 		{
-			var dy = h * Math.max(0, Math.min(1, size));
+			var dy = (fixed) ? Math.max(0, Math.min(h, size)) : h * Math.max(0, Math.min(1, size));
 			points = [new mxPoint(x, y), new mxPoint(x + w, y + dy),
 						new mxPoint(x + w, y + h - dy), new mxPoint(x, y + h), new mxPoint(x, y)];
 		}		
@@ -1990,11 +2021,17 @@
 	// Hexagon Perimeter 2 (keep existing one)
 	mxPerimeter.HexagonPerimeter2 = function (bounds, vertex, next, orthogonal)
 	{
-		var size = HexagonShape.prototype.size;
+		var fixed = mxUtils.getValue(vertex.style, 'fixedSize', '0') != '0';
+		var size = (fixed) ? HexagonShape.prototype.fixedSize : HexagonShape.prototype.size;
 		
 		if (vertex != null)
 		{
 			size = mxUtils.getValue(vertex.style, 'size', size);
+		}
+		
+		if (fixed)
+		{
+			size *= vertex.view.scale;
 		}
 		
 		var x = bounds.x;
@@ -2014,14 +2051,14 @@
 		
 		if (vertical)
 		{
-			var dy = h * Math.max(0, Math.min(1, size));
+			var dy = (fixed) ? Math.max(0, Math.min(h, size)) : h * Math.max(0, Math.min(1, size));
 			points = [new mxPoint(cx, y), new mxPoint(x + w, y + dy), new mxPoint(x + w, y + h - dy),
 							new mxPoint(cx, y + h), new mxPoint(x, y + h - dy),
 							new mxPoint(x, y + dy), new mxPoint(cx, y)];
 		}
 		else
 		{
-			var dx = w * Math.max(0, Math.min(1, size));
+			var dx = (fixed) ? Math.max(0, Math.min(w, size)) : w * Math.max(0, Math.min(1, size));
 			points = [new mxPoint(x + dx, y), new mxPoint(x + w - dx, y), new mxPoint(x + w, cy),
 						new mxPoint(x + w - dx, y + h), new mxPoint(x + dx, y + h),
 						new mxPoint(x, cy), new mxPoint(x + dx, y)];
@@ -2811,14 +2848,21 @@
 			c.setStrokeColor(null);
 		}
 
-		mxRectangleShape.prototype.paintBackground.apply(this, arguments);
-		
 		if (this.style != null)
 		{
-			c.setStrokeColor(this.stroke);
+			var pointerEvents = c.pointerEvents;
+			var events = mxUtils.getValue(this.style, mxConstants.STYLE_POINTER_EVENTS, '1') == '1';
+			
+			if (!events && (this.fill == null || this.fill == mxConstants.NONE))
+			{
+				c.pointerEvents = false;
+			}
+
 			c.rect(x, y, w, h);
 			c.fill();
 
+			c.pointerEvents = pointerEvents;
+			c.setStrokeColor(this.stroke);
 			c.begin();
 			c.moveTo(x, y);
 			
@@ -3380,18 +3424,24 @@
 			};
 		};
 		
-		function createTrapezoidHandleFunction(max)
+		function createTrapezoidHandleFunction(max, defaultValue, fixedDefaultValue)
 		{
+			max = (max != null) ? max : 0.5;
+			
 			return function(state)
 			{
 				var handles = [createHandle(state, ['size'], function(bounds)
 				{
-					var size = Math.max(0, Math.min(max, parseFloat(mxUtils.getValue(this.state.style, 'size', TrapezoidShape.prototype.size))));
-				
-					return new mxPoint(bounds.x + size * bounds.width * 0.75, bounds.y + bounds.height / 4);
+					var fixed = (fixedDefaultValue != null) ? mxUtils.getValue(this.state.style, 'fixedSize', '0') != '0' : null;
+					var size = Math.max(0, parseFloat(mxUtils.getValue(this.state.style, 'size', (fixed) ? fixedDefaultValue : defaultValue)));
+					
+					return new mxPoint(bounds.x + Math.min(bounds.width * 0.75 * max, size * ((fixed) ? 0.75 : bounds.width * 0.75)), bounds.y + bounds.height / 4);
 				}, function(bounds, pt)
 				{
-					this.state.style['size'] = Math.max(0, Math.min(max, (pt.x - bounds.x) / (bounds.width * 0.75)));
+					var fixed = (fixedDefaultValue != null) ? mxUtils.getValue(this.state.style, 'fixedSize', '0') != '0' : null;
+					var size = (fixed) ? (pt.x - bounds.x) : Math.max(0, Math.min(max, (pt.x - bounds.x) / bounds.width * 0.75));
+					
+					this.state.style['size'] = size;
 				}, false, true)];
 				
 				if (mxUtils.getValue(state.style, mxConstants.STYLE_ROUNDED, false))
@@ -3405,7 +3455,7 @@
 		
 		function createDisplayHandleFunction(defaultValue, allowArcHandle, max, redrawEdges, fixedDefaultValue)
 		{
-			max = (max != null) ? max : 1;
+			max = (max != null) ? max : 0.5;
 			
 			return function(state)
 			{
@@ -3414,7 +3464,7 @@
 					var fixed = (fixedDefaultValue != null) ? mxUtils.getValue(this.state.style, 'fixedSize', '0') != '0' : null;
 					var size = parseFloat(mxUtils.getValue(this.state.style, 'size', (fixed) ? fixedDefaultValue : defaultValue));
 	
-					return new mxPoint(bounds.x + Math.max(0, Math.min(bounds.width, size * ((fixed) ? 1 : bounds.width))), bounds.getCenterY());
+					return new mxPoint(bounds.x + Math.max(0, Math.min(bounds.width * 0.5, size * ((fixed) ? 1 : bounds.width))), bounds.getCenterY());
 				}, function(bounds, pt, me)
 				{
 					var fixed = (fixedDefaultValue != null) ? mxUtils.getValue(this.state.style, 'fixedSize', '0') != '0' : null;
@@ -4038,14 +4088,14 @@
 				}, false)];
 			},
 			'step': createDisplayHandleFunction(StepShape.prototype.size, true, null, true, StepShape.prototype.fixedSize),
-			'hexagon': createDisplayHandleFunction(HexagonShape.prototype.size, true, 0.5, true),
+			'hexagon': createDisplayHandleFunction(HexagonShape.prototype.size, true, 0.5, true, HexagonShape.prototype.fixedSize),
 			'curlyBracket': createDisplayHandleFunction(CurlyBracketShape.prototype.size, false),
 			'display': createDisplayHandleFunction(DisplayShape.prototype.size, false),
 			'cube': createCubeHandleFunction(1, CubeShape.prototype.size, false),
 			'card': createCubeHandleFunction(0.5, CardShape.prototype.size, true),
 			'loopLimit': createCubeHandleFunction(0.5, LoopLimitShape.prototype.size, true),
-			'trapezoid': createTrapezoidHandleFunction(0.5),
-			'parallelogram': createTrapezoidHandleFunction(1)
+			'trapezoid': createTrapezoidHandleFunction(0.5, TrapezoidShape.prototype.size, TrapezoidShape.prototype.fixedSize),
+			'parallelogram': createTrapezoidHandleFunction(1, ParallelogramShape.prototype.size, ParallelogramShape.prototype.fixedSize)
 		};
 		
 		// Exposes custom handles
@@ -4316,11 +4366,12 @@
 	                                   new mxConnectionConstraint(new mxPoint(0, 1), true), new mxConnectionConstraint(new mxPoint(1, 1), true),
 	                                   new mxConnectionConstraint(new mxPoint(0.5, 0), true), new mxConnectionConstraint(new mxPoint(0.5, 1), true),
 	          	              		   new mxConnectionConstraint(new mxPoint(0, 0.5), true), new mxConnectionConstraint(new mxPoint(1, 0.5))];
-	mxLabel.prototype.constraints = mxRectangleShape.prototype.constraints;
+	PartialRectangleShape.prototype.constraints = mxRectangleShape.prototype.constraints;
 	mxImageShape.prototype.constraints = mxRectangleShape.prototype.constraints;
 	mxSwimlane.prototype.constraints = mxRectangleShape.prototype.constraints;
 	PlusShape.prototype.constraints = mxRectangleShape.prototype.constraints;
-
+	mxLabel.prototype.constraints = mxRectangleShape.prototype.constraints;
+	
 	NoteShape.prototype.getConstraints = function(style, w, h)
 	{
 		var constr = [];
