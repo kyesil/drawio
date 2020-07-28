@@ -8,7 +8,11 @@ require  '_pd/php/_boot.php';
 <title>Flowchart Maker &amp; Online Diagram Software</title>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta name="Description" content="diagrams.net is free online diagram software for making flowcharts, process diagrams, org charts, UML, ER and network diagrams">
+	 <!-- Native File System API V2 token for *.draw.io expires 14 Aug 2020 -->
+	 <meta http-equiv="origin-trial" content="Ap+kHQ/r5W6VLU9eDVuqOMctTEcui6YU/XLImQmlQVGTlWbdPO2y6B+o+KvlI6d0eikgL4dZQ9rJi+077EUZ/QwAAABleyJvcmlnaW4iOiJodHRwczovL2RyYXcuaW86NDQzIiwiZmVhdHVyZSI6Ik5hdGl2ZUZpbGVTeXN0ZW0yIiwiZXhwaXJ5IjoxNTk3NDI4MjQzLCJpc1N1YmRvbWFpbiI6dHJ1ZX0=">
+    <!-- Native File System API V2 token for *.diagrams.net expires 14 Aug 2020 -->
+    <meta http-equiv="origin-trial" content="AjFjJEEkMlBWI402owb3kGzAEfBK6KaU2NkM/KJRpN4O3saYOHA0CmXhWiFLT/h/Pe5oRK8Ps7o8JAAUKL0TywsAAABqeyJvcmlnaW4iOiJodHRwczovL2RpYWdyYW1zLm5ldDo0NDMiLCJmZWF0dXJlIjoiTmF0aXZlRmlsZVN5c3RlbTIiLCJleHBpcnkiOjE1OTc0MjgzMjksImlzU3ViZG9tYWluIjp0cnVlfQ==">
+	<meta name="Description" content="diagrams.net is free online diagram software for making flowcharts, process diagrams, org charts, UML, ER and network diagrams">
     <meta name="Keywords" content="diagram, online, flow chart, flowchart maker, uml, erd">
     <meta itemprop="name" content="diagrams.net - free flowchart maker and diagrams online">
 	<meta itemprop="description" content="diagrams.net is a free online diagramming application  and flowchart maker . You can use it to create UML, entity relationship,
@@ -113,7 +117,6 @@ require  '_pd/php/_boot.php';
 		 */
 		function mxmeta(name, content, httpEquiv)
 		{
-			return;
 				try
 				{
 					var s = document.createElement('meta');
@@ -315,7 +318,8 @@ require  '_pd/php/_boot.php';
 	<link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#d89000">
 	<link rel="stylesheet" type="text/css" href="js/croppie/croppie.min.css">
     <link rel="stylesheet" type="text/css" href="styles/grapheditor.css">
-    <link rel="canonical" href="https://app.diagrams.net">
+    <link rel="preconnect" href="https://storage.googleapis.com">
+	<link rel="canonical" href="https://app.diagrams.net">
 	<link rel="manifest" href="images/manifest.json">
 	<link rel="shortcut icon" href="favicon.ico">
 	<style type="text/css">

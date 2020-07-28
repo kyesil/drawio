@@ -555,7 +555,7 @@ App.main = function(callback, createUi)
 	if (window.mxscript != null)
 	{
 		// Checks script content changes to avoid CSP errors in production
-		if (urlParams['dev'] == '1' && CryptoJS != null)
+		if (false && urlParams['dev'] == '1' && CryptoJS != null)
 		{
 			var scripts = document.getElementsByTagName('script');
 			

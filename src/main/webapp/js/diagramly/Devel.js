@@ -39,7 +39,7 @@ if (!mxIsElectron && location.protocol !== 'http:')
 			replace(/%style-src%/g, 'https://devhost.jgraph.com').
 			replace(/%frame-src%/g, '').
 			replace(/  /g, ' ');
-		mxmeta(null, devCsp, 'Content-Security-Policy');
+		mxmeta(null, devCsp, 'policy-info');
 
 		if (urlParams['print-csp'] == '1')
 		{

@@ -13,3 +13,14 @@ https://desk.draw.io/support/solutions/articles/16000080686
 app.getEmbeddedSvg
 
 Load data Editoruid.js:2022
+
+
+--------------- ignore Content-Security-Policy 
+## need re compile
+pdraw\src\main\webapp\js\diagramly\Devel.js:42 
+		mxmeta(null, devCsp, 'policy-info');
+
+src\main\webapp\js\diagramly\App.js:558
+		if (false && urlParams['dev'] == '1' && CryptoJS != null)
+
+
