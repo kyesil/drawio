@@ -4,7 +4,7 @@ mxClient.IS_CHROMEAPP = 1;
 // Public global variables
 window.MAX_REQUEST_SIZE = window.MAX_REQUEST_SIZE || 10485760;
 window.MAX_AREA = window.MAX_AREA || 15000 * 15000;
-EditorUi.drawHost = 'https://predixi.lan/s/pdraw/src/main/webapp/';
+EditorUi.drawHost = 'https://predixi.com/pdraw/src/main/webapp/';
 
 // URLs for save and export
 window.EXPORT_URL = '_pd/php/action.php?export';
@@ -36,13 +36,11 @@ function fileloaded(app) {
 window._App = null;
 var PdescriptorChanged = App.prototype.descriptorChanged;
 App.prototype.descriptorChanged = function () {
+	alert();
 	_App = this;
 	var r = PdescriptorChanged.apply(this, arguments);
 	fileloaded(this);
-
-	//var dlg = new DevTagsDialog(this, null);
-	//this.showDialog(dlg.container, 680, 600, true, false, null, false);
-	//dlg.init();
+	this.mode=App.MODE_BROWSER; //kaydet e basıldığında yeni dosya oluşturması engelendi.
 
 	return r;
 };
@@ -101,7 +99,7 @@ EditorUi.prototype.showDataDialog = function (cell) {
 };
 Graph.prototype.addForeignObjectWarning = function (canvas, root) { }//we don't want this
 
-/*
+
 //init app override we use descriptorChanged:file loaded
 var Pinit = App.prototype.init;
 App.prototype.init = function()
@@ -111,7 +109,7 @@ App.prototype.init = function()
 	apploaded();
 	return r;
 
-}*/
+}
 
 //override create canvas for disable foreing object in svg. 
 var Pcreatecanvas = Graph.prototype.createSvgCanvas;
