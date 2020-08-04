@@ -1,0 +1,7 @@
+1   Download ant apache-ant-1.10.8-src.zip
+    http://ant.apache.org/srcdownload.cgi
+
+2   Extract To Java folder 
+3   Add ant /bin folder to system %PATH% 
+4   cd pdraw\etc\build
+5   exec ant command to build
