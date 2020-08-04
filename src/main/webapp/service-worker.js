@@ -6,11 +6,11 @@ if (workbox)
 	workbox.precaching.precacheAndRoute([
   {
     "url": "js/app.min.js",
-    "revision": "df97bf6b9782ff1350e7801ca14bf16d"
+    "revision": "d499ceb0f9e3be4781f43c54510d97a8"
   },
   {
     "url": "js/extensions.min.js",
-    "revision": "94711a4e146fc217df65537e2b43a914"
+    "revision": "3878b8515f4fa24ddd4f28888302c96e"
   },
   {
     "url": "js/stencils.min.js",
@@ -26,7 +26,7 @@ if (workbox)
   },
   {
     "url": "index.html",
-    "revision": "2c4bf96b7cc65a1c5b153d55832aa705"
+    "revision": "00d237fa834f4fef1176fe0928576643"
   },
   {
     "url": "open.html",
@@ -90,7 +90,7 @@ if (workbox)
   },
   {
     "url": "resources/dia_ca.txt",
-    "revision": "834ce0ead33125ab0f05b942be433239"
+    "revision": "2601ef7e088d072bed90d59fac8ba013"
   },
   {
     "url": "resources/dia_th.txt",
@@ -122,7 +122,7 @@ if (workbox)
   },
   {
     "url": "resources/dia_eu.txt",
-    "revision": "e383e7e556cae6226eef39d6fbce30c3"
+    "revision": "bdb57943b8c48065e62ca42f8c72847e"
   },
   {
     "url": "resources/dia_ko.txt",
