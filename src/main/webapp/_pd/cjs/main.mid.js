@@ -26,7 +26,7 @@ function fileloaded(app) {
 	app.appIcon.removeEventListener(iconevents[2].name, iconevents[2].f); //clear mouse hover/out şeysi
 	app.appIcon.removeEventListener(iconevents[3].name, iconevents[3].f);
 
-
+console.log(mxSettings.settings.pageFormat);
 	app.appIcon.style.backgroundImage = "url('./_pd/css/img/back.svg')"; //mmanipulate header icon 
 	app.appIcon.style.cursor = "pointer";
 
@@ -36,7 +36,6 @@ function fileloaded(app) {
 window._App = null;
 var PdescriptorChanged = App.prototype.descriptorChanged;
 App.prototype.descriptorChanged = function () {
-	alert();
 	_App = this;
 	var r = PdescriptorChanged.apply(this, arguments);
 	fileloaded(this);
@@ -106,7 +105,6 @@ App.prototype.init = function()
 {
 	_App=this;
 	var r = Pinit.apply(this, arguments);
-	apploaded();
 	return r;
 
 }

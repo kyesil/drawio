@@ -38,11 +38,11 @@ function clearSvg(elem) {
                 let fc = e.getAttribute('color');
                 sstyle = sstyle + (fc ? "fill:" + fc+ ";": "");
             }
-            else
-                if (e.tagName === "span") sstyle = sstyle + "";
-                else
-                    if (e.tagName === "b") sstyle = sstyle + "font-weight:bold;";
-                    else continue;
+            else if (e.tagName === "span") sstyle = sstyle + "";
+            else if (e.tagName === "b") sstyle = sstyle + "font-weight:bold;";
+            else if(e.tagName === "h1") sstyle = sstyle + "font-size: 2em;font-weight:bold;";
+            else if(e.tagName === "p") sstyle = sstyle + "font-size: 1em;";
+            else continue;
             let s = e.getAttribute('style');
             if (s) sstyle = sstyle + e.getAttribute('style');
 
