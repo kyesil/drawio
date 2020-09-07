@@ -314,7 +314,7 @@ app.on('ready', e =>
 				from: from,
 				to: to,
 				allPages: format == 'pdf' && program.allPages,
-				scale: (program.crop && program.scale == null) ? 1.00001: (program.scale || 1), //any value other than 1 crops the pdf
+				scale: (program.crop && (program.scale == null || program.scale == 1)) ? 1.00001: (program.scale || 1), //any value other than 1 crops the pdf
 				embedXml: program.embedDiagram? '1' : '0',
 				jpegQuality: program.quality,
 				uncompressed: program.uncompressed
@@ -1199,6 +1199,20 @@ function exportDiagram(event, args, directFinalize)
 						browser.capturePage().then(function(img)
 						{
 							//Image is double the given bounds, so resize is needed!
+							var tScale = 1;
+
+							//If user defined width and/or height, enforce it precisely here. Height override width
+							if (args.h)
+							{
+								tScale = args.h / newBounds.height;
+							}
+							else if (args.w)
+							{
+								tScale = args.w / newBounds.width;
+							}
+							
+							newBounds.width *= tScale;
+							newBounds.height *= tScale;
 							img = img.resize(newBounds);
 
 							var data = args.format == 'png'? img.toPNG() : img.toJPEG(args.jpegQuality || 90);
@@ -1229,10 +1243,15 @@ function exportDiagram(event, args, directFinalize)
 				{
 					if (args.print)
 					{
-						pdfOptions.scaleFactor = args.pageScale;
-						pdfOptions.pageSize = {
-							width: args.pageWidth * MICRON_TO_PIXEL,
-							height: (args.pageHeight + 2) * MICRON_TO_PIXEL
+						pdfOptions = {
+							scaleFactor: args.pageScale,
+							printBackground: true,
+							pageSize : {
+								width: args.pageWidth * MICRON_TO_PIXEL,
+								//This height adjustment fixes the output. TODO Test more cases
+								height: (args.pageHeight * 1.025) * MICRON_TO_PIXEL
+							},
+							marginsType: 1 // no margin
 						};
 						 
 						contents.print(pdfOptions, (success, errorType) => 

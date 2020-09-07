@@ -46,7 +46,7 @@ GraphViewer.prototype.toolbarZIndex = 999;
 /**
  * If automatic fit should be enabled if zoom is disabled. Default is true.
  */
-GraphViewer.prototype.autoFit = true;
+GraphViewer.prototype.autoFit = false;
 
 /**
  * If the diagram should be centered. Default is false.
@@ -57,6 +57,12 @@ GraphViewer.prototype.center = false;
  * Specifies if zooming in for auto fit is allowed. Default is false.
  */
 GraphViewer.prototype.allowZoomIn = false;
+
+/**
+ * Specifies if zooming out for auto fit is allowed. Default is true.
+ * If toolbar-nohide is true then overflow content is visible.
+ */
+GraphViewer.prototype.allowZoomOut = true;
 
 /**
  * Whether the title should be shown as a tooltip if the toolbar is disabled.
@@ -88,6 +94,8 @@ GraphViewer.prototype.init = function(container, xmlNode, graphConfig)
 	this.graphConfig = (graphConfig != null) ? graphConfig : {};
 	this.autoFit = (this.graphConfig['auto-fit'] != null) ?
 		this.graphConfig['auto-fit'] : this.autoFit;
+	this.allowZoomOut = (this.graphConfig['allow-zoom-out'] != null) ?
+		this.graphConfig['allow-zoom-out'] : this.allowZoomOut;
 	this.allowZoomIn = (this.graphConfig['allow-zoom-in'] != null) ?
 		this.graphConfig['allow-zoom-in'] : this.allowZoomIn;
 	this.center = (this.graphConfig['center'] != null) ?
@@ -337,13 +345,14 @@ GraphViewer.prototype.init = function(container, xmlNode, graphConfig)
 					return true;
 				};
 				
-				//Fix graph clipping by avoiding negative negative translation (after resize is finished)
-				var graphFoldCells = this.graph.foldCells;
+				// Updates origin after tree cell folding
+				var graphFoldTreeCell = this.graph.foldTreeCell;
 				
-				this.graph.foldCells = mxUtils.bind(this, function()
+				this.graph.foldTreeCell = mxUtils.bind(this, function()
 				{
-					this.cellFolded = true;
-					return graphFoldCells.apply(this.graph, arguments);
+					this.treeCellFolded = true;
+					
+					return graphFoldTreeCell.apply(this.graph, arguments);
 				});
 				
 				this.fireEvent(new mxEventObject('render'));
@@ -561,19 +570,12 @@ GraphViewer.prototype.addSizeHandler = function()
 				this.toolbar.style.width = Math.max(this.minToolbarWidth, container.offsetWidth) + 'px';
 			}
 
-			//If a cell is folded set the translation zero to avoid -ve translation
-			if (this.cellFolded)
+			// Updates origin after tree cell folding
+			if (this.treeCellFolded)
 			{
-				this.cellFolded = false;
-				
-				if (this.center)
-				{
-					this.graph.center();
-				}
-				else
-				{
-					this.graph.view.setTranslate(0, 0);
-				}
+				this.treeCellFolded = false;
+				this.positionGraph(this.graph.view.translate);
+				this.graph.initialViewState.translate = this.graph.view.translate.clone();
 			}
 			
 			updatingOverflow = false;
@@ -699,7 +701,7 @@ GraphViewer.prototype.addSizeHandler = function()
 		}
 	}
 
-	var positionGraph = mxUtils.bind(this, function()
+	var positionGraph = mxUtils.bind(this, function(origin)
 	{
 		// Allocates maximum width while setting initial view state
 		var prev = container.style.minWidth;
@@ -712,9 +714,9 @@ GraphViewer.prototype.addSizeHandler = function()
 		var maxHeight = (this.graphConfig['max-height'] != null) ? this.graphConfig['max-height'] :
 			((container.style.height != '' && this.autoFit) ? container.offsetHeight : undefined);
 		
-		if (container.offsetWidth > 0 && (this.allowZoomIn ||
-			(bounds.width + 2 * this.graph.border > container.offsetWidth ||
-			bounds.height + 2 * this.graph.border > maxHeight)))
+		if (container.offsetWidth > 0 && origin == null && this.allowZoomOut && (this.allowZoomIn ||
+			bounds.width + 2 * this.graph.border > container.offsetWidth ||
+			bounds.height + 2 * this.graph.border > maxHeight))
 		{
 			var maxScale = null;
 
@@ -725,14 +727,16 @@ GraphViewer.prototype.addSizeHandler = function()
 
 			this.fitGraph(maxScale);
 		}
-		else if (!this.widthIsEmpty && !(this.graphConfig.resize != false || container.style.height == ''))
+		else if (!this.widthIsEmpty && origin == null && !(this.graphConfig.resize != false || container.style.height == ''))
 		{
 			this.graph.center((!this.widthIsEmpty || bounds.width < this.minWidth) && this.graphConfig.resize != true);
 		}
 		else
 		{
-			this.graph.view.setTranslate(Math.floor(this.graph.border - bounds.x / this.graph.view.scale),
-				Math.floor(this.graph.border - bounds.y / this.graph.view.scale));
+			origin = (origin != null) ? origin : new mxPoint();
+		
+			this.graph.view.setTranslate(Math.floor(this.graph.border - bounds.x / this.graph.view.scale) + origin.x,
+				Math.floor(this.graph.border - bounds.y / this.graph.view.scale) + origin.y);
 			lastOffsetWidth = container.offsetWidth;
 		}
 		
@@ -749,11 +753,11 @@ GraphViewer.prototype.addSizeHandler = function()
 	}
 
 	// Installs function on instance
-	this.positionGraph = function()
+	this.positionGraph = function(origin)
 	{
 		bounds = this.graph.getGraphBounds();
 		lastOffsetWidth = null;
-		positionGraph();
+		positionGraph(origin);
 	};
 };
 

@@ -1195,7 +1195,12 @@ EditorUi.prototype.installShapePicker = function()
 			{
 				mxEvent.consume(evt);
 				var pt = mxUtils.convertPoint(this.container, mxEvent.getClientX(evt), mxEvent.getClientY(evt));
-				ui.showShapePicker(pt.x, pt.y);
+				
+				// Asynchronous to avoid direct insert after double tap
+				window.setTimeout(mxUtils.bind(this, function()
+				{
+					ui.showShapePicker(pt.x, pt.y);
+				}), 30);
 			}
 			else
 			{
@@ -1293,7 +1298,7 @@ EditorUi.prototype.showShapePicker = function(x, y, source, callback, direction)
 		}
 		else
 		{
-			mxUtils.setPrefixedStyle(div.style, 'transform', 'translate(-4px,-4px)');
+			mxUtils.setPrefixedStyle(div.style, 'transform', 'translate(-22px,-22px)');
 		}
 		
 		if (graph.background != null && graph.background != mxConstants.NONE)
@@ -2924,6 +2929,32 @@ EditorUi.prototype.open = function()
 	// and the minimumGraphSize changes and CSS must be updated.
 	this.editor.graph.sizeDidChange();
 	this.editor.fireEvent(new mxEventObject('resetGraphView'));
+};
+
+/**
+ * Shows the given popup menu.
+ */
+EditorUi.prototype.showPopupMenu = function(fn, x, y, evt)
+{
+	this.editor.graph.popupMenuHandler.hideMenu();
+	
+	var menu = new mxPopupMenu(fn);
+	menu.div.className += ' geMenubarMenu';
+	menu.smartSeparators = true;
+	menu.showDisabled = true;
+	menu.autoExpand = true;
+	
+	// Disables autoexpand and destroys menu when hidden
+	menu.hideMenu = mxUtils.bind(this, function()
+	{
+		mxPopupMenu.prototype.hideMenu.apply(menu, arguments);
+		menu.destroy();
+	});
+
+	menu.popup(x, y, null, evt);
+	
+	// Allows hiding by clicking on document
+	this.setCurrentMenu(menu);	
 };
 
 /**

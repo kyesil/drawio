@@ -449,7 +449,7 @@
 		{
 			action.label = mxResources.get('refresh');
 		}
-
+		
 		editorUi.actions.addAction('upload...', function()
 		{
 			var file = editorUi.getCurrentFile();
@@ -522,7 +522,7 @@
 			if (vertices.length > 0)
 			{
 				var dlg = new EditGeometryDialog(editorUi, vertices);
-				editorUi.showDialog(dlg.container, 200, 250, true, true);
+				editorUi.showDialog(dlg.container, 200, 270, true, true);
 				dlg.init();
 			}
 		}, null, null, Editor.ctrlKey + '+Shift+M');
@@ -685,6 +685,16 @@
 		editorUi.actions.addAction('quickStart...', function()
 		{
 			editorUi.openLink('https://www.youtube.com/watch?v=Z0D96ZikMkc');
+		});
+		
+		editorUi.actions.addAction('forkme', function()
+		{
+			editorUi.openLink('https://github.com/jgraph/drawio');
+		}).label = 'Fork me on GitHub...';
+		
+		editorUi.actions.addAction('downloadDesktop...', function()
+		{
+			editorUi.openLink('https://get.diagrams.net/');
 		});
 		
 		action = editorUi.actions.addAction('tags...', mxUtils.bind(this, function()
@@ -1213,7 +1223,7 @@
 				}, 0);
 				
 				this.addMenuItems(menu, ['-', 'keyboardShortcuts', 'quickStart',
-					'support', '-', 'about'], parent);
+					'support', '-', 'forkme', 'downloadDesktop', '-', 'about'], parent);
 			}
 			
 			if (urlParams['test'] == '1')
@@ -3122,7 +3132,7 @@
 				}
 			}));
 		}
-			
+
 		// Overrides edit menu to add find and editGeometry
 		this.put('edit', new Menu(mxUtils.bind(this, function(menu, parent)
 		{
@@ -3133,10 +3143,9 @@
 				this.addMenuItems(menu, ['copyAsImage']);
 			}
 			
-			this.addMenuItems(menu, ['paste', 'delete', '-', 'duplicate', '-',
-									 'find', '-', 'editData', 'editTooltip', '-', 'editStyle', 'editGeometry', '-',
-			                         'edit', '-', 'editLink', 'openLink', '-',
-			                         'selectVertices', 'selectEdges', 'selectAll', 'selectNone', '-', 'lockUnlock']);
+			this.addMenuItems(menu, ['paste', 'delete', '-', 'duplicate', '-', 'find', '-', 'editData', 'editTooltip', '-',
+				 'editStyle',  'editGeometry', '-', 'edit', '-', 'editLink', 'openLink', '-',
+                 'selectVertices', 'selectEdges', 'selectAll', 'selectNone', '-', 'lockUnlock']);
 		})));
 
 		var action = editorUi.actions.addAction('comments', mxUtils.bind(this, function()

@@ -5,6 +5,21 @@
 	<script>
 		var isLocalStorage = false;
 		var mxLoadStylesheets = false;
+		
+		function getUrlParam(param)
+		{
+			var result = (new RegExp(param + '=([^&]*)')).exec(window.location.search);
+			
+			if (result != null && result.length > 0)
+			{
+				return decodeURIComponent(result[1].replace(/\+/g, '%20'));
+			}
+			
+			return null;
+		};
+		
+		var remoteMath = getUrlParam('remoteMath') == '1';
+		var fallbackFont = getUrlParam('fallbackFont');
 	</script>
 	<!-- CSS for print output is needed for using current window -->
 	<style type="text/css">
@@ -13,6 +28,7 @@
 	  	hr.mxPageBreak { display: none; }
 	</style>
 	<link rel="stylesheet" href="mxgraph/css/common.css" charset="UTF-8" type="text/css">
+	<link rel="stylesheet" href="export-fonts.css" charset="UTF-8" type="text/css">
     <script src="js/app.min.js"></script>
 	<script>
 		var mxIsElectron = navigator.userAgent != null &&
@@ -20,7 +36,8 @@
 		var GOOGLE_APPS_MAX_AREA = 25000000;
 		var GOOGLE_SHEET_MAX_AREA = 1048576; //1024x1024
 		
-		Editor.initMath('math/MathJax.js');
+		//TODO Add support for loading math from a local folder
+		Editor.initMath((remoteMath? 'https://app.diagrams.net/' : '') + 'math/MathJax.js');
 	
 		function render(data)
 		{
@@ -220,6 +237,38 @@
 							try 
 							{
 								const { ipcRenderer } = require('electron');
+								
+								ipcRenderer.on('get-svg-data', (event, arg) => 
+								{
+									graph.mathEnabled = math; //Enable math such that getSvg works as expected
+									// Returns the exported SVG for the given graph (see EditorUi.exportSvg)
+									var bg = graph.background;
+										
+									if (bg == mxConstants.NONE)
+									{
+										bg = null;
+									}
+									
+									var svgRoot = graph.getSvg(bg, 1, 0, false, null, true, null, null, null);
+									
+									if (graph.shadowVisible)
+									{
+										graph.addSvgShadow(svgRoot);
+									}
+									
+									// TODO addFontCss cannot be used as it requires this
+									// Adds CSS
+									//Editor.prototype.addFontCss(svgRoot);
+									
+									if (math)
+									{
+										Editor.prototype.addMathCss(svgRoot);
+									}
+									
+									ipcRenderer.send('svg-data', '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n' +
+											mxUtils.getXml(svgRoot));
+								});
+								
 								//For some reason, Electron 9 doesn't send this object as is without stringifying. Usually when variable is external to function own scope
 								ipcRenderer.send('render-finished', {bounds: JSON.stringify(bounds)});
 							}
@@ -492,6 +541,8 @@
 					
 					if (data.print)
 					{
+						document.title = data.fileTitle;
+						
 						var gb = graph.getGraphBounds();
 						printScale = data.pageScale;
 				
@@ -499,9 +550,6 @@
 						{
 							printScale = 1;
 						}
-						
-						// Workaround to match available paper size in actual print output
-						printScale *= 0.75;
 						
 						if (data.fit)
 						{
@@ -676,7 +724,7 @@
 				{
 					var pf = graph.pageFormat || mxConstants.PAGE_FORMAT_A4_PORTRAIT;
 					var scale = data.print? data.scale : 1 / graph.pageScale;
-					var autoOrigin = data.fit || false;
+					var autoOrigin = (data.print && data.fit != null) ? data.fit : false;
 					var border = 0;
 	
 					// Negative coordinates are cropped or shifted if page visible
@@ -691,7 +739,7 @@
 					scale *= printScale;
 					
 					// Starts at first visible page
-					if (autoOrigin)
+					if (!autoOrigin)
 					{
 						var layout = graph.getPageLayout();
 						x0 -= layout.x * pf.width;
@@ -827,6 +875,14 @@
 				renderPage();
 			}
 			
+			if (fallbackFont)
+			{
+				//Add a fallbackFont font to all labels in case the selected font doesn't support the character
+	            //Some systems doesn't have a good fallback fomt that supports all languages
+	            //Use this with a custom font-face in export-fonts.css file
+	            document.querySelectorAll('foreignObject div').forEach(d => d.style.fontFamily = (d.style.fontFamily || '') + ', ' + fallbackFont);
+			}
+			
 			renderGrid();
 			// Includes images in SVG and HTML labels
 			waitForImages('image', 'xlink:href');
@@ -838,45 +894,16 @@
 			return graph;
 		};
 		
-		/**
-		 * Returns the exported SVG for the given graph (see EditorUi.exportSvg).
-		 */
-		function getSvgData(graph)
-		{
-			var bg = graph.background;
-			
-			if (bg == mxConstants.NONE)
-			{
-				bg = null;
-			}
-			
-			var svgRoot = graph.getSvg(bg, 1, 0, false, null, true, null, null, null);
-			
-			if (graph.shadowVisible)
-			{
-				graph.addSvgShadow(svgRoot);
-			}
-			
-			return '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n' +
-				mxUtils.getXml(svgRoot);
-		};
-		
 		//Electron pdf export
 		if (mxIsElectron)
 		{
 			try 
 			{
 				const { ipcRenderer } = require('electron');
-				var graph = null;
 				
 				ipcRenderer.on('render', (event, arg) => 
 				{
-					graph = render(arg);
-				});
-				
-				ipcRenderer.on('get-svg-data', (event, arg) => 
-				{
-					ipcRenderer.send('svg-data', getSvgData(graph));
+					render(arg);
 				});
 			}
 			catch(e)
