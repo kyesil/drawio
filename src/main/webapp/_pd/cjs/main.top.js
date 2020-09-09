@@ -23,16 +23,19 @@ function decodeHTMLEntities(text) {
 
     for (var i = 0, max = entities.length; i < max; ++i)
         text = text.replace(new RegExp('&' + entities[i][0] + ';', 'g'), entities[i][1]);
-
+ text = text.replace(new RegExp('<br>', 'g'), "<br/>");
     return text;
 }
 
 function clearSvg(elem) {
     let elems = elem.children;
-    if (elems.length > 0)
+//todo remove switch elem
+
+    /*if (elems.length > 0)
         for (let i = 0; i < elems.length; i++) {
             const e = elems[i];
             let sstyle = "";
+            let dy = "";
             if (e.children.length > 0) clearSvg(e);
             if (e.tagName === "font") {
                 let fc = e.getAttribute('color');
@@ -42,13 +45,15 @@ function clearSvg(elem) {
             else if (e.tagName === "b") sstyle = sstyle + "font-weight:bold;";
             else if(e.tagName === "h1") sstyle = sstyle + "font-size: 2em;font-weight:bold;";
             else if(e.tagName === "p") sstyle = sstyle + "font-size: 1em;";
+            else if(e.tagName === "br") dy="1.2em"
             else continue;
             let s = e.getAttribute('style');
             if (s) sstyle = sstyle + e.getAttribute('style');
 
             if (sstyle) sstyle = sstyle.replace('color', 'fill');
-            e.outerHTML = '<tspan style="' + sstyle + '">' + e.innerHTML + '</tspan>';
-        }
+
+            e.outerHTML = '<tspan style="' + sstyle + '" dy="'+dy+'">' + e.innerHTML + '</tspan>';
+        }*/
 
 }
 

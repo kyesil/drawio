@@ -66,9 +66,9 @@ Graph.prototype.createSvgImageExport = function () {
 			} else {
 				//replace html tag in svg file because foreing object disabled
 				g.innerHTML = decodeHTMLEntities(g.innerHTML);
-				console.log(g.innerHTML);
+				//console.log(g.innerHTML);
 				clearSvg(g);
-				console.log(g.innerHTML);
+				//console.log(g.innerHTML);
 
 			}
 			if (state.cell.value.attributes)

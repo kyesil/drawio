@@ -26,7 +26,7 @@ function fileloaded(app) {
 	app.appIcon.removeEventListener(iconevents[2].name, iconevents[2].f); //clear mouse hover/out şeysi
 	app.appIcon.removeEventListener(iconevents[3].name, iconevents[3].f);
 
-console.log(mxSettings.settings.pageFormat);
+//console.log(mxSettings.settings.pageFormat);
 	app.appIcon.style.backgroundImage = "url('./_pd/css/img/back.svg')"; //mmanipulate header icon 
 	app.appIcon.style.cursor = "pointer";
 
@@ -57,7 +57,7 @@ App.prototype.appIconClicked = function (evt) {
 var PshowDD = EditorUi.prototype.showDataDialog;
 EditorUi.prototype.showDataDialog = function (cell) {
 	if (!cell) return;
-	console.log(new Date().getTime());
+
 	let dlg;
 	let str;
 	if (typeof (cell.value) === 'string') str = cell.value;
@@ -93,9 +93,10 @@ EditorUi.prototype.showDataDialog = function (cell) {
 	this.showDialog(dlg.container, 480, 420, true, false, null, false);
 
 	dlg.init();
-	console.log(new Date().getTime());
+	
 
 };
+
 Graph.prototype.addForeignObjectWarning = function (canvas, root) { }//we don't want this
 
 
@@ -113,7 +114,7 @@ App.prototype.init = function()
 var Pcreatecanvas = Graph.prototype.createSvgCanvas;
 Graph.prototype.createSvgCanvas = function (node) {
 	var canvas = Pcreatecanvas.apply(this, arguments);
-	canvas.foEnabled = false;//disable fo
+	//canvas.foEnabled = false;//disable fo
 	return canvas;
 };
 
