@@ -12,7 +12,7 @@ if (!mxIsElectron && location.protocol !== 'http:')
 	{
 		var csp = 'default-src \'self\'; ' +
 			// storage.googleapis.com is needed for workbox-service-worker
-			'script-src %script-src% \'self\' https://storage.googleapis.com ' +
+			'script-src %script-src% \'self\' https://viewer.diagrams.net https://storage.googleapis.com ' +
 				'https://apis.google.com https://*.pusher.com https://code.jquery.com ' +
 				// Bootstrap script in index.html (checked for changes in App.main
 				// in dev mode to avoid deployment without updating this SHA)
@@ -157,6 +157,7 @@ mxscript(drawDevUrl + 'js/diagramly/StorageFile.js');
 mxscript(drawDevUrl + 'js/diagramly/StorageLibrary.js');
 mxscript(drawDevUrl + 'js/diagramly/RemoteFile.js');
 mxscript(drawDevUrl + 'js/diagramly/RemoteLibrary.js');
+mxscript(drawDevUrl + 'js/diagramly/EmbedFile.js');
 mxscript(drawDevUrl + 'js/diagramly/Dialogs.js');
 mxscript(drawDevUrl + 'js/diagramly/Editor.js');
 mxscript(drawDevUrl + 'js/diagramly/EditorUi.js');

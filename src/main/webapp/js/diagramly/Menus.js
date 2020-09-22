@@ -1821,7 +1821,7 @@
 			var bounds = graph.getGraphBounds();
 			
 			editorUi.showPublishLinkDialog(mxResources.get('iframe'), null, '100%',
-				(Math.ceil((bounds.y + bounds.height - graph.view.translate.y) / graph.view.scale) + 2),
+				Math.ceil(bounds.height / graph.view.scale) + 2,
 				function(linkTarget, linkColor, allPages, lightbox, editLink, layers, width, height)
 			{
 				if (editorUi.spinner.spin(document.body, mxResources.get('loading')))
@@ -1962,16 +1962,18 @@
 				//Add support to saving files if embedded mode is running with files
 				var file = editorUi.getCurrentFile();
 				
-				if (file != null && (file.constructor != LocalFile || file.mode != null))
+				if (file != null && file.constructor != EmbedFile && (file.constructor != LocalFile || file.mode != null))
 				{
 					editorUi.saveFile();
 				}
 			};
 	
-			editorUi.actions.addAction('saveAndExit', function()
+			var saveAndExitAction = editorUi.actions.addAction('saveAndExit', function()
 			{
 				editorUi.actions.get('save').funct(true);
 			});
+			
+			saveAndExitAction.label = urlParams['publishClose'] == '1' ? mxResources.get('publish') : mxResources.get('saveAndExit');
 			
 			editorUi.actions.addAction('exit', function()
 			{
@@ -2409,50 +2411,57 @@
 				{
 					var dlg = new CreateDialog(editorUi, title, mxUtils.bind(this, function(newTitle, mode)
 					{
-						// Mode is "download" if Create button is pressed, means use Google Drive
-						if (mode == 'download')
+						if (mode == '_blank')
 						{
-							mode = App.MODE_GOOGLE;
+							editorUi.editor.editAsNew(editorUi.getFileData(), newTitle);
 						}
-						
-						if (newTitle != null && newTitle.length > 0)
+						else
 						{
-							if (mode == App.MODE_GOOGLE)
+							// Mode is "download" if Create button is pressed, means use Google Drive
+							if (mode == 'download')
 							{
-								if (editorUi.spinner.spin(document.body, mxResources.get('saving')))
+								mode = App.MODE_GOOGLE;
+							}
+	
+							if (newTitle != null && newTitle.length > 0)
+							{
+								if (mode == App.MODE_GOOGLE)
 								{
-									// Saveas does not update the file descriptor in Google Drive
-									file.saveAs(newTitle, mxUtils.bind(this, function(resp)
+									if (editorUi.spinner.spin(document.body, mxResources.get('saving')))
 									{
-										// Replaces file descriptor in-place and saves
-										file.desc = resp;
-										
-										// Makes sure the latest XML is in the file
-										file.save(false, mxUtils.bind(this, function()
+										// Saveas does not update the file descriptor in Google Drive
+										file.saveAs(newTitle, mxUtils.bind(this, function(resp)
 										{
-											editorUi.spinner.stop();
-											file.setModified(false);
-											file.addAllSavedStatus();
+											// Replaces file descriptor in-place and saves
+											file.desc = resp;
+											
+											// Makes sure the latest XML is in the file
+											file.save(false, mxUtils.bind(this, function()
+											{
+												editorUi.spinner.stop();
+												file.setModified(false);
+												file.addAllSavedStatus();
+											}), mxUtils.bind(this, function(resp)
+											{
+												editorUi.handleError(resp);
+											}));
 										}), mxUtils.bind(this, function(resp)
 										{
 											editorUi.handleError(resp);
 										}));
-									}), mxUtils.bind(this, function(resp)
-									{
-										editorUi.handleError(resp);
-									}));
+									}
 								}
-							}
-							else
-							{
-								editorUi.createFile(newTitle, editorUi.getFileData(true), null, mode);
+								else
+								{
+									editorUi.createFile(newTitle, editorUi.getFileData(true), null, mode);
+								}
 							}
 						}
 					}), mxUtils.bind(this, function()
 					{
 						editorUi.hideDialog();
 					}), mxResources.get('makeCopy'), mxResources.get('create'), null,
-						null, null, null, true, null, null, null, null,
+						null, true, null, true, null, null, null, null,
 						editorUi.editor.fileExtensions);
 					editorUi.showDialog(dlg.container, 420, 380, true, true);
 					dlg.init();

@@ -4137,6 +4137,7 @@ LucidImporter = {};
 			if (text.t != null)
 			{
 				var txt = text.t;
+				txt = txt.replace(/\u2028/g, '\n'); //Special unicide line separator
 				var m = text.m;
 				
 				//Convert text object to HTML if needed
@@ -6534,7 +6535,7 @@ LucidImporter = {};
 					var keyboard = null;
 					var statusBar = null;
 					
-					if (p.AndroidDeviceName == 'Tablet' || p.AndroidDeviceName == 'Mini Tablet')
+					if (p.AndroidDeviceName == 'Tablet' || p.AndroidDeviceName == 'Mini Tablet' ||  (p.AndroidDeviceName == 'custom' && p.CustomDeviceType == 'Tablet'))
 					{
 						v.style += "shape=mxgraph.android.tab2;"
 						background = new mxCell('', new mxGeometry(w * 0.112, h * 0.077, w * 0.77, h * 0.85), '');
@@ -6549,7 +6550,7 @@ LucidImporter = {};
 							statusBar = new mxCell('', new mxGeometry(w * 0.112, h * 0.077, w * 0.77, h * 0.03), 'shape=mxgraph.android.statusBar;strokeColor=#33b5e5;fillColor=#000000;fontColor=#33b5e5;fontSize=' + h * 0.015 + ';');
 						}
 					}
-					else if (p.AndroidDeviceName == 'Large Phone' || p.AndroidDeviceName == 'Phone')
+					else if (p.AndroidDeviceName == 'Large Phone' || p.AndroidDeviceName == 'Phone' ||  (p.AndroidDeviceName == 'custom' && p.CustomDeviceType == 'Phone'))
 					{
 						v.style += "shape=mxgraph.android.phone2;"
 						background = new mxCell('', new mxGeometry(w * 0.04, h * 0.092, w * 0.92, h * 0.816), '');
