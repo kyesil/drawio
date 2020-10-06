@@ -269,7 +269,7 @@ LucidImporter = {};
 			'UMLComponentBlock' : 'shape=component;align=left;spacingLeft=36',
 			'UMLNodeBlock' : 'shape=cube;size=12;flipH=1',
 			'UMLComponentInterfaceBlock' : 'ellipse',
-			'UMLComponentBoxBlock' : cs, //TODO
+			'UMLComponentBoxBlock' : cs,
 //			'UMLAssemblyConnectorBlock' NA
 			'UMLProvidedInterfaceBlock' : 'shape=lollipop;direction=south',
 			'UMLRequiredInterfaceBlock' : 'shape=requires;direction=north',
@@ -3748,7 +3748,13 @@ LucidImporter = {};
 			//'TimelineIntervalBlock' : cs,
 			'MinimalTextBlock' : 'strokeColor=none;fillColor=none',
 //Freehand			
-			'FreehandBlock' : cs
+			'FreehandBlock' : cs,
+//ExtShapes
+			'ExtShapeLaptopBlock': ss + 'citrix.laptop_2;verticalLabelPosition=bottom;verticalAlign=top',
+			'ExtShapeServerBlock': ss + 'citrix.tower_server;verticalLabelPosition=bottom;verticalAlign=top',
+			'ExtShapeCloudBlock': ss + 'citrix.cloud;verticalLabelPosition=bottom;verticalAlign=top',
+			'ExtShapeUserBlock': ss + 'aws3d.end_user;verticalLabelPosition=bottom;verticalAlign=top;fillColor=#073763',
+			'ExtShapeWorkstationLCDBlock': ss + 'veeam.3d.workstation;verticalLabelPosition=bottom;verticalAlign=top'
 	};
 	
 	// actual code start
@@ -4167,6 +4173,7 @@ LucidImporter = {};
 		}
 		
 		// TODO: Convert text object to HTML. One case is covered. Is there others?
+		// TODO: HTML text conversion looks stable now, maybe convert all using html?
 		if (text != null)
 		{
 			if (text.t != null)
@@ -4180,7 +4187,7 @@ LucidImporter = {};
 				{
 					for (var i = 0; i < m.length; i++)
 					{
-						if (m[i].s > 0)
+						if (m[i].s > 0 || (m[i].e != null && m[i].e < txt.length))
 						{
 							isLastLblHTML = true;
 							break;
@@ -4267,7 +4274,7 @@ LucidImporter = {};
 	
 	function getLabelStyle(properties, noLblStyle)
 	{
-		var style = (noLblStyle? (hasStyle(style, 'overflow')? '' : 'overflow=width;') + (hasStyle(style, 'html')? '' : 'html=1;') : 
+		var style = 'whiteSpace=wrap;' + (noLblStyle? 'overflow=width;html=1;' : 
 				getFontSize(properties) +
 				getFontColor(properties) + 
 				getFontStyle(properties) +
@@ -4292,7 +4299,7 @@ LucidImporter = {};
 			s = ';';
 		}
 		
-		s +=	
+		s += 'whiteSpace=wrap;' + 
 		  (noLblStyle? (hasStyle(style, 'overflow')? '' : 'overflow=width;') + (hasStyle(style, 'html')? '' : 'html=1;') : 
 			addStyle(mxConstants.STYLE_FONTSIZE, style, properties, action, cell) +			
 			addStyle(mxConstants.STYLE_FONTCOLOR, style, properties, action, cell) +			
@@ -5188,7 +5195,7 @@ LucidImporter = {};
 				
 				addCustomData(cell, p, graph);
 				
-				if (p.Title && p.Text)
+				if (p.Title && p.Text && a.Class.substr(0, 8) != 'ExtShape')
 				{
 					var geo = cell.geometry;
 					var title = new mxCell(convertText(p.Title), new mxGeometry(0, geo.height,geo.width, 10), 'strokeColor=none;fillColor=none;');
@@ -8067,6 +8074,14 @@ LucidImporter = {};
 				v.style += addAllStyles(v.style, p, a, v, isLastLblHTML);
 				break;
 			case 'UMLComponentBoxBlock' :
+				v.value = convertText(p);
+				v.style = 'html=1;dropTarget=0;' + addAllStyles(v.style, p, a, v, isLastLblHTML);
+				
+				var icon = new mxCell('', new mxGeometry(1, 0, 15, 15), 'shape=component;jettyWidth=8;jettyHeight=4;');
+				icon.geometry.relative = true;
+				icon.geometry.offset = new mxPoint(-20, 5);
+				icon.vertex = true;
+				v.insert(icon);
 				break;
 			case 'BPMNActivity' :
 				v.value = convertText(p.Text);
