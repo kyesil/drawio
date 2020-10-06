@@ -14,6 +14,6 @@ if (!file_exists($MX_PATH)) {
 ?>
     <script>
         var _SC_PATH = '<?= $SC_PATH ?>';
-        if (_SC_PATH) urlParams['open'] = 'U/s/R/pd/' + _SC_PATH + '.xml?'+Math.floor(Date.now() / 1000);
+        if (_SC_PATH) urlParams['open'] = 'U/s/E/pd/' + _SC_PATH + '.xml?'+Math.floor(Date.now() / 1000);
     </script>
 

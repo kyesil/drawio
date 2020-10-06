@@ -1,5 +1,5 @@
 <?php 
-define('PDSC', 'C:/KAPPS/WWW/_sharedWeb/www/R/pd/');
+define('PDSC', 'C:/KAPPS/WWW/_sharedWeb/www/E/pd/');
 define('PDPHP', __DIR__);
 define('PD', PDPHP.'/../../../..');
 define('KWWW',PD .'/../../../');
