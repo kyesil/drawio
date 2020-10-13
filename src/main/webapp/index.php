@@ -61,6 +61,11 @@ require  '_pd/php/_boot.php';
 			return result;
 		})();
 		
+		let hn = window.location.hostname;
+		urlParams["dev"] = hn === "predixi.com" ? 0 : 1;
+		urlParams["offline"] = 1;
+		urlParams["pages"] = 0;
+
 		// Forces CDN caches by passing URL parameters via URL hash
 		if (window.location.hash != null && window.location.hash.substring(0, 2) == '#P')
 		{
@@ -148,7 +153,8 @@ require  '_pd/php/_boot.php';
 		function mxscript(src, onLoad, id, dataAppKey, noWrite)
 		{
 			var defer = onLoad == null && !noWrite;
-			if(src=="js/extensions.min.js") //for App.js:619 mxscript('js/extensions.min.js'); issue: js write after load body to destroy everything
+		
+			if(document.body) //for App.js:619 mxscript('js/extensions.min.js'); issue: js write after load body to destroy everything
 				noWrite=true;
 			
 			if ((urlParams['dev'] != '1' && typeof document.createElement('canvas').getContext === "function") ||

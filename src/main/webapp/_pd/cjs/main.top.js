@@ -1,10 +1,3 @@
-let hn = window.location.hostname;
-urlParams["dev"] = hn === "predixi.com" ? 0 : 1;
-urlParams["offline"] = 1;
-urlParams["pages"] = 0;
-
-
-
 function getNodeIndex(element) {
     return Array.from(element.parentNode.childNodes).indexOf(element);
 }
@@ -24,13 +17,13 @@ function decodeHTMLEntities(text) {
 
     for (var i = 0, max = entities.length; i < max; ++i)
         text = text.replace(new RegExp('&' + entities[i][0] + ';', 'g'), entities[i][1]);
- text = text.replace(new RegExp('<br>', 'g'), "<br/>");
+    text = text.replace(new RegExp('<br>', 'g'), "<br/>");
     return text;
 }
 
 function clearSvg(elem) {
     let elems = elem.children;
-//todo remove switch elem
+    //todo remove switch elem
 
     /*if (elems.length > 0)
         for (let i = 0; i < elems.length; i++) {
@@ -61,7 +54,7 @@ function clearSvg(elem) {
 //text input to autocomplete text input for dtag selection
 function autocomplete(inp, acarr, aprop) {
     /*the autocomplete function takes two arguments,
-	the text field element and an array of possible autocompleted values:*/
+    the text field element and an array of possible autocompleted values:*/
     if (!acarr || acarr.length < 1) return;
     if (inp.tagName.toLowerCase() == 'textarea')
         inp.setAttribute('rows', 1 + Math.floor(inp.value.length / 37));
@@ -122,8 +115,8 @@ function autocomplete(inp, acarr, aprop) {
                     inp.value = vals.join(',')
                     if (inp.value && inp.value[inp.value.length - 1] !== ',')
                         inp.value += ',';
-					/*close the list of autocompleted values,
-					(or any other open lists of autocompleted values:*/
+                    /*close the list of autocompleted values,
+                    (or any other open lists of autocompleted values:*/
                     closeAllLists();
                     if (inp.tagName.toLowerCase() == 'textarea')
                         inp.setAttribute('rows', 1 + Math.floor(inp.value.length / 37));
