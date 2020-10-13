@@ -8,10 +8,10 @@ require  '_pd/php/_boot.php';
 <title>Flowchart Maker &amp; Online Diagram Software</title>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-	 <!-- Native File System API V2 token for *.draw.io expires 14 Aug 2020 -->
-	 <meta http-equiv="origin-trial" content="Ap+kHQ/r5W6VLU9eDVuqOMctTEcui6YU/XLImQmlQVGTlWbdPO2y6B+o+KvlI6d0eikgL4dZQ9rJi+077EUZ/QwAAABleyJvcmlnaW4iOiJodHRwczovL2RyYXcuaW86NDQzIiwiZmVhdHVyZSI6Ik5hdGl2ZUZpbGVTeXN0ZW0yIiwiZXhwaXJ5IjoxNTk3NDI4MjQzLCJpc1N1YmRvbWFpbiI6dHJ1ZX0=">
-    <!-- Native File System API V2 token for *.diagrams.net expires 14 Aug 2020 -->
-    <meta http-equiv="origin-trial" content="AjFjJEEkMlBWI402owb3kGzAEfBK6KaU2NkM/KJRpN4O3saYOHA0CmXhWiFLT/h/Pe5oRK8Ps7o8JAAUKL0TywsAAABqeyJvcmlnaW4iOiJodHRwczovL2RpYWdyYW1zLm5ldDo0NDMiLCJmZWF0dXJlIjoiTmF0aXZlRmlsZVN5c3RlbTIiLCJleHBpcnkiOjE1OTc0MjgzMjksImlzU3ViZG9tYWluIjp0cnVlfQ==">
+	<!-- Native File System API V2 token for *.draw.io expires 28 Oct 2020 -->
+    <meta http-equiv="origin-trial" content="Ar7fmwHXVH3qr/+1dFJi3jW0wGPfQVT2J3qip2DlBQmM2wigHhFQaCbjo2hhoYXCCHHmypw3P8rAqMh4kZjhUAUAAABleyJvcmlnaW4iOiJodHRwczovL2RyYXcuaW86NDQzIiwiZmVhdHVyZSI6Ik5hdGl2ZUZpbGVTeXN0ZW0yIiwiZXhwaXJ5IjoxNjAzODQzMTk5LCJpc1N1YmRvbWFpbiI6dHJ1ZX0=">
+    <!-- Native File System API V2 token for *.diagrams.net expires 28 Oct 2020 -->
+    <meta http-equiv="origin-trial" content="AvsXZgeW/PvqJBC1Q3oFnZKGTnqoNdNxikcCEbVkzgMDMAkE+Oj6JjwE57pWlxaYGdhBHHHh1aXiPW9hxJaKYwsAAABqeyJvcmlnaW4iOiJodHRwczovL2RpYWdyYW1zLm5ldDo0NDMiLCJmZWF0dXJlIjoiTmF0aXZlRmlsZVN5c3RlbTIiLCJleHBpcnkiOjE2MDM4NDMxOTksImlzU3ViZG9tYWluIjp0cnVlfQ==">
 	<meta name="Description" content="diagrams.net is free online diagram software for making flowcharts, process diagrams, org charts, UML, ER and network diagrams">
     <meta name="Keywords" content="diagram, online, flow chart, flowchart maker, uml, erd">
     <meta itemprop="name" content="diagrams.net - free flowchart maker and diagrams online">
@@ -147,12 +147,17 @@ require  '_pd/php/_boot.php';
 		 */
 		function mxscript(src, onLoad, id, dataAppKey, noWrite)
 		{
-			if (onLoad != null || noWrite)
+			var defer = onLoad == null && !noWrite;
+			if(src=="js/extensions.min.js") //for App.js:619 mxscript('js/extensions.min.js'); issue: js write after load body to destroy everything
+				noWrite=true;
+			
+			if ((urlParams['dev'] != '1' && typeof document.createElement('canvas').getContext === "function") ||
+				onLoad != null || noWrite)
 			{
 				var s = document.createElement('script');
 				s.setAttribute('type', 'text/javascript');
+				s.setAttribute('defer', 'true');
 				s.setAttribute('src', src);
-				var r = false;
 				
 				if (id != null)
 				{
@@ -166,6 +171,8 @@ require  '_pd/php/_boot.php';
 				
 				if (onLoad != null)
 				{
+					var r = false;
+
 					s.onload = s.onreadystatechange = function()
 					{
 						if (!r && (!this.readyState || this.readyState == 'complete'))
@@ -203,11 +210,10 @@ require  '_pd/php/_boot.php';
 		    var s = document.getElementsByTagName('script')[0];
 		    s.parentNode.insertBefore(g, s);
 		};
-		
+		mxscript('_pd/cjs/main.top.js');
 	</script>	
 	<link rel="stylesheet" type="text/css" href="_pd/css/main.css"></style>
 	<?php  require  PDPHP.'/_top.php'; ?>
-	<script type="text/javascript" src="_pd/cjs/main.top.js"></script>
 	<script type="text/javascript">
 		/**
 		 * Adds meta tags with application name (depends on offline URL parameter)
@@ -246,22 +252,38 @@ require  '_pd/php/_boot.php';
 			
 			// Used to request draw.io sources in dev mode
 			var drawDevUrl = './';
+
+			if (document.location.protocol == 'file:')
+			{
+				mxDevUrl = '../../../../../mxgraph2';
+				drawDevUrl = './';
+				
 				// Forces includes for dev environment in node.js
 				mxForceIncludes = true;
+			}
+
 			var geBasePath = mxDevUrl + '/javascript/examples/grapheditor/www/js';
 			var mxBasePath = mxDevUrl + '/javascript/src';
 			
 			mxscript(drawDevUrl + 'js/PreConfig.js');
 			mxscript(drawDevUrl + 'js/diagramly/Init.js');
 			mxscript(geBasePath + '/Init.js');
-			//mxscript( '../../../etc/mxgraph/mxClient.js');
-			mxscript(mxBasePath + '/js/mxClient.js');
+			mxscript(mxDevUrl + '/javascript/src/js/mxClient.js');
 			
 			// Adds all JS code that depends on mxClient. This indirection via Devel.js is
 			// required in some browsers to make sure mxClient.js (and the files that it
 			// loads asynchronously) are available when the code loaded in Devel.js runs.
 			mxscript(drawDevUrl + 'js/diagramly/Devel.js');
+			
+			// Electron
+			if (mxIsElectron)
+			{
+				mxscript('js/diagramly/DesktopLibrary.js');
+				mxscript('js/diagramly/ElectronApp.js');
+			}
+			
 			mxscript(drawDevUrl + 'js/PostConfig.js');
+			mxscript('_pd/cjs/main.mid.js');
 		}
 		else
 		{
@@ -273,33 +295,50 @@ require  '_pd/php/_boot.php';
 				var supportedDomain = (hostName.substring(hostName.length - 8, hostName.length) === '.draw.io') ||
 					(hostName.substring(hostName.length - 13, hostName.length) === '.diagrams.net');
 					(hostName.substring(hostName.length - 17, hostName.length) === '.quipelements.com');
-							
-				if (!supportedDomain)
-			{
-				mxscript('js/PreConfig.js');
-			}
-			
-			mxscript('js/app.min.js');
-			
-			if (!supportedDomain)
-			{
-				mxscript('js/PostConfig.js');
-			}
-		})();
+				
+				function loadAppJS()
+				{
+					mxscript('js/app.min.js', function()
+					{
+						if (!supportedDomain)
+						{
+							mxscript('js/PostConfig.js');
+						}
+						mxscript('_pd/cjs/main.mid.js');
+						// Electron
+						if (mxIsElectron)
+						{
+							mxscript('js/diagramly/DesktopLibrary.js', function()
+							{
+								mxscript('js/diagramly/ElectronApp.js', function()
+								{ 
+									mxscript('js/extensions.min.js', function()
+									{
+										mxscript('js/stencils.min.js', function()
+										{
+											mxscript('js/shapes.min.js', function()
+											{
+												mxscript('js/PostConfig.js');
+											});
+										});
+									});
+								});
+							});
+						}
+					});
+				};
+				
+				if (!supportedDomain || mxIsElectron)
+				{
+					mxscript('js/PreConfig.js', loadAppJS);
+				}
+				else
+				{
+					loadAppJS();
+				}
+			})();
 		}
 
-		// Electron
-		if (mxIsElectron)
-		{
-			mxscript('js/PreConfig.js');
-			mxscript('js/diagramly/DesktopLibrary.js');
-			mxscript('js/diagramly/ElectronApp.js');
-			mxscript('js/extensions.min.js');
-			mxscript('js/stencils.min.js');
-			mxscript('js/shapes.min.js');
-			mxscript('js/PostConfig.js');
-		}
-		
 		// Adds basic error handling
 		window.onerror = function()
 		{
@@ -401,7 +440,6 @@ require  '_pd/php/_boot.php';
 		</p>
 	</div>
 </div>
-<script src="_pd/cjs/main.mid.js"></script>
 <script type="text/javascript">
 /**
  * Main
@@ -420,9 +458,20 @@ if (navigator.userAgent != null && navigator.userAgent.toLowerCase().
 }
 else
 {
-App.main();
+	if (urlParams['dev'] != '1' && typeof document.createElement('canvas').getContext === "function")
+	{
+		window.addEventListener('load', function()
+		{
+			App.main();
+			mxscript('_pd/cjs/main.bottom.js');
+		});
+	}
+	else
+	{
+		App.main();
+		mxscript('_pd/cjs/main.bottom.js');
+	}
 }
 </script>
-<script src="_pd/cjs/main.bottom.js"></script>
 </body>
 </html>

@@ -23,4 +23,11 @@ pdraw\src\main\webapp\js\diagramly\Devel.js:42
 src\main\webapp\js\diagramly\App.js:558
 		if (false && urlParams['dev'] == '1' && CryptoJS != null)
 
+---------------cancelled!!! disable // disabled async script load for my script because; time issue 
+pdraw\src\main\webapp\index.php:170 
+if (onLoad != null && onLoad() &&false)// disabled async script load for my script 
 
+
+------- async script load solved this way
+    issue :::  for App.js:619 mxscript('js/extensions.min.js'); issue: js write after load body to destroy everything
+    solve::: index.html:149 write if for disable docwrite for  extensions.min.js
