@@ -27,12 +27,12 @@
 	 * Known file types.
 	 */
 	Editor.prototype.diagramFileTypes = [
-		{description: 'diagramXmlDesc', extension: 'drawio'},
-		{description: 'diagramPngDesc', extension: 'png'},
-		{description: 'diagramSvgDesc', extension: 'svg'},
-		{description: 'diagramHtmlDesc', extension: 'html'},
-		{description: 'diagramXmlDesc', extension: 'xml'}];
-	
+		{description: 'diagramXmlDesc', extension: 'drawio', mimeType: 'text/xml'},
+		{description: 'diagramPngDesc', extension: 'png', mimeType: 'image/png'},
+		{description: 'diagramSvgDesc', extension: 'svg', mimeType: 'image/svg'},
+		{description: 'diagramHtmlDesc', extension: 'html', mimeType: 'text/html'},
+		{description: 'diagramXmlDesc', extension: 'xml', mimeType: 'text/xml'}];
+
 	/**
 	 * Known file types.
 	 */
@@ -207,6 +207,14 @@
 	 * Specifies if custom properties should be enabled.
 	 */
 	Editor.enableCustomProperties = true;
+	
+	/**
+	 * Specifies if custom properties should be enabled.
+	 */
+	Editor.enableServiceWorker = urlParams['pwa'] != '0' &&
+		'serviceWorker' in navigator && (urlParams['offline'] == '1' ||
+		/.*\.diagrams\.net$/.test(window.location.hostname) ||
+		/.*\.draw\.io$/.test(window.location.hostname));
 
 	/**
 	 * Specifies if XML files should be compressed. Default is true.
@@ -834,7 +842,7 @@
 			}
 			else
 			{
-				style.fill == '';
+				style.fill = '';
 			}
 			
 			// Applies cell style
@@ -1925,8 +1933,9 @@
 	 * Mathjax output ignores CSS transforms in Safari (lightbox and normal mode).
 	 * Check the following test case on page 2 before enabling this in production:
 	 * https://devhost.jgraph.com/git/drawio/etc/embed/sf-math-fo-clipping.html?dev=1
+	 * UPDATE: Fixed via position:static CSS override in initMath.
 	 */
-	Editor.prototype.useForeignObjectForMath = !mxClient.IS_SF;
+	Editor.prototype.useForeignObjectForMath = true;
 
 	/**
 	 * Executes the first step for connecting to Google Drive.
@@ -2285,21 +2294,22 @@
 		
 		if (tags != null && tags.length > 0)
 		{
-			var script = document.createElement('script');
-			script.type = 'text/javascript';
-			script.src = src;
-			tags[0].parentNode.appendChild(script);
+			var s = document.createElement('script');
+			s.setAttribute('type', 'text/javascript');
+			s.setAttribute('src', src);
+			
+			tags[0].parentNode.appendChild(s);
 		}
 		
 		// Overrides position relative for block elements to fix
-		// clipping with zoom in Chrome (drawio/issues/1213)
+		// zoomed math clipping in Webkit (drawio/issues/1213)
 		try
 		{
-			if (mxClient.IS_GC)
+			if (mxClient.IS_GC || mxClient.IS_SF)
 			{
 				var style = document.createElement('style')
 				style.type = 'text/css';
-				style.innerHTML = 'div.MathJax_SVG_Display { position: static !important; }';
+				style.innerHTML = 'div.MathJax_SVG_Display { position: static; }';
 				document.getElementsByTagName('head')[0].appendChild(style);
 			}
 		}
@@ -7006,7 +7016,15 @@
 					pv.writeHead = function(doc)
 					{
 						writeHead.apply(this, arguments);
-						
+												
+						// Fixes clipping for transformed math
+						if (mxClient.IS_GC || mxClient.IS_SF)
+						{
+							doc.writeln('<style type="text/css">');
+							doc.writeln('div.MathJax_SVG_Display { position: static; }');
+							doc.writeln('</style>');
+						}
+
 						// Fixes font weight for PDF export in Chrome
 						if (mxClient.IS_GC)
 						{

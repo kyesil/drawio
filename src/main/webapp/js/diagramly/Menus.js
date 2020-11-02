@@ -78,6 +78,14 @@
 			img.src = IMAGE_PATH + '/help.png';
 		}
 		
+		if (urlParams['noFileMenu'] == '1')
+		{
+			this.defaultMenuItems = this.defaultMenuItems.filter(function(m)
+			{
+				return m != 'file';
+			});
+		}
+
 		editorUi.actions.addAction('new...', function()
 		{
 			var compact = editorUi.isOffline();
@@ -572,7 +580,7 @@
 					if (!isNaN(val) && val > 0)
 					{
 					   	editorUi.exportSvg(val / 100, transparentBackground, ignoreSelection, addShadow,
-					   		editable, embedImages, border, !cropImage, currentPage, linkTarget, keepTheme);
+					   		editable, embedImages, border, !cropImage, false, linkTarget, keepTheme);
 					}
 				}), true, null, 'svg');
 		}));
@@ -1000,10 +1008,8 @@
 		layoutMenu.funct = function(menu, parent)
 		{
 			layoutMenuFunct.apply(this, arguments);
-			
-			menu.addSeparator(parent);
-		
-			menu.addItem(mxResources.get('orgChart') + '...', null, function()
+
+			menu.addItem(mxResources.get('orgChart'), null, function()
 			{
 				var branchOptimizer = null, parentChildSpacingVal = 20, siblingSpacingVal = 20, notExecuted = true;
 				
@@ -1151,6 +1157,22 @@
 				
 				editorUi.showDialog(dlg.container, 355, 125, true, true);
 			}, parent, null, isGraphEnabled());
+						
+			menu.addSeparator(parent);
+		
+			menu.addItem(mxResources.get('parallels'), null, mxUtils.bind(this, function()
+			{
+				// Keeps parallel edges apart
+				var layout = new mxParallelEdgeLayout(graph);
+				layout.checkOverlap = true;
+				layout.spacing = 20;
+				
+	    		editorUi.executeLayout(function()
+	    		{
+	    			layout.execute(graph.getDefaultParent(), (!graph.isSelectionEmpty()) ?
+	    				graph.getSelectionCells() : null);
+	    		}, false);
+			}), parent);
 			
 			menu.addSeparator(parent);
 			editorUi.menus.addMenuItem(menu, 'runLayout', parent, null, null, mxResources.get('apply') + '...');
@@ -2293,37 +2315,51 @@
 			
 			if (file != null)
 			{
-				var filename = (file.getTitle() != null) ? file.getTitle() : this.editorUi.defaultFilename;
-				
-				var dlg = new FilenameDialog(this.editorUi, filename, mxResources.get('rename'), mxUtils.bind(this, function(title)
+				if (file.constructor == LocalFile && file.fileHandle != null)
 				{
-					if (title != null && title.length > 0 && file != null && title != file.getTitle() &&
-						this.editorUi.spinner.spin(document.body, mxResources.get('renaming')))
+					editorUi.showSaveFilePicker(mxUtils.bind(editorUi, function(fileHandle, desc)
 					{
-						// Delete old file, save new file in dropbox if autosize is enabled
-						file.rename(title, mxUtils.bind(this, function(resp)
-						{
-							this.editorUi.spinner.stop();
-						}),
-						mxUtils.bind(this, function(resp)
-						{
-							this.editorUi.handleError(resp, (resp != null) ? mxResources.get('errorRenamingFile') : null);
-						}));
-					}
-				}), (file.constructor == DriveFile || file.constructor == StorageFile) ?
-					mxResources.get('diagramName') : null, function(name)
+						file.invalidFileHandle = null;
+						file.fileHandle = fileHandle;
+						file.title = desc.name;
+						file.desc = desc;
+						editorUi.save(desc.name);
+					}), null, editorUi.createFileSystemOptions(file.getTitle()));
+				}
+				else
 				{
-					if (name != null && name.length > 0)
+					var filename = (file.getTitle() != null) ? file.getTitle() : this.editorUi.defaultFilename;
+					
+					var dlg = new FilenameDialog(this.editorUi, filename, mxResources.get('rename'), mxUtils.bind(this, function(title)
 					{
-						return true;
-					}
-					
-					editorUi.showError(mxResources.get('error'), mxResources.get('invalidName'), mxResources.get('ok'));
-					
-					return false;
-				}, null, null, null, null, editorUi.editor.fileExtensions);
-				this.editorUi.showDialog(dlg.container, 340, 90, true, true);
-				dlg.init();
+						if (title != null && title.length > 0 && file != null && title != file.getTitle() &&
+							this.editorUi.spinner.spin(document.body, mxResources.get('renaming')))
+						{
+							// Delete old file, save new file in dropbox if autosize is enabled
+							file.rename(title, mxUtils.bind(this, function(resp)
+							{
+								this.editorUi.spinner.stop();
+							}),
+							mxUtils.bind(this, function(resp)
+							{
+								this.editorUi.handleError(resp, (resp != null) ? mxResources.get('errorRenamingFile') : null);
+							}));
+						}
+					}), (file.constructor == DriveFile || file.constructor == StorageFile) ?
+						mxResources.get('diagramName') : null, function(name)
+					{
+						if (name != null && name.length > 0)
+						{
+							return true;
+						}
+						
+						editorUi.showError(mxResources.get('error'), mxResources.get('invalidName'), mxResources.get('ok'));
+						
+						return false;
+					}, null, null, null, null, editorUi.editor.fileExtensions);
+					this.editorUi.showDialog(dlg.container, 340, 90, true, true);
+					dlg.init();
+				}
 			}
 		}));
 		

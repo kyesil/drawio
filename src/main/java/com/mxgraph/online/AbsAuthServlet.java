@@ -15,10 +15,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.logging.Level;
 
 import javax.cache.Cache;
 import javax.cache.CacheException;
@@ -149,7 +147,7 @@ abstract public class AbsAuthServlet extends HttpServlet
 		String refreshToken = request.getParameter("refresh_token");
 		String error = request.getParameter("error");
 		HashMap<String, String> stateVars = new HashMap<>();
-		String secret = null, client = null, redirectUri = null, domain = null, stateToken = null, cookieToken = null, version = null;
+		String secret = null, client = null, redirectUri = null, domain = null, stateToken = null, cookieToken = null, version = null, successRedirect = null;
 		
 		try
 		{
@@ -172,6 +170,13 @@ abstract public class AbsAuthServlet extends HttpServlet
 				client = stateVars.get("cId");
 				stateToken = stateVars.get("token");
 				version = stateVars.get("ver");
+				successRedirect = stateVars.get("redirect");
+
+				//Redirect to a page on the same domain only (relative path) TODO Is this enough?
+				if (successRedirect != null && successRedirect.toLowerCase().startsWith("http"))
+				{
+					successRedirect = null;
+				}
 				
 				Cookie[] cookies = request.getCookies();
 				
@@ -226,16 +231,24 @@ abstract public class AbsAuthServlet extends HttpServlet
 			}
 			else
 			{
-				Response authResp = contactOAuthServer(CONFIG.AUTH_SERVICE_URL, code, refreshToken, secret, client, redirectUri, 1);
+				Response authResp = contactOAuthServer(CONFIG.AUTH_SERVICE_URL, code, refreshToken, secret, client, redirectUri, successRedirect != null, 1);
+				
 				response.setStatus(authResp.status);
 				
 				if (authResp.content != null)
 				{
-					OutputStream out = response.getOutputStream();
-					PrintWriter writer = new PrintWriter(out);
-					writer.println(authResp.content);
-					writer.flush();
-					writer.close();
+					if (successRedirect != null)
+					{
+						response.sendRedirect(successRedirect + "#" + Utils.encodeURIComponent(authResp.content, "UTF-8"));
+					}
+					else
+					{
+						OutputStream out = response.getOutputStream();
+						PrintWriter writer = new PrintWriter(out);
+						writer.println(authResp.content);
+						writer.flush();
+						writer.close();
+					}
 				}
 			}
 		}
@@ -252,7 +265,7 @@ abstract public class AbsAuthServlet extends HttpServlet
 	}
 	
 	private Response contactOAuthServer(String authSrvUrl, String code, String refreshToken, String secret,
-			String client, String redirectUri, int retryCount)
+			String client, String redirectUri,boolean directResp, int retryCount)
 	{
 		HttpURLConnection con = null;
 		Response response = new Response();
@@ -338,8 +351,16 @@ abstract public class AbsAuthServlet extends HttpServlet
 			in.close();
 
 			response.status = con.getResponseCode();
-			// Writes JavaScript code
-			response.content = processAuthResponse(authRes.toString(), jsonResponse);
+			
+			if (directResp)
+			{
+				response.content = authRes.toString();
+			}
+			else
+			{
+				// Writes JavaScript code
+				response.content = processAuthResponse(authRes.toString(), jsonResponse);
+			}
 		}
 		catch(IOException e)
 		{
@@ -375,7 +396,7 @@ abstract public class AbsAuthServlet extends HttpServlet
 			else if (retryCount > 0 && e.getMessage() != null && e.getMessage().contains("Connection timed out"))
 		    {
 				return contactOAuthServer(authSrvUrl, code, refreshToken, secret,
-						client, redirectUri, --retryCount);
+						client, redirectUri, directResp, --retryCount);
 		    }
 			else
 			{
