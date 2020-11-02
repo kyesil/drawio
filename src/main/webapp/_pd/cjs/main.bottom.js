@@ -71,10 +71,14 @@ Graph.prototype.createSvgImageExport = function () {
 				//console.log(g.innerHTML);
 
 			}
+			var gtype;
 			if (state.cell.value.attributes)
 				for (let i = 0; i < state.cell.value.attributes.length; i++) {
 					let attrib = state.cell.value.attributes[i];
 					if (attrib.name === 'label') continue;
+					if (attrib.name === 'tags'){
+						gtype="dyn tags";
+					} 
 					g.setAttribute(attrib.name, attrib.value);
 				}
 		}

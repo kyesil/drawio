@@ -8,10 +8,6 @@ require  '_pd/php/_boot.php';
 <title>Flowchart Maker &amp; Online Diagram Software</title>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-	<!-- Native File System API V2 token for *.draw.io expires 28 Oct 2020 -->
-    <meta http-equiv="origin-trial" content="Ar7fmwHXVH3qr/+1dFJi3jW0wGPfQVT2J3qip2DlBQmM2wigHhFQaCbjo2hhoYXCCHHmypw3P8rAqMh4kZjhUAUAAABleyJvcmlnaW4iOiJodHRwczovL2RyYXcuaW86NDQzIiwiZmVhdHVyZSI6Ik5hdGl2ZUZpbGVTeXN0ZW0yIiwiZXhwaXJ5IjoxNjAzODQzMTk5LCJpc1N1YmRvbWFpbiI6dHJ1ZX0=">
-    <!-- Native File System API V2 token for *.diagrams.net expires 28 Oct 2020 -->
-    <meta http-equiv="origin-trial" content="AvsXZgeW/PvqJBC1Q3oFnZKGTnqoNdNxikcCEbVkzgMDMAkE+Oj6JjwE57pWlxaYGdhBHHHh1aXiPW9hxJaKYwsAAABqeyJvcmlnaW4iOiJodHRwczovL2RpYWdyYW1zLm5ldDo0NDMiLCJmZWF0dXJlIjoiTmF0aXZlRmlsZVN5c3RlbTIiLCJleHBpcnkiOjE2MDM4NDMxOTksImlzU3ViZG9tYWluIjp0cnVlfQ==">
 	<meta name="Description" content="diagrams.net is free online diagram software for making flowcharts, process diagrams, org charts, UML, ER and network diagrams">
     <meta name="Keywords" content="diagram, online, flow chart, flowchart maker, uml, erd">
     <meta itemprop="name" content="diagrams.net - free flowchart maker and diagrams online">
@@ -62,7 +58,7 @@ require  '_pd/php/_boot.php';
 		})();
 		
 		let hn = window.location.hostname;
-		urlParams["dev"] = hn === "predixi.com" ? 0 : 1;
+		urlParams["dev"] = hn === "lan.predixi.com" ? 0 : 1;
 		urlParams["offline"] = 1;
 		urlParams["pages"] = 0;
 
@@ -248,6 +244,16 @@ require  '_pd/php/_boot.php';
 			// ignored
 		}
 
+		var mxScriptsLoaded = false, mxWinLoaded = false;
+		
+		function checkAllLoaded()
+		{
+			if (mxScriptsLoaded && mxWinLoaded)
+			{
+				App.main();				
+			}
+		};
+
 		var t0 = new Date();
 
 		// Changes paths for local development environment
@@ -306,6 +312,9 @@ require  '_pd/php/_boot.php';
 				{
 					mxscript('js/app.min.js', function()
 					{
+						mxScriptsLoaded = true;
+						checkAllLoaded();
+
 						if (!supportedDomain)
 						{
 							mxscript('js/PostConfig.js');
@@ -468,7 +477,8 @@ else
 	{
 		window.addEventListener('load', function()
 		{
-			App.main();
+			mxWinLoaded = true;
+			checkAllLoaded();
 			mxscript('_pd/cjs/main.bottom.js');
 		});
 	}
