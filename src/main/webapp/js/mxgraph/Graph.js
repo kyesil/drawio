@@ -2772,7 +2772,7 @@ Graph.prototype.formatDate = function(date, mask, utc)
 /**
  * 
  */
-Graph.prototype.createLayersDialog = function()
+Graph.prototype.createLayersDialog = function(onchange)
 {
 	var div = document.createElement('div');
 	div.style.position = 'absolute';
@@ -2819,6 +2819,11 @@ Graph.prototype.createLayersDialog = function()
 				}
 				
 				model.setVisible(layer, cb.checked);
+
+				if (onchange != null)
+				{
+					onchange(layer);
+				}
 			});
 		})(model.getChildAt(model.root, i)));
 	}
@@ -8393,7 +8398,8 @@ if (typeof mxVertexHandler != 'undefined')
 		 * @param {number} dy Y-coordinate of the translation.
 		 */
 		Graph.prototype.getSvg = function(background, scale, border, nocrop, crisp,
-			ignoreSelection, showText, imgExport, linkTarget, hasShadow)
+			ignoreSelection, showText, imgExport, linkTarget, hasShadow, incExtFonts,
+			keepTheme, exportType)
 		{
 			//Disable Css Transforms if it is used
 			var origUseCssTrans = this.useCssTransforms;
@@ -8413,9 +8419,10 @@ if (typeof mxVertexHandler != 'undefined')
 				ignoreSelection = (ignoreSelection != null) ? ignoreSelection : true;
 				showText = (showText != null) ? showText : true;
 	
-				var bounds = (ignoreSelection || nocrop) ?
+				var bounds = (exportType == 'page') ? this.view.getBackgroundPageBounds() :
+					((ignoreSelection || nocrop || exportType == 'diagram') ?
 					this.getGraphBounds() : this.getBoundingBox(
-					this.getSelectionCells());
+					this.getSelectionCells()));
 	
 				if (bounds == null)
 				{
@@ -8620,7 +8627,7 @@ if (typeof mxVertexHandler != 'undefined')
 		 */
 		Graph.prototype.addForeignObjectWarning = function(canvas, root)
 		{
-			if (root.getElementsByTagName('foreignObject').length > 0)
+			if (urlParams['svg-warning'] != '0' && root.getElementsByTagName('foreignObject').length > 0)
 			{
 				var sw = canvas.createElement('switch');
 				var g1 = canvas.createElement('g');

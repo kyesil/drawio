@@ -9,6 +9,7 @@ LucidImporter = {};
 {
 	// Global import transformation
 	var defaultFontSize = '11';
+	var defaultLucidFont = 'Liberation Sans';
 	var scale = 0.6;
 	var dx = 0;
 	var dy = 0;
@@ -86,13 +87,13 @@ LucidImporter = {};
 			'PreparationBlock': 'shape=hexagon;perimeter=hexagonPerimeter2',
 			'DataBlock': 'shape=parallelogram;perimeter=parallelogramPerimeter;anchorPointDirection=0',
 			'DataBlockNew': 'shape=parallelogram;perimeter=parallelogramPerimeter;anchorPointDirection=0',
-			'DatabaseBlock': 'shape=cylinder;size=0.1;anchorPointDirection=0;boundedLbl=1;',
-			'DirectAccessStorageBlock': 'shape=cylinder;direction=south;size=0.1;anchorPointDirection=0;boundedLbl=1;',
+			'DatabaseBlock': 'shape=cylinder3;size=4;anchorPointDirection=0;boundedLbl=1;',
+			'DirectAccessStorageBlock': 'shape=cylinder3;direction=south;size=10;anchorPointDirection=0;boundedLbl=1;',
 			'InternalStorageBlock': 'shape=internalStorage;dx=10;dy=10',
 			'PaperTapeBlock': 'shape=tape;size=0.2',
 			'ManualOperationBlockNew': 'shape=trapezoid;perimeter=trapezoidPerimeter;anchorPointDirection=0;flipV=1',
 			'DelayBlock': 'shape=delay',
-			'StoredDataBlock': 'shape=dataStorage',
+			'StoredDataBlock': 'shape=cylinder3;boundedLbl=1;size=15;lid=0;direction=south;',
 			'MergeBlock': 'triangle;direction=south;anchorPointDirection=0',
 			'ConnectorBlock': 'ellipse',
 			'OrBlock': s + 'flowchart.summing_function',
@@ -114,11 +115,11 @@ LucidImporter = {};
 			'BraceBlockRotated': cs,
 			'BracketBlockRotated': cs,
 //Geometric shapes
-			'IsoscelesTriangleBlock': 'triangle;direction=north;anchorPointDirection=0',
+			'IsoscelesTriangleBlock': 'shape=mxgraph.basic.acute_triangle;dx=0.5;anchorPointDirection=0',
 			'RightTriangleBlock': s + 'basic.orthogonal_triangle',
 			'PentagonBlock': s + 'basic.pentagon',
 			'HexagonBlock': 'shape=hexagon;perimeter=hexagonPerimeter2',
-			'OctagonBlock': s + 'basic.octagon',
+			'OctagonBlock': s + 'basic.octagon2;dx=15;',
 			'CrossBlock': 'shape=cross;size=0.6',
 			'CloudBlock': 'ellipse;shape=cloud',
 			'HeartBlock': s + 'basic.heart',
@@ -219,7 +220,7 @@ LucidImporter = {};
 			'MindMapDiamondBlock' : 'shape=rhombus',
 			'MindMapPentagonBlock' : s + 'basic.pentagon',
 			'MindMapHexagonBlock' : 'shape=hexagon;perimeter=hexagonPerimeter2',
-			'MindMapOctagonBlock' : s + 'basic.octagon',
+			'MindMapOctagonBlock' : s + 'basic.octagon2;dx=10;',
 			'MindMapCrossBlock' : s + 'basic.cross2;dx=20',
 //Entity Relationship
 			'ERDEntityBlock' : cs,
@@ -230,7 +231,8 @@ LucidImporter = {};
 			'UMLClassBlock': cs,
 			'UMLActiveClassBlock': 'shape=process',
 			'UMLMultiplicityBlock' : cs,
-			'UMLPackageBlock': 'shape=folder;tabPosition=left',
+//			'UMLPackageBlock': 'shape=folder;tabPosition=left',
+			'UMLPackageBlock': '',
 			'UMLConstraintBlock' : cs,
 			'UMLNoteBlock': 'shape=note;size=15',
 			'UMLNoteBlockV2': 'shape=note;size=15',
@@ -296,7 +298,7 @@ LucidImporter = {};
 //BPMN 2.0
 			'BPMNActivity' : cs,
 			'BPMNEvent' : cs,
-			'BPMNChoreography' : cs, //TODO
+//			'BPMNChoreography' : cs, //TODO
 			'BPMNConversation' : cs,
 			'BPMNGateway' : cs,
 			'BPMNData' : cs,
@@ -310,7 +312,7 @@ LucidImporter = {};
 			'DFDExternalEntityBlock2' : '',
 			'YDMDFDProcessBlock' : 'ellipse',
 			'YDMDFDDataStoreBlock' : 'shape=partialRectangle;right=0;left=0',
-			'GSDFDProcessBlock' : 'shape=swimlane;rounded=1;arcSize=10',
+			'GSDFDProcessBlock' : cs,
 			'GSDFDProcessBlock2' : 'rounded=1;arcSize=10;',
 			'GSDFDDataStoreBlock' : cs,
 			'GSDFDDataStoreBlock2' : 'shape=partialRectangle;right=0',
@@ -334,8 +336,8 @@ LucidImporter = {};
 //Shipments
 			'VSMExternalShipmentAirplaneBlock' : s + 'lean_mapping.airplane_7',
 			'VSMExternalShipmentForkliftBlock' : s + 'lean_mapping.move_by_forklift',
-			'VSMExternalShipmentTruckBlock' : s + 'lean_mapping.truck_shipment',
-			'VSMExternalShipmentBoatBlock' : s + 'lean_mapping.boat_shipment',
+			'VSMExternalShipmentTruckBlock' : s + 'lean_mapping.truck_shipment;align=left;',
+			'VSMExternalShipmentBoatBlock' : s + 'lean_mapping.boat_shipment;verticalAlign=bottom;',
 //Information
 			'VSMProductionControlBlock' : cs,
 			'VSMOtherInformationBlock' : '',
@@ -349,7 +351,7 @@ LucidImporter = {};
 //Value Stream Mapping
 			'VSMKaizenBurstBlock' : s + 'lean_mapping.kaizen_lightening_burst',
 			'VSMOperatorBlock' : s + 'lean_mapping.operator;flipV=1',
-			'VSMTimelineBlock' : cs, //TODO
+//			'VSMTimelineBlock' : cs, //TODO
 			'VSMQualityProblemBlock' : s + 'lean_mapping.quality_problem',
 //Kanban
 			'VSMProductionKanbanSingleBlock' : 'shape=card;size=18;flipH=1;',
@@ -1649,62 +1651,62 @@ LucidImporter = {};
 			'Cisco_cisco_workstation' : s + 'cisco.computers_and_peripherals.workstation;' + c,
 			'Cisco_cisco_www_server' : s + 'cisco.servers.www_server;' + c,
 //Computers and Monitors
-			'NET_PC' : s + 'networks.pc;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_Virtual-PC' : s + 'networks.virtual_pc;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_Terminal' : s + 'networks.terminal;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_DataPipe' : s + 'networks.bus;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_SlateDevice' : s + 'networks.tablet;fillColor=#29AAE1;strokeColor=#ffffff', 
-			'NET_TabletDevice' : s + 'networks.tablet;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_Laptop' : s + 'networks.laptop;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_PDA' : s + 'networks.mobile;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_CRTMonitor' : s + 'networks.monitor;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_LCDMonitor' : s + 'networks.monitor;fillColor=#29AAE1;strokeColor=#ffffff',
+			'NET_PC' : s + 'networks.pc;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_Virtual-PC' : s + 'networks.virtual_pc;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_Terminal' : s + 'networks.terminal;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_DataPipe' : s + 'networks.bus;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_SlateDevice' : s + 'networks.tablet;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;', 
+			'NET_TabletDevice' : s + 'networks.tablet;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_Laptop' : s + 'networks.laptop;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_PDA' : s + 'networks.mobile;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_CRTMonitor' : s + 'networks.monitor;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_LCDMonitor' : s + 'networks.monitor;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
 //Detailed Network Diagrams
 //			'NET_ABSwitch' NA
 //			'NET_Repeater' NA
 //			'NET_DiagnosticDevice' NA
 //			'NET_CardReader' NA
 //			'NET_PatchPanel' NA
-			'NET_RadioTower' : s + 'networks.radio_tower;fillColor=#29AAE1;strokeColor=#ffffff',
+			'NET_RadioTower' : s + 'networks.radio_tower;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
 //			'NET_BiometricReader' NA
-			'NET_ExternalHardDrive' : s + 'networks.external_storage;fillColor=#29AAE1;strokeColor=#ffffff',
+			'NET_ExternalHardDrive' : s + 'networks.external_storage;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
 //			'NET_WebService' NA
 //			'NET_FiberOptic' NA
-			'NET_SatelliteDish' : s + 'networks.satellite_dish;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_Satellite' : s + 'networks.satellite;fillColor=#29AAE1;strokeColor=#ffffff',
+			'NET_SatelliteDish' : s + 'networks.satellite_dish;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_Satellite' : s + 'networks.satellite;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
 //			'NET_VoIPPhone' NA
 //			'NET_PBX' NA
 //			'NET_MLPS' NA
 //Basic Network Shapes
-			'NET_WirelessAccessPoint' : s + 'networks.radio_tower;fillColor=#29AAE1;strokeColor=#29AAE1',
+			'NET_WirelessAccessPoint' : s + 'networks.radio_tower;fillColor=#29AAE1;strokeColor=#29AAE1;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
 			'NET_RingNetwork' : cs,
 			'NET_Ethernet' : cs,
-			'NET_Server' : s + 'networks.server;fillColor=#29AAE1;strokeColor=#ffffff',
+			'NET_Server' : s + 'networks.server;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
 //			'NET_ExternalMediaDrive' NA
-			'NET_Mainframe' : s + 'networks.mainframe;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_Router' : s + 'networks.wireless_hub;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_Switch' : s + 'networks.switch;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_Firewall' : s + 'networks.firewall;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_User' : s + 'networks.user_male;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_CommLink' : s + 'networks.comm_link_edge;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_SuperComputer' : s + 'networks.supercomputer;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_VirtualServer' : s + 'networks.virtual_server;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_Printer' : s + 'networks.printer;fillColor=#29AAE1;strokeColor=#ffffff',
+			'NET_Mainframe' : s + 'networks.mainframe;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_Router' : s + 'networks.wireless_hub;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_Switch' : s + 'networks.switch;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_Firewall' : s + 'networks.firewall;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_User' : s + 'networks.user_male;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_CommLink' : s + 'networks.comm_link_edge;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_SuperComputer' : s + 'networks.supercomputer;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_VirtualServer' : s + 'networks.virtual_server;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_Printer' : s + 'networks.printer;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
 //			'NET_Plotter' NA
-			'NET_Scanner' : s + 'networks.scanner;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_Copier' : s + 'networks.copier;fillColor=#29AAE1;strokeColor=#ffffff',
+			'NET_Scanner' : s + 'networks.scanner;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_Copier' : s + 'networks.copier;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
 //			'NET_FaxMachine' NA
-			'NET_MultiFunctionMachine' : s + 'networks.copier;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_Projector' : s + 'networks.video_projector;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_ProjectorScreen' : s + 'networks.video_projector_screen;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_Bridge' : s + 'networks.router;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_Hub' : s + 'networks.hub;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_Modem' : s + 'networks.modem;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_Telephone' : s + 'signs.tech.telephone_5;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_CellPhone' : s + 'networks.mobile;fillColor=#29AAE1;strokeColor=#ffffff',
-			'NET_SmartPhone' : s + 'networks.mobile;fillColor=#29AAE1;strokeColor=#ffffff',
+			'NET_MultiFunctionMachine' : s + 'networks.copier;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_Projector' : s + 'networks.video_projector;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_ProjectorScreen' : s + 'networks.video_projector_screen;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_Bridge' : s + 'networks.router;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_Hub' : s + 'networks.hub;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_Modem' : s + 'networks.modem;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_Telephone' : s + 'signs.tech.telephone_5;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_CellPhone' : s + 'networks.mobile;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
+			'NET_SmartPhone' : s + 'networks.mobile;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
 //			'NET_VideoPhone' NA
-			'NET_Camera' : s + 'signs.tech.camera_2;fillColor=#29AAE1;strokeColor=#ffffff',
+			'NET_Camera' : s + 'signs.tech.camera_2;fillColor=#29AAE1;strokeColor=#ffffff;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;',
 //			'NET_VideoCamera' NA
 //Server Racks
 			'RackServerRack' : s + 'rackGeneral.container;container=1;collapsible=0;childLayout=rack;marginLeft=9;marginRight=9;marginTop=21;marginBottom=22;textColor=#000000;numDisp=off',
@@ -1791,26 +1793,37 @@ LucidImporter = {};
 			'EE_Lightbulb' : s + 'electrical.miscellaneous.light_bulb',
 			'EE_IntegratedCircuit' : 'shape=mxgraph.electrical.logic_gates.dual_inline_ic',
 //Power Sources
-			'EE_AcSource' : s + 'electrical.signal_sources.ac_source;strokeWidth=1',
-			'EE_VoltageSource' : s + 'electrical.signal_sources.dc_source_3',
-			'EE_CurrentSource' : s + 'electrical.signal_sources.dc_source_2;direction=north',
-			'EE_ControlledCurrentSource' : s + 'electrical.signal_sources.dependent_source_2;direction=west',
-			'EE_ControlledVoltageSource' : s + 'electrical.signal_sources.dependent_source_3',
+			'EE_AcSource' : s + 'electrical.signal_sources.ac_source;strokeWidth=1;verticalLabelPosition=middle;align=left;verticalAlign=top;labelPosition=right;',
+			'EE_VoltageSource' : s + 'electrical.signal_sources.dc_source_3;verticalLabelPosition=middle;align=left;verticalAlign=top;labelPosition=right;',
+			'EE_CurrentSource' : s + 'electrical.signal_sources.dc_source_2;direction=north;verticalLabelPosition=middle;align=left;verticalAlign=top;labelPosition=right;',
+			'EE_ControlledCurrentSource' : s + 'electrical.signal_sources.dependent_source_2;direction=west;verticalLabelPosition=middle;align=left;verticalAlign=top;labelPosition=right;',
+			'EE_ControlledVoltageSource' : s + 'electrical.signal_sources.dependent_source_3;verticalLabelPosition=middle;align=left;verticalAlign=top;labelPosition=right;',
 			'EE_DcSource1' : s + 'electrical.miscellaneous.monocell_battery;flipH=1;verticalLabelPosition=bottom;verticalAlign=top',
 			'EE_DcSource2' : s + 'electrical.miscellaneous.multicell_battery;flipH=1;verticalLabelPosition=bottom;verticalAlign=top',
 			'EE_Vss' : s + 'electrical.signal_sources.vss2;verticalLabelPosition=top;verticalAlign=bottom;fontSize=24',
 			'EE_Vdd' : s + 'electrical.signal_sources.vdd;verticalLabelPosition=bottom;verticalAlign=top',
 //Transistors
+			
 			'EE_BJT_NPN1' : s + 'electrical.transistors.pnp_transistor_1',
+			'EE_BJT_NPN1_V2' : s + 'electrical.transistors.npn_transistor_1;',
 			'EE_BJT_PNP1' : s + 'electrical.transistors.npn_transistor_1',
+			'EE_BJT_PNP1_V2' : s + 'electrical.transistors.pnp_transistor_1',
 			'EE_JFET_P' : s + 'electrical.transistors.p-channel_jfet_1;flipV=1',
+			'EE_JFET_P_V2' : s + 'electrical.transistors.p-channel_jfet_1;flipV=1',
 			'EE_JFET_N' : s + 'electrical.transistors.n-channel_jfet_1',
+			'EE_JFET_N_V2' : s + 'electrical.transistors.n-channel_jfet_1',
 			'EE_MOSFET_P1' : s + 'electrical.mosfets1.mosfet_ic_p;flipV=1',
+			'EE_MOSFET_P1_V2' : s + 'electrical.mosfets1.mosfet_ic_p;flipV=1',
 			'EE_MOSFET_P2' : s + 'electrical.mosfets1.mosfet_p_no_bulk',
+			'EE_MOSFET_P2_V2' : s + 'electrical.mosfets1.mosfet_p_no_bulk',
 			'EE_MOSFET_P3' : s + 'electrical.mosfets1.p-channel_mosfet_1;flipV=1',
+			'EE_MOSFET_P3_V2' : s + 'electrical.mosfets1.p-channel_mosfet_1;flipV=1',
 			'EE_MOSFET_N1' : s + 'electrical.mosfets1.mosfet_ic_n',
+			'EE_MOSFET_N1_V2' : s + 'electrical.mosfets1.mosfet_ic_n',
 			'EE_MOSFET_N2' : s + 'electrical.mosfets1.mosfet_n_no_bulk',
+			'EE_MOSFET_N2_V2' : s + 'electrical.mosfets1.mosfet_n_no_bulk',
 			'EE_MOSFET_N3' : s + 'electrical.mosfets1.n-channel_mosfet_1',
+			'EE_MOSFET_N3_V2' : s + 'electrical.mosfets1.n-channel_mosfet_1',
 //Relays
 //			'EE_SPST' NA
 //			'EE_SPDT' NA
@@ -2046,6 +2059,20 @@ LucidImporter = {};
 			'GCPIconGenericBlock' : gcpIcon + 'placeholder',
 			'GCPIconPredictionAPIBlock' : gcpIcon + 'prediction_api',
 			//'GCPGoogleCloudPlatformLockupBlock' : gcpIcon + 'gcp_google_cloud_platform_lockup',
+			'GCPAutoScalingModifier' : 'shape=mxgraph.gcp2.modifiers_autoscaling;fillColor=#757575;strokeColor=none;',
+			'GCPCustomVirtualMachineModifier' : 'shape=mxgraph.gcp2.modifiers_custom_virtual_machine;fillColor=#757575;strokeColor=none;',
+			'GCPHighCPUMachineModifier' : 'shape=mxgraph.gcp2.modifiers_high_cpu_machine;fillColor=#757575;strokeColor=none;',
+			'GCPHighMemoryMachineModifier' : 'shape=mxgraph.gcp2.modifiers_high_memory_machine;fillColor=#757575;strokeColor=none;',
+			'GCPPreemptableVSModifier' : 'shape=mxgraph.gcp2.modifiers_preemptable_vm;fillColor=#757575;strokeColor=none;',
+			'GCPSharedCoreMachineF1Modifier' : 'shape=mxgraph.gcp2.modifiers_shared_core_machine_f1;fillColor=#757575;strokeColor=none;',
+			'GCPSharedCoreMachineG1Modifier' : 'shape=mxgraph.gcp2.modifiers_shared_core_machine_g1;fillColor=#757575;strokeColor=none;',
+			'GCPStandardMachineModifier' : 'shape=mxgraph.gcp2.modifiers_standard_machine;fillColor=#757575;strokeColor=none;',
+			'GCPStorageModifier' : 'shape=mxgraph.gcp2.modifiers_storage;fillColor=#757575;strokeColor=none;',
+			'GCPAppEngineProductCard' : cs,
+			'GCPCloudDataflowProductCard' : cs,
+			'GCPCloudDataprocProductCard' : cs,
+			'GCPComputeEngineProductCard' : cs,
+			'GCPContainerEngineProductCard' : cs,
 			
 //Kubernetes Icons
 			'CronjobLabeledKub19' : kupIcon + 'cronjob',
@@ -2122,7 +2149,7 @@ LucidImporter = {};
 			'KubeletLabeledKub19' : kupIcon + 'kubelet',
 			'SchedLabeledKub19' : kupIcon + 'sched',
 //Equation
-			'Equation' : cs, //TODO
+//			'Equation' : cs, //TODO
 //Walls
 			'fpWall' : '',
 //Rooms
@@ -2345,7 +2372,7 @@ LucidImporter = {};
 			'PEClarifierBlock' : s + 'pid.vessels.bunker_(conical_bottom);verticalLabelPosition=bottom;verticalAlign=top',
 			'PETankBlock' : s + 'pid.vessels.tank_(conical_roof);verticalLabelPosition=bottom;verticalAlign=top',
 			'PETrayColumnBlock' : s + 'pid2misc.column;columnType=tray;verticalLabelPosition=bottom;verticalAlign=top',
-			'PEReactionVesselBlock' : s + 'pid.vessels.reactor',
+			'PEReactionVesselBlock' : s + 'pid.vessels.reactor;verticalLabelPosition=bottom;verticalAlign=top',
 			'PEBin' : s + 'pid.vessels.tank_(conical_bottom)',
 			'PEDomeRoofTank' : s + 'pid.vessels.tank_(dished_roof)',
 			'PEConeRoofTank' : s + 'pid.vessels.tank_(conical_roof)',
@@ -2371,7 +2398,7 @@ LucidImporter = {};
 			'PEShellAndTubeHeat2Block' : s + 'pid.heat_exchangers.shell_and_tube_heat_exchanger_2;verticalLabelPosition=bottom;verticalAlign=top',
 			'PEShellAndTubeHeat3Block' : s + 'pid.heat_exchangers.shell_and_tube_heat_exchanger_1;direction=north;verticalLabelPosition=bottom;verticalAlign=top',
 			'PESinglePassHeatBlock' : s + 'pid.heat_exchangers.single_pass_heat_exchanger;verticalLabelPosition=bottom;verticalAlign=top',
-			'PEHeaterBlock' : s + 'pid.heat_exchangers.heater',
+			'PEHeaterBlock' : s + 'pid.heat_exchangers.heater;verticalLabelPosition=bottom;verticalAlign=top',
 //Pumps
 			'PEEjectorInjectorBlock' : s + 'pid.fittings.injector;verticalLabelPosition=bottom;verticalAlign=top',
 			'PECompressorTurbineBlock' : cs,
@@ -2454,34 +2481,34 @@ LucidImporter = {};
 //iPhone Elements
 			'iOS7StatusBariPhone' : s + 'ios7ui.appBar',
 //			'iOS7NavBariPhone' NA
-			'iOS7TabsiPhone' : cs, //TODO
-			'iOS7iPhoneActionSheet' : cs, //TODO
+//			'iOS7TabsiPhone' : cs, //TODO
+//			'iOS7iPhoneActionSheet' : cs, //TODO
 			'iOS7iPhoneKeyboard' : s + 'ios7.misc.keyboard_(letters)',
-			'iOS7TableView' : cs, //TODO
+//			'iOS7TableView' : cs, //TODO
 //iPad Elements
 			'iOS7StatusBariPad' : s + 'ios7ui.appBar',
-			'iOS7NavBariPad' : cs, //TODO
-			'iOS7TabsiPad' : cs, //TODO
-			'iOS7iPadActionSheet' : cs, //TODO
+//			'iOS7NavBariPad' : cs, //TODO
+//			'iOS7TabsiPad' : cs, //TODO
+//			'iOS7iPadActionSheet' : cs, //TODO
 			'iOS7iPadKeyboard' : s + 'ios7.misc.keyboard_(letters)',
 //			'iOS7SplitView'
 //			'iOS7iPadPopover'
 //Common Elements
-			'iOS7AlertDialog' : cs, //TODO
+//			'iOS7AlertDialog' : cs, //TODO
 			'iOS7ProgressBar' : s + 'ios7ui.downloadBar', //TODO
 			'iOS7Slider' : s + 'ios7ui.searchBox', //TODO
 			'iOS7SearchBar' : s + 'ios7ui.searchBox', 
 			'iOS7Button' : '',
 			'iOS7TextField' : '',
 			'iOS7TextView' : '',
-			'iOS7SegmentedControl' : cs, //TODO
+//			'iOS7SegmentedControl' : cs, //TODO
 			'iOS7Toggle' : s + 'ios7ui.onOffButton;buttonState=on;strokeColor=#38D145;strokeColor2=#aaaaaa;fillColor=#38D145;fillColor2=#ffffff', //TODO
 			'iOS7Stepper' : s + 'ios7.misc.adjust;fillColor=#ffffff;gradientColor=none',
 			'iOS7PageControls' : s + 'ios7ui.pageControl;fillColor=#666666;strokeColor=#bbbbbb', //TODO
 			'iOS7Block' : '',
-			'iOS7DatePicker' : cs, //TODO
-			'iOS7TimePicker' : cs, //TODO
-			'iOS7CountdownPicker' : cs, //TODO
+//			'iOS7DatePicker' : cs, //TODO
+//			'iOS7TimePicker' : cs, //TODO
+//			'iOS7CountdownPicker' : cs, //TODO
 //iOS Icons
 			'iOS7IconArrow left' : s + 'ios7.misc.left',
 			'iOS7IconArrow' : s + 'ios7.misc.right',
@@ -2578,7 +2605,8 @@ LucidImporter = {};
 			'UI2BrowserBlock' : cs,
 			'UI2WindowBlock' : cs, 
 			'UI2DialogBlock' : cs,
-			'UI2AreaBlock' : '',
+			'UI2AreaBlock' : 'rounded=1;arcSize=3',
+			'UIAreaBlock' : 'rounded=1;arcSize=3;fillColor=none',
 			'UI2ElementBlock' : '',
 			'UI2AccordionBlock' : cs,
 			'UI2TabBarContainerBlock' : cs,
@@ -2625,7 +2653,7 @@ LucidImporter = {};
 			'UI2AtoZBlock' : cs,
 			'UI2PaginationBlock' : cs,
 			'UI2ContextMenuBlock' : cs,
-			'UI2TreePaneBlock' : cs, //TODO
+//			'UI2TreePaneBlock' : cs, //TODO
 			'UI2PlaybackControlsBlock' : s + 'mockup.misc.playbackControls;fillColor=#ffffff;strokeColor=#999999;fillColor2=#99ddff;strokeColor2=none;fillColor3=#ffffff;strokeColor3=none',
 			'Image_ui_formatting_toolbar' : s + 'mockup.menus_and_buttons.font_style_selector_2',
 //UI Misc
@@ -2645,11 +2673,11 @@ LucidImporter = {};
 //			'Image_ipad_bar_black' : '',
 //			'Image_ipad_safari_top' NA
 			'Image_ipad_search' : s + 'mockup.forms.searchBox;mainText=;flipH=1',
-			'Image_ipad_alert_dialog' : cs, //TODO
-			'Image_ipad_dialog' : cs, //TODO
+//			'Image_ipad_alert_dialog' : cs, //TODO
+//			'Image_ipad_dialog' : cs, //TODO
 			'Image_ipad_popover' : s + 'ios.iOption;barPos=50;pointerPos=top;buttonText=',
-			'Image_ipad_table' : cs, //TODO
-			'Image_ipad_vtab' : cs, //TODO
+//			'Image_ipad_table' : cs, //TODO
+//			'Image_ipad_vtab' : cs, //TODO
 //iOS 6 iPad Controls
 			'Image_ipad_button_black' : '',
 			'Image_ipad_button_blue' : '',
@@ -2663,9 +2691,9 @@ LucidImporter = {};
 			'Image_ipad_prev_next' : s + 'ios.iPrevNext;strokeColor=#444444;fillColor=#dddddd;fillColor2=#3D5565;fillColor3=#ffffff',
 			'Image_ipad_keyboard_portrait' : s + 'ios.iKeybLett',
 			'Image_ipad_keyboard_landscape' : s + 'ios.iKeybLett',
-			'Image_ipad_large_tabbed_button' : cs, //TODO
-			'Image_ipad_sort_button' : cs, //TODO
-			'Image_ipad_tab_bar' : cs, //TODO
+//			'Image_ipad_large_tabbed_button' : cs, //TODO
+//			'Image_ipad_sort_button' : cs, //TODO
+//			'Image_ipad_tab_bar' : cs, //TODO
 			'Image_ipad_slider' : s + 'ios.iSlider;barPos=20',
 //			'Image_ipad_switch_off'
 //iOS 6 iPad Icons
@@ -2696,17 +2724,17 @@ LucidImporter = {};
 			'Image_iphone_bar_semi_trans_black' : '',
 			'Image_iphone_bar_semi_trans_blue' : '',
 			'Image_iphone_search' : s + 'mockup.forms.searchBox;mainText=;flipH=1',
-			'Image_iphone_table' : cs, //TODO
-			'Image_iphone_table_w_buttons' : cs, //TODO
-			'Image_iphone_table_w_icons' : cs, //TODO
-			'Image_iphone_list' : cs, //TODO
+//			'Image_iphone_table' : cs, //TODO
+//			'Image_iphone_table_w_buttons' : cs, //TODO
+//			'Image_iphone_table_w_icons' : cs, //TODO
+//			'Image_iphone_list' : cs, //TODO
 //			'Image_iphone_safari_top' NA
 //			'Image_iphone_safari_bottom' NA
-			'Image_iphone_gray_grad_list' : '', //TODO
+//			'Image_iphone_gray_grad_list' : '', //TODO
 //			'Image_iphone_alert_bar' NA
 //			'Image_iphone_alert_dialog' : cs, //TODO
-			'Image_iphone_dialog' : cs, //TODO
-			'Image_iphone_scroll_pane' : cs, //TODO
+//			'Image_iphone_dialog' : cs, //TODO
+//			'Image_iphone_scroll_pane' : cs, //TODO
 			'Image_iphone_alpha_list' : s + 'ios.iAlphaList',
 //iOS 6 iPhone Controls
 			'Image_iphone_button_black' : '',
@@ -2729,11 +2757,11 @@ LucidImporter = {};
 			'Image_iphone_keyboard_button_blue' : '',
 			'Image_iphone_keyboard_letters' : s + 'ios.iKeybLett',
 			'Image_iphone_keyboard_landscape' : s + 'ios.iKeybLett',
-			'Image_iphone_large_tabbed_button' : cs, //TODO
-			'Image_iphone_sort_button' : cs, //TODO
-			'Image_iphone_tab_bar' : cs, //TODO
-			'Image_iphone_picker_multi' : cs, //TODO
-			'Image_iphone_picker_web' : cs, //TODO
+//			'Image_iphone_large_tabbed_button' : cs, //TODO
+//			'Image_iphone_sort_button' : cs, //TODO
+//			'Image_iphone_tab_bar' : cs, //TODO
+//			'Image_iphone_picker_multi' : cs, //TODO
+//			'Image_iphone_picker_web' : cs, //TODO
 //iOS 6 iPhone Icons
 			'Image_iphone_add_icon_blue' : s + 'ios.iAddIcon;fillColor=#8BbEff;fillColor2=#135Ec8;strokeColor=#ffffff',
 			'Image_iphone_add_icon_green' : s + 'ios.iAddIcon;fillColor=#7AdF78;fillColor2=#1A9917;strokeColor=#ffffff',
@@ -2747,7 +2775,7 @@ LucidImporter = {};
 			'Image_iphone_pin_green' : s + 'ios.iPin;fillColor2=#00dd00;fillColor3=#004400;strokeColor=#006600',
 			'Image_iphone_pin_red' : s + 'ios.iPin;fillColor2=#dd0000;fillColor3=#440000;strokeColor=#660000',
 			'Image_iphone_radio_off' : 'ellipse', //TODO
-			'Image_iphone_checkbox_off' : '', //TODO
+//			'Image_iphone_checkbox_off' : '', //TODO
 			'Image_iphone_indicator' : 'fillColor=#e8878E;gradientColor=#BD1421;strokeColor=#ffffff',
 			'Image_iphone_thread_count' : '',
 				
@@ -2848,17 +2876,17 @@ LucidImporter = {};
 			'AmazonConnect2017' : 'shape=mxgraph.aws3.connect;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top',
 			
 // AWS 17 - Containers			
-//			'AutoScalingGroup2017' : '',
-//			'AvailabilityZone2017' : '',
-//			'Region2017' : '',
+			'AutoScalingGroup2017' : 'rounded=1;arcSize=10;dashed=1;dashPattern=8 3 1 3;verticalAlign=bottom',
+			'AvailabilityZone2017' : 'rounded=1;arcSize=10;dashed=1;dashPattern=8 4;verticalAlign=bottom',
+			'Region2017' : 'rounded=1;arcSize=10;dashed=1;dashPattern=1 1;verticalAlign=bottom',
 			'SecurityGroup2017' : 'verticalAlign=bottom',
-//			'ElasticBeanStalkContainer2017' : '',
-//			'EC2InstanceContents2017' : '',
-//			'VPCSubnet2017' : '',
-//			'ServerContents2017' : '',
-//			'VirtualPrivateCloudContainer2017' : '',
-//			'AWSCloudContainer2017' : '',
-//			'CorporateDataCenterContainer2017' : '',
+			'ElasticBeanStalkContainer2017' : cs,
+			'EC2InstanceContents2017' : cs,
+			'VPCSubnet2017' : cs,
+			'ServerContents2017' : 'rounded=1;arcSize=10;dashed=0;fillColor=#DBDBDB;gradientColor=none;verticalAlign=bottom',
+			'VirtualPrivateCloudContainer2017' : cs,
+			'AWSCloudContainer2017' : cs,
+			'CorporateDataCenterContainer2017' : cs,
 			
 // AWS 17 - Database			
 			'AmazonDynamoDB2017' : 'shape=mxgraph.aws3.dynamo_db;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top',
@@ -3116,6 +3144,7 @@ LucidImporter = {};
 			'volume2017' : 'shape=mxgraph.aws3.volume;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top',
 			
 // AWS 19 Analytics			
+			
 			'AnalyticsAWS19' : 'shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.analytics;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top',
 			'AmazonAthenaAWS19' : 'shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.athena;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;strokeColor=#ffffff',
 			'AmazonCloudSearchAWS19' : 'shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cloudsearch;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;strokeColor=#ffffff',
@@ -3207,7 +3236,15 @@ LucidImporter = {};
 			'AWSElasticBeanstalk_ApplicationAWS19' : 'shape=mxgraph.aws4.application;verticalLabelPosition=bottom;align=center;verticalAlign=top;strokeColor=none',
 			'AWSElasticBeanstalk_DeploymentAWS19' : 'shape=mxgraph.aws4.deployment;verticalLabelPosition=bottom;align=center;verticalAlign=top;strokeColor=none',
 			'AWSLambda_LambdaFunctionAWS19' : 'shape=mxgraph.aws4.lambda_function;verticalLabelPosition=bottom;align=center;verticalAlign=top;strokeColor=none',
-
+			'AWSThinkboxDeadlineAWS19' : 'shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.thinkbox_deadline;verticalLabelPosition=bottom;align=center;verticalAlign=top;strokeColor=#ffffff;',
+			'AWSThinkboxDraftAWS19' : 'shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.thinkbox_draft;verticalLabelPosition=bottom;align=center;verticalAlign=top;strokeColor=#ffffff;',
+			'AWSThinkboxFrostAWS19' : 'shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.thinkbox_frost;verticalLabelPosition=bottom;align=center;verticalAlign=top;strokeColor=#ffffff;',
+			'AWSThinkboxKrakatoaAWS19' : 'shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.thinkbox_krakatoa;verticalLabelPosition=bottom;align=center;verticalAlign=top;strokeColor=#ffffff;',
+			'AWSThinkboxSequoiaAWS19' : 'shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.thinkbox_sequoia;verticalLabelPosition=bottom;align=center;verticalAlign=top;strokeColor=#ffffff;',
+			'AWSThinkboxStokeAWS19' : 'shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.thinkbox_stoke;verticalLabelPosition=bottom;align=center;verticalAlign=top;strokeColor=#ffffff;',
+			'AWSThinkboxXMeshAWS19' : 'shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.thinkbox_xmesh;verticalLabelPosition=bottom;align=center;verticalAlign=top;strokeColor=#ffffff;',
+			
+			
 // AWS 19 - Cost Management		
 			'AWSCostManagementAWS19' : 'shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cost_management;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top',
 			'AWSBudgetsAWS19' : 'shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.budgets;verticalLabelPosition=bottom;align=center;verticalAlign=top;strokeColor=#ffffff',
@@ -3714,8 +3751,8 @@ LucidImporter = {};
 			'GCPInputPhone' : cs,
 			'GCPInputBlank' : cs,
 
-// Site Map			
-//			'SMPage' : s + 'rect',
+// Site Map	
+			'SMPage' : cs,
 			'SMHome' : s + 'sitemap.home;strokeColor=#000000;fillColor=#E6E6E6',
 			'SMGallery' : s + 'sitemap.gallery;strokeColor=#000000;fillColor=#E6E6E6',
 			'SMShopping' : s + 'sitemap.shopping;strokeColor=#000000;fillColor=#E6E6E6',
@@ -3765,7 +3802,7 @@ LucidImporter = {};
 			'ExtShapeServerBlock': ss + 'citrix.tower_server;verticalLabelPosition=bottom;verticalAlign=top',
 			'ExtShapeCloudBlock': ss + 'citrix.cloud;verticalLabelPosition=bottom;verticalAlign=top',
 			'ExtShapeUserBlock': ss + 'aws3d.end_user;verticalLabelPosition=bottom;verticalAlign=top;fillColor=#073763',
-			'ExtShapeWorkstationLCDBlock': ss + 'veeam.3d.workstation;verticalLabelPosition=bottom;verticalAlign=top',
+			'ExtShapeWorkstationLCDBlock': ss + 'veeam.3d.workstation;verticalLabelPosition=bottom;verticalAlign=top'
 	};
 	
 	// actual code start
@@ -3773,7 +3810,7 @@ LucidImporter = {};
 	function convertTxt2Html(txt, srcM, props)
 	{
 		var blockStyles = {'a': true, 'il': true, 'ir': true, 'mt': true, 'mb': true, 'p': true, 't': true, 'l': true};
-		var nonBlockStyles = {'lk': true, 's': true, 'c': true, 'b': true, 'fc': true, 'i': true, 'u': true, 'k': true};
+		var nonBlockStyles = {'lk': true, 's': true, 'c': true, 'b': true, 'fc': true, 'i': true, 'u': true, 'k': true, 'f': true, 'ac': true};
 
 		srcM.sort(function(a, b)
 		{
@@ -3784,6 +3821,12 @@ LucidImporter = {};
 		{ 
 			return nonBlockStyles[m.n];
 		});
+		
+		//To prevent losing begining of a label when first one is not at zero (links case) 
+		if (m[0] && m[0].s != 0)
+		{
+			m.unshift({s: 0, n: 'dummy', v: '', e: m[0].s});
+		}
 		
 		var globalStyles = srcM.filter(function(m)
 		{
@@ -3924,15 +3967,10 @@ LucidImporter = {};
 				
 				if (nonBlockStyles != null && nonBlockStyles['c'])
 				{
-					var v = nonBlockStyles['c'].v;
+					var v = rgbToHex(nonBlockStyles['c'].v);
 					
 					if (v != null)
 					{
-						if (v.charAt(0) != '#')
-						{
-							v = '#' + v;
-						}
-	
 						v = v.substring(0, 7);
 						str += 'color:' + v + ';';
 					}
@@ -3940,7 +3978,7 @@ LucidImporter = {};
 				
 				str += '">';
 				openBlockTags.push('li');
-				str += '<span style="';
+				str += '<span style="font-size:' + defaultFontSize + 'px;';
 				openBlockTags.push('span');
 			}
 			
@@ -3985,7 +4023,7 @@ LucidImporter = {};
 			
 			if (!listActive)
 			{
-				str += '<span>';
+				str += '<span style="font-size:' + defaultFontSize + 'px;">';
 				openBlockTags.push('span');
 			}
 			
@@ -4004,9 +4042,9 @@ LucidImporter = {};
 			{
 				var lk = styles['lk'];
 				
-				if (lk.v != null && lk.v.length > 0 && lk.v[0].tp == 'ext')
+				if (lk.v != null && lk.v.length > 0)
 				{
-					str += '<a href="' + lk.v[0].url + '">';
+					str += '<a href="' + getLink(lk.v[0]) + '">';
 					openTags.push('a');
 					tagCount++;
 				}
@@ -4020,15 +4058,10 @@ LucidImporter = {};
 
 			if (styles['c'])
 			{
-				var v = styles['c'].v;
+				var v = rgbToHex(styles['c'].v);
 				
 				if (v != null)
 				{
-					if (v.charAt(0) != '#')
-					{
-						v = '#' + v;
-					}
-
 					v = v.substring(0, 7);
 					str += 'color:' + v + ';';
 				}
@@ -4042,6 +4075,27 @@ LucidImporter = {};
 			if (styles['i'] && styles['i'].v)
 			{
 				str += 'font-style: italic;';
+			}
+			
+			if (styles['ac'] && styles['ac'].v)
+			{
+				str += 'text-transform: uppercase;';
+			}
+			
+			var fontFamily = null;
+			
+			if (styles['f'])
+			{
+				fontFamily = styles['f'].v;
+			}
+			else if (props.Font)
+			{
+				fontFamily = props.Font;
+			}
+			
+			if (fontFamily && fontFamily != defaultLucidFont)
+			{
+				str += 'font-family: ' + fontFamily + ';';
 			}
 			
 			var td = [];
@@ -4124,12 +4178,12 @@ LucidImporter = {};
 			if (k < globalStyles.length)
 			{
 				var bs = globalStyles[k], curBS = globalStyles[k].s;
-							
+
 				if (blockActive)
 				{
 					curBlockStyles = {};
-					html += endTag(txt, maxE, curS, true); //End any open tag
-					curS = maxE;
+					html += endTag(txt, curS, maxE, true); //End any open tag
+					curE = curS = maxE;
 					html += endBlockTag(); 
 				}
 		
@@ -4164,14 +4218,15 @@ LucidImporter = {};
 	
 				if (s && e && s.s < e.e) //s can be null when all starts are used, e ends after s BUT sometimes there are errors in the file
 				{
-					if (s.s > maxE) break;
+					if (s.s >= maxE) break;
 					curS = s.s;
 	
 					if (curS - curE > 0)
 					{
 						//NOTE: After the fix in end where we add dummy start and end, this shouldn't be called
 						//End any open tag and add remaining text with current style 
-						html += startTag(curStyles) + endTag(txt, curE, curS); 
+						html += startTag(curStyles) + endTag(txt, curE, curS);
+						curE = curS;
 					}
 					
 					while(s != null && s.s == curS)
@@ -4215,6 +4270,11 @@ LucidImporter = {};
 		
 		if (blockActive)
 		{
+			if (curE != maxE)
+			{
+				html += txt.substring(curE, maxE);
+			}
+			
 			html += endBlockTag(true); 
 		}
 					
@@ -4291,7 +4351,7 @@ LucidImporter = {};
 				{
 					for (var i = 0; i < m.length; i++)
 					{
-						if (m[i].s > 0 || (m[i].e != null && m[i].e < txt.length) || m[i].n == 't')
+						if (m[i].s > 0 || (m[i].e != null && m[i].e < txt.length) || m[i].n == 't' || m[i].n == 'ac')
 						{
 							isLastLblHTML = true;
 							break;
@@ -4382,6 +4442,7 @@ LucidImporter = {};
 	{
 		var style = 'whiteSpace=wrap;' + (noLblStyle? 'overflow=block;html=1;fontSize=' + defaultFontSize + ';' : 
 				getFontSize(properties) +
+				getFontFamily(properties) +
 				getFontColor(properties) + 
 				getFontStyle(properties) +
 				getTextAlignment(properties) + 
@@ -4410,7 +4471,8 @@ LucidImporter = {};
 		  (noLblStyle? (hasStyle(style, 'overflow')? '' : 'overflow=block;') + 
 			(hasStyle(style, 'html')? '' : 'html=1;') + 'fontSize=' + defaultFontSize + ';' 
 			:
-			addStyle(mxConstants.STYLE_FONTSIZE, style, properties, action, cell) +		
+			addStyle(mxConstants.STYLE_FONTSIZE, style, properties, action, cell) +	
+			addStyle(mxConstants.STYLE_FONTFAMILY, style, properties, action, cell) +		
 			addStyle(mxConstants.STYLE_FONTCOLOR, style, properties, action, cell) +			
 			addStyle(mxConstants.STYLE_FONTSTYLE, style, properties, action, cell) +		
 			addStyle(mxConstants.STYLE_ALIGN, style, properties, action, cell) +		
@@ -4444,7 +4506,10 @@ LucidImporter = {};
 			{
 				case mxConstants.STYLE_FONTSIZE :
 					return getFontSize(properties);
-					
+				
+				case mxConstants.STYLE_FONTFAMILY :
+					return getFontFamily(properties);
+				
 				case mxConstants.STYLE_FONTCOLOR :
 					return getFontColor(properties);
 					
@@ -4551,18 +4616,66 @@ LucidImporter = {};
 		
 		return '';
 	}
+	
+	function getFontFamily(properties)
+	{
+		var m = getTextM(properties);
+		var fontFamily;
 		
-	function getLink(m)
+		if (m != null)
+		{
+			for (var i = 0; i < m.length; i++)
+			{
+				if (m[i].n == 'f' && m[i].v)
+				{
+					fontFamily = m[i].v;
+					break;
+				}
+			}
+		}
+		
+		if (!fontFamily && properties.Font)
+		{
+			fontFamily = properties.Font;
+		}
+		
+		return fontFamily && fontFamily != defaultLucidFont ?'fontFamily=' + fontFamily + ';' : '';
+	};
+	
+	function getLink(lnk)
+	{
+		if (lnk.tp == 'ext')
+		{
+			return lnk.url;
+		}
+		else if (lnk.tp == 'ml')
+		{
+			return 'mailto:' + lnk.eml;
+		}
+		else if (lnk.tp == 'pg')
+		{
+			return 'data:page/id,' + (LucidImporter.pageIdsMap[lnk.id] || 0);
+		}
+		else if (lnk.tp == 'c') //Confluence content
+		{
+			return 'data:confluence/id,' + lnk.ccid;
+		}
+		else
+		{
+			return null;	
+		}
+	};
+	
+	function getLinkFromM(m)
 	{
 		if (m != null)
 		{
 			for (var i = 0; i < m.length; i++)
 			{
-				if (m[i].n = 'lk' && m[i].v != null &&
-					m[i].v.length > 0 &&
-					m[i].v[0].tp == 'ext')
+				if (m[i].n == 'lk' && m[i].v != null &&
+					m[i].v.length > 0)
 				{
-					return m[i].v[0].url;
+					return getLink(m[i].v[0]);
 				}
 			}
 		}
@@ -4590,14 +4703,7 @@ LucidImporter = {};
 					{
 						isC = true;
 						
-						var currV = currM.v;
-						
-						if (currV.charAt(0) != '#')
-						{
-							currV = '#' + currV;
-						}
-
-						var currV = currV.substring(0, 7);
+						var currV = rgbToHex(currM.v).substring(0, 7);
 
 						return mxConstants.STYLE_FONTCOLOR + '=' + currV + ';';
 					}
@@ -4938,6 +5044,8 @@ LucidImporter = {};
 
 		if (typeof properties.LineColor === 'string')
 		{
+			properties.LineColor = rgbToHex(properties.LineColor);
+			
 			if (properties.LineColor.length > 7)
 			{
 				var sOpac = "0x" + properties.LineColor.substring(properties.LineColor.length - 2, properties.LineColor.length);
@@ -4951,6 +5059,8 @@ LucidImporter = {};
 		
 		if (typeof properties.FillColor === 'string')
 		{
+			properties.FillColor = rgbToHex(properties.FillColor);
+			
 			if (properties.FillColor.length > 7)
 			{
 				var fOpac = "0x" + properties.FillColor.substring(properties.FillColor.length - 2, properties.FillColor.length);
@@ -5061,20 +5171,36 @@ LucidImporter = {};
 		return '';
 	}
 
-	function getColor(color)
+	function rgbToHex(color)
 	{
-		var clr = color? color.substring(0, 7) : null;
-		
-		if (clr && clr.charAt(0) != '#' && clr.charAt(0).toLowerCase() != 'r')
+		if (color)
 		{
-			clr = '#' + clr;
+			if (color.substring(0, 3) == 'rgb')
+			{
+				color = '#' + color.match(/\d+/g).map(function(n)
+				{
+					var s = parseInt(n).toString(16);
+					return (s.length == 1? '0' : '') + s;
+				}).join('');
+			}
+			else if (color.charAt(0) != '#')
+			{
+				color = '#' + color;
+			}
 		}
 		
-		return clr;
+		return color;
+	};
+	
+	function getColor(color)
+	{
+		color = rgbToHex(color);
+		return color? color.substring(0, 7) : null;
 	}
 	
 	function getOpacity2(color, style)
 	{
+		color = rgbToHex(color);
 		return color && color.length > 7? (style + '=' + Math.round(parseInt('0x' + color.substr(7)) / 2.55) + ';') : '';
 	}
 	
@@ -5158,10 +5284,33 @@ LucidImporter = {};
 	
 	function getImage(properties, action, url)
 	{
-		var imgUrl = url;
+		var imgUrl = url, extraStyles = '';
 		
 		// Converts images
-		if (action.Class == 'ImageSearchBlock2')
+		if (properties.FillColor && properties.FillColor.url)
+		{
+			imgUrl = properties.FillColor.url;
+			//Check if image is cropped, stretched, ...
+			if (properties.FillColor.pos == 'fill')
+			{
+				extraStyles = 'imageAspect=0;';
+			} 
+			else if (typeof properties.FillColor.pos == 'object')
+			{
+				//TODO Support non-destructive cropping
+				/*"pos": {
+		            "pin": {
+		                "x": 0.5765582655826557,
+		                "y": 0.6180376215526864
+		            },
+		            "size": {
+		                "w": 0.7764227642276422,
+		                "h": 1.5284871672246134
+		            }
+            	}*/
+			}
+		}
+		else if (action.Class == 'ImageSearchBlock2')
 		{
 			imgUrl = properties.URL;
 		}
@@ -5169,10 +5318,6 @@ LucidImporter = {};
 				properties.ImageFillProps.url != null)
 		{
 			imgUrl = properties.ImageFillProps.url;
-		}
-		else if (properties.FillColor && properties.FillColor.url)
-		{
-			imgUrl = properties.FillColor.url;
 		}
 					
 		if (imgUrl != null)
@@ -5182,7 +5327,7 @@ LucidImporter = {};
 				imgUrl = LucidImporter.imgSrcMap[imgUrl];
 			}
 			
-			return 'image=' + imgUrl + ';';
+			return 'image=' + imgUrl + ';' + extraStyles;
 		}
 		
 		return '';
@@ -5191,19 +5336,20 @@ LucidImporter = {};
 	// Adds metadata, link, converts placeholders
 	function addCustomData(cell, p, graph)
 	{
-		if (p.Link != null && p.Link.length > 0 && p.Link[0].tp == 'ext')
+		if (p.Link != null && p.Link.length > 0)
 		{
-			graph.setAttributeForCell(cell, 'link', p.Link[0].url);
+			graph.setAttributeForCell(cell, 'link', getLink(p.Link[0]));
 		}
-		else if (p.Text != null)
+		//If the text has a link, it will be handled by html labels
+		/*else if (p.Text != null)
 		{
-			var link = getLink(getTextM(p.Text));
+			var link = getLinkFromM(getTextM(p.Text));
 			
 			if (link != null)
 			{
 				graph.setAttributeForCell(cell, 'link', link);
 			}
-		}
+		}*/
 		
 		replacePlaceholders(cell, graph);
 		
@@ -5635,15 +5781,10 @@ LucidImporter = {};
 				}
 				else if (obj.Value.m[i].n == 'c')
 				{
-					var v = obj.Value.m[i].v;
+					var v = rgbToHex(obj.Value.m[i].v);
 					
 					if (v != null)
 					{
-						if (v.charAt(0) != '#')
-						{
-							v = '#' + v;
-						}
-
 						v = v.substring(0, 7);
 					}
 					
@@ -5702,6 +5843,9 @@ LucidImporter = {};
 			
 			var group = new mxCell('', new mxGeometry(), 'group;dropTarget=0;');
 			group.vertex = true;
+			//Store z-order to use it in groups
+			group.zOrder = obj.ZOrder;
+
 			var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 			var members = obj.Members, memberCells = [];
 			
@@ -5725,7 +5869,7 @@ LucidImporter = {};
 				var ai = a.zOrder;
 				var bi = b.zOrder;
 				
-				return (ai != null && bi != null) ? ai - bi : 0;
+				return (ai != null && bi != null) ? (ai > bi? 1 : (ai < bi? -1 : 0)) : 0; //ZOrder can be negative
 			});
 			
 			for (var i = 0; i < memberCells.length; i++)
@@ -5918,7 +6062,7 @@ LucidImporter = {};
 				var ai = (a.Properties != null) ? a.Properties.ZOrder : a.ZOrder;
 				var bi = (b.Properties != null) ? b.Properties.ZOrder : b.ZOrder;
 				
-				return (ai != null && bi != null) ? ai - bi : 0;
+				return (ai != null && bi != null) ? (ai > bi? 1 : (ai < bi? -1 : 0)) : 0; //ZOrder can be negative
 			});
 			
 			function addLine(obj, p)
@@ -6019,6 +6163,18 @@ LucidImporter = {};
 				v.style = 'points=[' + v.stylePoints.join(',') + '];' + v.style;
 				delete v.stylePoints;
 			});
+			
+			//Cleanup added properties
+			try
+			{
+				var allCells = graph.getModel().cells;
+				
+				for (var id in allCells)
+				{
+					var c = allCells[id];
+					delete c.zOrder;
+				}
+			} catch(e){}
 			
 			if (!noSelection)
 				graph.setSelectionCells(select);
@@ -6205,6 +6361,7 @@ LucidImporter = {};
 		LucidImporter.stencilsMap = {}; //Reset stencils cache
 		LucidImporter.imgSrcRepl = imgSrcRepl; //Use LucidImporter object to store the map since it is used deep inside
 		LucidImporter.globalProps = {};
+		LucidImporter.pageIdsMap = {};
 		LucidImporter.hasUnknownShapes = false;
 		var xml = ['<?xml version=\"1.0\" encoding=\"UTF-8\"?>', '<mxfile>'];
 		
@@ -6229,7 +6386,9 @@ LucidImporter = {};
 			
 			for (var id in obj.Pages)
 			{
-				pages.push(obj.Pages[id]);
+				var pg = obj.Pages[id];
+				pg.id = id;
+				pages.push(pg);
 			}
 			
 			pages.sort(function(a, b)
@@ -6247,6 +6406,11 @@ LucidImporter = {};
 			    	return 0;
 			    }
 			});
+			
+			for (var i = 0; i < pages.length; i++)
+			{
+				LucidImporter.pageIdsMap[pages[i].id] = i;
+			}
 		};
 		
 		if (state.state != null && urlParams['dev'] == '1' && window.console != null)
@@ -6348,6 +6512,32 @@ LucidImporter = {};
 		if (icon != 'transparent')
 		{
 			var s = mxConstants.STYLE_SHAPE + '=mxgraph.gcp2.';
+		}
+		else
+		{
+			var s = mxConstants.STYLE_SHAPE + '=';
+		}
+
+		v.style = 'rounded=1;absoluteArcSize=1;arcSize=2;verticalAlign=bottom;fillColor=#ffffff;strokeColor=#dddddd;whiteSpace=wrap;';
+		v.style += addAllStyles(v.style, p, a, v);
+		
+		v.value = convertText(p);
+    	v.vertex = true;
+	    var icon1 = new mxCell(null, new mxGeometry(0.5, 0, w * 0.7 * scaleX, w * 0.7 * scaleY), 
+	    		s + icon + ';part=1;dashed=0;connectable=0;html=1;strokeColor=none;shadow=0;'); 
+
+	    icon1.geometry.relative = true;
+	    icon1.geometry.offset = new mxPoint(- scaleX * w * 0.35, 10 + (1 - scaleY) * w * 0.35);
+    	icon1.vertex = true;
+    	icon1.style += addAllStyles(icon1.style, p, a, icon1, isLastLblHTML);
+    	v.insert(icon1);
+	};
+	
+	function addGCP2ExpandedProductCard(icon, scaleX, scaleY, w, h, v, p, a)
+	{
+		if (icon != 'transparent')
+		{
+			var s = mxConstants.STYLE_SHAPE + '=mxgraph.gcp.';
 		}
 		else
 		{
@@ -6798,6 +6988,19 @@ LucidImporter = {};
 					content.vertex = true;
 					v.insert(content);
 				}
+				break;
+			case 'GSDFDProcessBlock' : 
+				var startSize = Math.round(p.nameHeight * scale);
+				v.style = 'shape=swimlane;html=1;rounded=1;arcSize=10;collapsible=0;startSize=' + startSize;
+				v.value = convertText(p.Number, true);
+				v.style += addAllStyles(v.style, p, a, v, isLastLblHTML);
+				v.style += getFillColor(p, a).replace('fillColor', 'swimlaneFillColor');
+				
+				var content = new mxCell('', new mxGeometry(0, startSize, w, h - startSize), 'rounded=1;arcSize=10;strokeColor=none;fillColor=none');
+				content.value = convertText(p.Text, true);
+				content.style += addAllStyles(content.style, p, a, content, isLastLblHTML);
+				content.vertex = true;
+				v.insert(content);
 				break;
 			case 'AndroidDevice' :
 				if (p.AndroidDeviceName != null)
@@ -8118,11 +8321,12 @@ LucidImporter = {};
 				break;
 				
 			case 'SMPage' :
+			//TODO Link icon (p.Url != "")
 				if (p.Group)
 				{
 					v.style += 'strokeColor=none;fillColor=none;'
 						
-					var item1 = new mxCell('', new mxGeometry(0, 0, w * 0.9, h * 0.9), 'part=1;');
+					var item1 = new mxCell('', new mxGeometry(0, 0, w * 0.9, h * 0.9), 'rounded=1;arcSize=3;part=1;');
 					item1.vertex = true;
 					v.insert(item1);
 					
@@ -8132,7 +8336,7 @@ LucidImporter = {};
 						getShadow(p) +
 						getStrokeWidth(p); 
 
-					var item2 = new mxCell('', new mxGeometry(w * 0.1, h * 0.1, w * 0.9, h * 0.9), 'part=1;');
+					var item2 = new mxCell('', new mxGeometry(w * 0.1, h * 0.1, w * 0.9, h * 0.9), 'rounded=1;arcSize=3;part=1;');
 					item2.vertex = true;
 					v.insert(item2);
 					
@@ -8146,15 +8350,17 @@ LucidImporter = {};
 					
 					if (p.Future)
 					{
-						item1.style += 'dashed=1;';
-						item2.style += 'dashed=1;';
+						item1.style += 'dashed=1;fixDash=1;';
+						item2.style += 'dashed=1;fixDash=1;';
 					}
 				}
 				else
 				{
+					v.style += 'rounded=1;arcSize=3;';
+					
 					if (p.Future)
 					{
-						v.style += 'dashed=1;';
+						v.style += 'dashed=1;fixDash=1;';
 					}
 					
 					v.value = convertText(p.Text);
@@ -8387,7 +8593,7 @@ LucidImporter = {};
 							getLabelStyle(p.Text, isLastLblHTML);
 						break
 					case 3:
-						v.style += 'shape=ext;dashed=1;dashPattern=2 1;' +
+						v.style += 'shape=ext;dashed=1;dashPattern=2 5;' +
 							getLabelStyle(p.Text, isLastLblHTML);
 						break
 					case 4:
@@ -11269,6 +11475,8 @@ LucidImporter = {};
 				break;
 				
 			case 'UI2TableBlock' :
+				//TODO Add this (probably a table support in general)
+				LucidImporter.hasUnknownShapes = true;
 				break;
 			case 'UI2ButtonBarBlock' :
 				v.style += addAllStyles(v.style, p, a, v);
@@ -12194,6 +12402,22 @@ LucidImporter = {};
 			case 'GCPInputBlank' :
 				addGCP2UserDeviceCard('transparent', 1, 1, w, h, v, p, a);
 				break;
+// no corresponding icons, only with shadows							
+//			case 'GCPAppEngineProductCard' :
+//				addGCP2ExpandedProductCard('compute.app_engine', 1, 1, w, h, v, p, a);
+//				break;
+//			case 'GCPCloudDataflowProductCard' :
+//				addGCP2ExpandedProductCard('cloud_dataflow', 1, 1, w, h, v, p, a);
+//				break;
+//			case 'GCPCloudDataprocProductCard' :
+//				addGCP2ExpandedProductCard('cloud_dataproc', 1, 1, w, h, v, p, a);
+//				break;
+//			case 'GCPComputeEngineProductCard' :
+//				addGCP2ExpandedProductCard('compute_engine', 1, 1, w, h, v, p, a);
+//				break;
+//			case 'GCPContainerEngineProductCard' :
+//				addGCP2ExpandedProductCard('compute_engine', 1, 1, w, h, v, p, a);
+//				break;
 			case 'PresentationFrameBlock' :
 				if (p.ZOrder == 0) //These are hidden
 				{
@@ -12509,6 +12733,57 @@ LucidImporter = {};
 				v.value = convertText(p);
 				v.style += addAllStyles(v.style, p, a, v, isLastLblHTML);
 			break;
+			case 'VPCSubnet2017':
+			case 'VirtualPrivateCloudContainer2017':
+			case 'ElasticBeanStalkContainer2017':
+			case 'EC2InstanceContents2017':
+			case 'AWSCloudContainer2017':
+			case 'CorporateDataCenterContainer2017':
+				//all use the same code, just icon is different
+				var iconStyle, iconW, iconH;
+				
+				switch(cls)
+				{
+					case 'VPCSubnet2017':
+						iconStyle = 'shape=mxgraph.aws3.permissions;fillColor=#D9A741;';
+						iconW = 30;
+						iconH = 35;
+					break;
+					case 'VirtualPrivateCloudContainer2017':
+						iconStyle = 'shape=mxgraph.aws3.virtual_private_cloud;fillColor=#F58536;';
+						iconW = 52;
+						iconH = 36;
+					break;
+					case 'ElasticBeanStalkContainer2017':
+						iconStyle = 'shape=mxgraph.aws3.elastic_beanstalk;fillColor=#F58536;';
+						iconW = 30;
+						iconH = 41;
+					break;
+					case 'EC2InstanceContents2017':
+						iconStyle = 'shape=mxgraph.aws3.instance;fillColor=#F58536;';
+						iconW = 40;
+						iconH = 41;
+					break;
+					case 'AWSCloudContainer2017':
+						iconStyle = 'shape=mxgraph.aws3.cloud;fillColor=#F58536;';
+						iconW = 52;
+						iconH = 36;
+					break;
+					case 'CorporateDataCenterContainer2017':
+						iconStyle = 'shape=mxgraph.aws3.corporate_data_center;fillColor=#7D7C7C;';
+						iconW = 30;
+						iconH = 42;
+					break;
+				}
+				v.style = 'rounded=1;arcSize=10;dashed=0;verticalAlign=bottom;';
+				v.value = convertText(p);
+				v.style += addAllStyles(v.style, p, a, v, isLastLblHTML);
+				v.geometry.y += 20;
+				v.geometry.height -= 20;
+				var icon = new mxCell('', new mxGeometry(20, -20, iconW, iconH), iconStyle);
+				icon.vertex = true;
+				v.insert(icon);
+			break;
 		}
 
 		if (v.style && v.style.indexOf('html') < 0)
@@ -12543,9 +12818,9 @@ LucidImporter = {};
 		{
 			try
 			{
-				var deg = mxUtils.toDegree(p.Text_TRotation) +  mxUtils.toDegree(p.TextRotation);
+				var deg = mxUtils.toDegree(p.Text_TRotation || 0) +  mxUtils.toDegree(p.TextRotation || 0);
 				
-				if (deg != 0 && v.value)
+				if (!isNaN(deg) && deg != 0 && v.value)
 				{
 					var w = v.geometry.width, h = v.geometry.height;
 					var lblW = w, lblH = h, x = 0, y = 0;
