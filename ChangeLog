@@ -1,3 +1,24 @@
+16-DEC-2020: 14.0.4
+
+- Fixes images paths
+
+15-DEC-2020: 14.0.3
+
+- Fixes NPE
+
+15-DEC-2020: 14.0.2
+
+- Improves Lucidchart import
+
+10-DEC-2020: 14.0.1
+
+- Uses minimal UI on iPad Mini and smaller
+- Adds clear.html for clearing caches
+
+09-DEC-2020: 14.0.0
+
+- Internal refactoring of source code
+
 07-DEC-2020: 13.11.0
 
 - Fixes for Confluence Cloud

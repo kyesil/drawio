@@ -154,6 +154,7 @@ window.mxLanguageMap = window.mxLanguageMap ||
 if (typeof window.mxBasePath === 'undefined')
 {
 	window.mxBasePath = 'mxgraph';
+	window.mxImageBasePath = 'mxgraph/images';
 }
 
 if (window.mxLanguages == null)
@@ -218,7 +219,7 @@ window.uiTheme = window.uiTheme || (function()
 		{
 	        var iw = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
 
-	        if (iw <= 414)
+	        if (iw <= 768)
 	        {
 	        	ui = 'min';
 	        }

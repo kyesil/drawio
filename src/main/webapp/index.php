@@ -58,7 +58,7 @@ require  '_pd/php/_boot.php';
 		})();
 		
 		let hn = window.location.hostname;
-		urlParams["dev"] = hn === "lan.predixi.com" ? 0 : 1;
+		urlParams["dev"] = hn === "lan.predixi.com" ? 1 : 0;
 		urlParams["offline"] = 1;
 		urlParams["pages"] = 0;
 
@@ -260,27 +260,28 @@ require  '_pd/php/_boot.php';
 		if (urlParams['dev'] == '1')
 		{
 			// Used to request grapheditor/mxgraph sources in dev mode
-			var mxDevUrl ='../../../../pmxgraph';
+			var mxDevUrl = document.location.protocol + '//devhost.jgraph.com/drawio/src/main';
+		
 			
 			// Used to request draw.io sources in dev mode
 			var drawDevUrl = './';
+			var geBasePath = '../grapheditor';
+			var mxBasePath = './mxgraph';
 
 			if (document.location.protocol == 'file:')
 			{
-				mxDevUrl = '../../../../../mxgraph2';
 				drawDevUrl = './';
+				geBasePath = '../grapheditor';
+				mxBasePath = './mxgraph';
 				
 				// Forces includes for dev environment in node.js
 				mxForceIncludes = true;
 			}
 
-			var geBasePath = mxDevUrl + '/javascript/examples/grapheditor/www/js';
-			var mxBasePath = mxDevUrl + '/javascript/src';
-			
 			mxscript(drawDevUrl + 'js/PreConfig.js');
 			mxscript(drawDevUrl + 'js/diagramly/Init.js');
 			mxscript(geBasePath + '/Init.js');
-			mxscript(mxDevUrl + '/javascript/src/js/mxClient.js');
+			mxscript(mxBasePath + '/mxClient.js');
 			
 			// Adds all JS code that depends on mxClient. This indirection via Devel.js is
 			// required in some browsers to make sure mxClient.js (and the files that it
