@@ -6,11 +6,11 @@ if (workbox)
 	workbox.precaching.precacheAndRoute([
   {
     "url": "js/app.min.js",
-    "revision": "f4ec81ec1ad9fc8f4ef35f3af7854f9a"
+    "revision": "e7273b4d1a47ccf8550f58b706e514c2"
   },
   {
     "url": "js/extensions.min.js",
-    "revision": "dfc7176d1d195196c4749612f4a673ab"
+    "revision": "441dda769aa367d7a8e96e2106b914e4"
   },
   {
     "url": "js/stencils.min.js",
@@ -18,7 +18,7 @@ if (workbox)
   },
   {
     "url": "js/shapes.min.js",
-    "revision": "fafef0a25b40d8a14ae6c88f225ce50f"
+    "revision": "d4e08647ed1af5535730685f546a454f"
   },
   {
     "url": "js/math-print.js",
@@ -26,7 +26,7 @@ if (workbox)
   },
   {
     "url": "index.html",
-    "revision": "0d230ea924531724d0f5cd5f7c645993"
+    "revision": "8ef6cab30fadfb9eaef35903e8b9a379"
   },
   {
     "url": "open.html",
@@ -58,7 +58,7 @@ if (workbox)
   },
   {
     "url": "js/viewer-static.min.js",
-    "revision": "a2475f420379dca82afebc157a3bf889"
+    "revision": "11761d6ddbbfea9b45077b10621be6d5"
   },
   {
     "url": "connect/jira/editor-1-3-3.html",
@@ -106,7 +106,7 @@ if (workbox)
   },
   {
     "url": "connect/confluence/connectUtils-1-4-8.js",
-    "revision": "72420bc09282e2ccd367fd5f6908db26"
+    "revision": "bd4bd1793dd558f8746928c26f4b6fc8"
   },
   {
     "url": "connect/new_common/cac.js",
@@ -126,7 +126,7 @@ if (workbox)
   },
   {
     "url": "connect/confluence/viewer.js",
-    "revision": "03422c61be519c8a8115a4af60af60c5"
+    "revision": "b45421970eafa6ea34306b9aaed4b477"
   },
   {
     "url": "connect/confluence/viewer-1-4-42.html",
