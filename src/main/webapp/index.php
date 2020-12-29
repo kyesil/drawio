@@ -261,18 +261,17 @@ require  '_pd/php/_boot.php';
 		{
 			// Used to request grapheditor/mxgraph sources in dev mode
 			var mxDevUrl = document.location.protocol + '//devhost.jgraph.com/drawio/src/main';
-		
 			
 			// Used to request draw.io sources in dev mode
 			var drawDevUrl = './';
-			var geBasePath = '../grapheditor';
+			var geBasePath = './js/grapheditor';
 			var mxBasePath = './mxgraph';
 
 			if (document.location.protocol == 'file:')
 			{
-				drawDevUrl = './';
-				geBasePath = '../grapheditor';
+				geBasePath = './js/grapheditor';
 				mxBasePath = './mxgraph';
+				drawDevUrl = './';
 				
 				// Forces includes for dev environment in node.js
 				mxForceIncludes = true;
