@@ -1,3 +1,60 @@
+22-JAN-2021: 14.2.7
+
+- Improves Lucidchart import
+
+20-JAN-2021: 14.2.6
+
+- Fixes for OneDrive client flow
+
+19-JAN-2021: 14.2.5
+
+- Add client-side clipping of SVG
+
+15-JAN-2021: 14.2.4
+
+- Improves Lucidchart import
+
+14-JAN-2021: 14.2.3
+
+- Fixes pako encoding issues
+
+13-JAN-2021: 14.2.2
+
+- Fixes decoding of compressed shape files
+
+13-JAN-2021: 14.2.1
+
+- Fixes UInt8Array call stack size exception
+
+13-JAN-2021: 14.2.0
+
+- Disables Trello by default
+- Updates pako to 2.0.3
+
+09-JAN-2021: 14.1.9
+
+- AWS stencil update
+
+02-JAN-2021: 14.1.8
+
+- Internal release
+
+01-JAN-2021: 14.1.7
+
+- Fixes NPE for single point edges
+
+31-DEC-2020: 14.1.6
+
+- Internal release for conf/jira cloud changes
+
+31-DEC-2020: 14.1.5
+
+- Desktop fixes for File API clash
+
+30-DEC-2020: 14.1.4
+
+- Fixes marker rounding errors
+
 28-DEC-2020: 14.1.3
 
 - Internal release

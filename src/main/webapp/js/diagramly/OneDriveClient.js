@@ -2,32 +2,43 @@
  * Copyright (c) 2006-2020, JGraph Ltd
  * Copyright (c) 2006-2020, draw.io AG
  */
-OneDriveClient = function(editorUi, isExtAuth, inlinePicker)
+
+//Add a closure to hide the class private variables without changing the code a lot
+(function ()
+{
+
+var _token = null;
+
+window.OneDriveClient = function(editorUi, isExtAuth, inlinePicker, noLogout)
 {
 	if (isExtAuth == null && window.urlParams != null && window.urlParams['extAuth'] == '1')
 	{
 		isExtAuth = true;
 	}
 	
-	if (inlinePicker == null && window.urlParams != null && window.urlParams['inlinePicker'] == '1')
+	if (inlinePicker == null && 
+		((window.urlParams != null && window.urlParams['inlinePicker'] == '1') ||
+		mxClient.IS_ANDROID || mxClient.IS_IOS //Mobile devices doesn't work with OneDrive picker, so, use the inline picker
+		))
 	{
 		inlinePicker = true;
+	}
+	
+	if (noLogout == null && window.urlParams != null && window.urlParams['noLogoutOD'] == '1')
+	{
+		noLogout = true;
 	}
 	
 	DrawioClient.call(this, editorUi, isExtAuth? 'oneDriveExtAuthInfo' : 'oneDriveAuthInfo');
 	
 	this.isExtAuth = isExtAuth;
 	this.inlinePicker = inlinePicker;
+	this.noLogout = noLogout;
 	var authInfo = JSON.parse(this.token);
 	
 	if (authInfo != null)
 	{
-		this.token = authInfo.access_token;
 		this.endpointHint = authInfo.endpointHint != null ? authInfo.endpointHint.replace('/Documents', '/_layouts/15/onedrive.aspx') : authInfo.endpointHint;
-		this.tokenExpiresOn = authInfo.expiresOn;
-		
-		var remainingTime = (this.tokenExpiresOn - Date.now()) / 1000;
-		this.resetTokenRefresh(remainingTime < 600? 1 : remainingTime); //10 min tolerance window in case of any rounding errors
 	}
 };
 
@@ -50,7 +61,7 @@ OneDriveClient.prototype.clientId = window.location.hostname == 'viewer.diagrams
 /**
  * OAuth 2.0 scopes for installing Drive Apps.
  */
-OneDriveClient.prototype.scopes = 'user.read files.readwrite.all offline_access sites.read.all';
+OneDriveClient.prototype.scopes = 'user.read files.readwrite.all sites.read.all';
 
 /**
  * OAuth 2.0 scopes for installing Drive Apps.
@@ -117,7 +128,7 @@ OneDriveClient.prototype.get = function(url, onload, onerror)
 	
 	req.setRequestHeaders = mxUtils.bind(this, function(request, params)
 	{
-		request.setRequestHeader('Authorization', 'Bearer ' + this.token);
+		request.setRequestHeader('Authorization', 'Bearer ' + _token);
 	});
 	
 	req.send(onload, onerror);
@@ -236,7 +247,8 @@ OneDriveClient.prototype.updateAuthInfo = function(newAuthInfo, remember, forceU
 		this.setUser(null);
 	}
 	
-	this.token = newAuthInfo.access_token;
+	_token = newAuthInfo.access_token;
+	delete newAuthInfo.access_token; //Don't store access token
 	newAuthInfo.expiresOn = Date.now() + newAuthInfo.expires_in * 1000;
 	this.tokenExpiresOn = newAuthInfo.expiresOn;
 
@@ -271,8 +283,7 @@ OneDriveClient.prototype.authenticateStep2 = function(state, success, error, fai
 			
 			if (authInfo != null)
 			{
-				var req = new mxXmlRequest(this.redirectUri + '?refresh_token=' + authInfo.refresh_token +
-						'&state=' + encodeURIComponent('cId=' + this.clientId + '&domain=' + window.location.hostname + '&ver=2&token=' + state), null, 'GET'); //To identify which app/domain is used
+				var req = new mxXmlRequest(this.redirectUri + '?state=' + encodeURIComponent('cId=' + this.clientId + '&domain=' + window.location.hostname + '&token=' + state), null, 'GET'); //To identify which app/domain is used
 				
 				req.send(mxUtils.bind(this, function(req)
 				{
@@ -284,7 +295,7 @@ OneDriveClient.prototype.authenticateStep2 = function(state, success, error, fai
 					{
 						this.clearPersistentToken();
 						this.setUser(null);
-						this.token = null;
+						_token = null;
 
 						if (req.getStatus() == 401 && !failOnAuth) // (Unauthorized) [e.g, invalid refresh token]
 						{
@@ -304,8 +315,8 @@ OneDriveClient.prototype.authenticateStep2 = function(state, success, error, fai
 					var url = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize' +
 						'?client_id=' + this.clientId + '&response_type=code' +
 						'&redirect_uri=' + encodeURIComponent(this.redirectUri) +
-						'&scope=' + encodeURIComponent(this.scopes) +
-						'&state=' + encodeURIComponent('cId=' + this.clientId + '&domain=' + window.location.hostname + '&ver=2&token=' + state); //To identify which app/domain is used
+						'&scope=' + encodeURIComponent(this.scopes + (remember? ' offline_access' : '')) +
+						'&state=' + encodeURIComponent('cId=' + this.clientId + '&domain=' + window.location.hostname + '&token=' + state); //To identify which app/domain is used
 	
 					var width = 525,
 						height = 525,
@@ -486,7 +497,7 @@ OneDriveClient.prototype.executeRequest = function(url, success, error)
 		}));
 	});
 	
-	if (this.token == null || this.tokenExpiresOn - Date.now() < 60000) //60 sec tolerance window
+	if (_token == null || this.tokenExpiresOn - Date.now() < 60000) //60 sec tolerance window
 	{
 		this.authenticate(function()
 		{
@@ -504,7 +515,7 @@ OneDriveClient.prototype.executeRequest = function(url, success, error)
  */
 OneDriveClient.prototype.checkToken = function(fn)
 {
-	if (this.token == null || this.tokenRefreshThread == null || this.tokenExpiresOn - Date.now() < 60000)
+	if (_token == null || this.tokenRefreshThread == null || this.tokenExpiresOn - Date.now() < 60000)
 	{
 		this.authenticate(fn, this.emptyFn);
 	}
@@ -617,7 +628,7 @@ OneDriveClient.prototype.getFile = function(id, success, error, denyConvert, asL
 	
 							if (index > 0)
 							{
-								var xml = this.ui.extractGraphModelFromPng(data.substring(index + 1));
+								var xml = this.ui.extractGraphModelFromPng(data);
 								
 								if (xml != null && xml.length > 0)
 								{
@@ -1049,7 +1060,7 @@ OneDriveClient.prototype.writeLargeFile = function(url, data, success, error, et
 					req.setRequestHeaders = mxUtils.bind(this, function(request, params)
 					{
 						request.setRequestHeader('Content-Type', 'application/json');
-						request.setRequestHeader('Authorization', 'Bearer ' + this.token);
+						request.setRequestHeader('Authorization', 'Bearer ' + _token);
 						
 						if (etag != null)
 						{
@@ -1096,7 +1107,7 @@ OneDriveClient.prototype.writeLargeFile = function(url, data, success, error, et
 				}
 			});
 			
-			if (this.token == null || this.tokenExpiresOn - Date.now() < 60000) //60 sec tolerance window
+			if (_token == null || this.tokenExpiresOn - Date.now() < 60000) //60 sec tolerance window
 			{
 				this.authenticate(function()
 				{
@@ -1161,7 +1172,7 @@ OneDriveClient.prototype.writeFile = function(url, data, method, contentType, su
 						//TODO This header is needed for moving a file between two different drives. 
 						//		Note: the response is empty when this header is used, also the server may take some time to really execute the request (i.e. async) 
 						//request.setRequestHeader('Prefer', 'respond-async');
-						request.setRequestHeader('Authorization', 'Bearer ' + this.token);
+						request.setRequestHeader('Authorization', 'Bearer ' + _token);
 						
 						if (etag != null)
 						{
@@ -1212,7 +1223,7 @@ OneDriveClient.prototype.writeFile = function(url, data, method, contentType, su
 				}
 			});
 			
-			if (this.token == null || this.tokenExpiresOn - Date.now() < 60000) //60 sec tolerance window
+			if (_token == null || this.tokenExpiresOn - Date.now() < 60000) //60 sec tolerance window
 			{
 				this.authenticate(function()
 				{
@@ -1358,7 +1369,7 @@ OneDriveClient.prototype.pickFolder = function(fn, direct)
 					'endpointHint': mxClient.IS_IE11? null : this.endpointHint, //IE11 doen't work with our modified version, so, setting endpointHint disable using our token BUT will force relogin!
 					'redirectUri': this.pickerRedirectUri,
 					'queryParameters': 'select=id,name,parentReference',
-					'accessToken': this.token,
+					'accessToken': _token,
 					isConsumerAccount: false
 				},
 				success: mxUtils.bind(this, function(files)
@@ -1368,7 +1379,7 @@ OneDriveClient.prototype.pickFolder = function(fn, direct)
 					//Update the token in case a login with a different user
 					if (mxClient.IS_IE11)
 					{
-						this.token = files.accessToken;
+						_token = files.accessToken;
 					}
 				}),
 				cancel: mxUtils.bind(this, function()
@@ -1398,7 +1409,7 @@ OneDriveClient.prototype.pickFolder = function(fn, direct)
 		}
 	});
 	
-	if (this.token == null || this.tokenExpiresOn - Date.now() < 60000) //60 sec tolerance window
+	if (_token == null || this.tokenExpiresOn - Date.now() < 60000) //60 sec tolerance window
 	{
 		this.authenticate(mxUtils.bind(this, function()
 		{
@@ -1439,7 +1450,7 @@ OneDriveClient.prototype.pickFile = function(fn)
 				'endpointHint': mxClient.IS_IE11? null : this.endpointHint, //IE11 doen't work with our modified version, so, setting endpointHint disable using our token BUT will force relogin!
 				'redirectUri': this.pickerRedirectUri,
 				'queryParameters': 'select=id,name,parentReference', //We can also get @microsoft.graph.downloadUrl within this request but it will break the normal process
-				'accessToken': this.token,
+				'accessToken': _token,
 				isConsumerAccount: false
 			},
 			success: mxUtils.bind(this, function(files)
@@ -1449,7 +1460,7 @@ OneDriveClient.prototype.pickFile = function(fn)
 					//Update the token in case a login with a different user
 					if (mxClient.IS_IE11)
 					{
-						this.token = files.accessToken;
+						_token = files.accessToken;
 					}
 					
 					fn(OneDriveFile.prototype.getIdOf(files.value[0]), files);
@@ -1468,7 +1479,7 @@ OneDriveClient.prototype.pickFile = function(fn)
 		}
 	});
 	
-	if (this.token == null || this.tokenExpiresOn - Date.now() < 60000) //60 sec tolerance window
+	if (_token == null || this.tokenExpiresOn - Date.now() < 60000) //60 sec tolerance window
 	{
 		this.authenticate(mxUtils.bind(this, function()
 		{
@@ -1501,7 +1512,11 @@ OneDriveClient.prototype.logout = function()
 	}
 
 	window.open('https://login.microsoftonline.com/common/oauth2/v2.0/logout', 'logout', 'width=525,height=525,status=no,resizable=yes,toolbar=no,menubar=no,scrollbars=yes');
+	//Send to server to clear refresh token cookie
+	this.ui.editor.loadUrl(this.redirectUri + '?doLogout=1&state=' + encodeURIComponent('cId=' + this.clientId + '&domain=' + window.location.hostname));
 	this.clearPersistentToken();
 	this.setUser(null);
-	this.token = null;
+	_token = null;
 };
+
+})();

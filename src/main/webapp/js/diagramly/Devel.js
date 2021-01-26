@@ -63,7 +63,7 @@ if (!mxIsElectron && location.protocol !== 'http:')
 			// Adds script tags and loads shapes with eval
 			replace(/%script-src%/g, 'https://www.dropbox.com https://api.trello.com https://devhost.jgraph.com \'unsafe-eval\'').
 			// Adds Trello and Dropbox backend storage
-			replace(/%connect-src%/g, 'https://*.dropboxapi.com https://api.trello.com').
+			replace(/%connect-src%/g, 'https://*.dropboxapi.com https://trello.com https://api.trello.com').
 			// Loads common.css from mxgraph
 			replace(/%style-src%/g, 'https://devhost.jgraph.com').
 			replace(/%frame-src%/g, '').
@@ -79,13 +79,13 @@ if (!mxIsElectron && location.protocol !== 'http:')
 				replace(/%frame-src%/g, '').
 					replace(/%style-src%/g, '').
 					replace(/  /g, ' '));
-			console.log('confluence.draw.io:',
+			console.log('ac.draw.io:',
 				csp.replace(/%script-src%/g, 'https://aui-cdn.atlassian.com https://connect-cdn.atl-paas.net https://ajax.googleapis.com').
 					replace(/%frame-src%/g, 'https://www.lucidchart.com https://app.lucidchart.com').
 					replace(/%style-src%/g, 'https://aui-cdn.atlassian.com https://*.atlassian.net').
 					replace(/%connect-src%/g, '').
 					replace(/  /g, ' '));
-			console.log('jira.draw.io:',
+			console.log('aj.draw.io:',
 				csp.replace(/%script-src%/g, 'https://connect-cdn.atl-paas.net').
 					replace(/%frame-src%/g, '').
 					replace(/%style-src%/g, 'https://aui-cdn.atlassian.com https://*.atlassian.net').

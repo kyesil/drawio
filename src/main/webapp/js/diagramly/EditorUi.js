@@ -3943,7 +3943,7 @@
 								fn();
 							}
 						}), 480, 150);
-								
+
 						return;
 					}
 				}
@@ -3972,6 +3972,10 @@
 					else if (e.code == App.ERROR_BUSY)
 					{
 						msg = mxUtils.htmlEntities(mxResources.get('busy'));
+					}
+					else if (typeof e === 'string' && e.length > 0)
+					{
+						msg = mxUtils.htmlEntities(e);
 					}
 				}
 			}
@@ -7324,7 +7328,7 @@
 		// TODO: Remove unescape, use btoa for compatibility with graph.compress
 		function compress(s)
 		{
-			return encode64(pako.deflateRaw(s, { to : 'string' }));
+			return encode64(Graph.arrayBufferToString(pako.deflateRaw(s)));
 		};
 
 		var plantUmlServerUrl = (type == 'txt') ? PLANT_URL + '/txt/' :
@@ -8174,7 +8178,7 @@
 						    			if (file.type.substring(0, 9) == 'image/svg')
 						    			{
 						    				// Checks if SVG contains content attribute
-					    					var data = e.target.result;
+					    					var data = Graph.clipSvgDataUri(e.target.result);
 					    					var comma = data.indexOf(',');
 					    					var svgText = decodeURIComponent(escape(atob(data.substring(comma + 1))));
 					    					var root = mxUtils.parseXml(svgText);
@@ -11249,6 +11253,7 @@
 					}
 					else if (data.action == 'export')
 					{
+						
 						if (data.format == 'png' || data.format == 'xmlpng')
 						{
 							if ((data.spin == null && data.spinKey == null) || this.spinner.spin(document.body,
@@ -11296,9 +11301,14 @@
 								var pageId = data.pageId || (this.pages != null? ((data.currentPage) ?
 									this.currentPage.getId() : this.pages[0].getId()) : null);
 								
-								// LATER: Uses external export if current page (not first page) has mathEnabled
 								if (this.isExportToCanvas())
 								{
+									// Uses optional XML from incoming message
+									if (data.xml != null && data.xml.length > 0)
+									{
+										this.setFileData(xml);
+									}
+
 									// Exports PNG for first/specific page while other page is visible by creating a graph
 									// LATER: Add caching for the graph or SVG while not on first page
 									if (this.pages != null && this.currentPage.getId() != pageId)
@@ -11368,7 +11378,7 @@
 							       	var req = new mxXmlRequest(EXPORT_URL, 'format=png&embedXml=' +
 							       		((data.format == 'xmlpng') ? '1' : '0') + 
 							       		(pageId != null? '&pageId=' + pageId : '') +
-							       		(data.layerIds != null? '&extras=' + encodeURIComponent(JSON.stringify({layerIds: data.layerIds})) : '') +
+							       		(data.layerIds != null && data.layerIds.length > 0? '&extras=' + encodeURIComponent(JSON.stringify({layerIds: data.layerIds})) : '') +
 							       		(data.scale != null? '&scale=' + data.scale : '') +'&base64=1&xml=' +
 							       		encodeURIComponent(xml));
 	

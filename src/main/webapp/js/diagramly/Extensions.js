@@ -10,7 +10,7 @@ LucidImporter = {};
 	// Global import transformation
 	var defaultFontSize = '11';
 	var defaultLucidFont = 'Liberation Sans';
-	var scale = 0.6;
+	var scale = 0.75;
 	var dx = 0;
 	var dy = 0;
 	
@@ -19,7 +19,7 @@ LucidImporter = {};
 	var vertexStyle = 'html=1;overflow=block;blockSpacing=1;whiteSpace=wrap;';
 	var labelStyle = 'text;html=1;resizable=0;labelBackgroundColor=#ffffff;align=center;verticalAlign=middle;';
 	
-	var c = 'fillColor=#036897;strokeColor=#ffffff';
+	var c = 'verticalLabelPosition=bottom;verticalAlign=top;fillColor=#036897;strokeColor=#ffffff';
 	var s = 'shape=mxgraph.';
 	var ss = 'strokeColor=none;shape=mxgraph.';
 	var ssAzure = 'verticalLabelPosition=bottom;verticalAlign=top;' + ss;
@@ -84,6 +84,7 @@ LucidImporter = {};
 			'ImageSearchBlock2': 'shape=image',
 			'UserImage2Block': 'shape=image',
 			'ExtShapeBoxBlock': '',
+			'DefaultStickyNoteBlock': 'shadow=1',
 //Flowchart
 			'ProcessBlock': '',
 			'DecisionBlock': 'rhombus',
@@ -134,6 +135,7 @@ LucidImporter = {};
 			'RightArrowBlock': cs,
 			'DoubleArrowBlock': cs,
 			'CalloutBlock': s + 'basic.rectangular_callout',
+			'CalloutSquareBlock': cs,
 			'ShapeCircleBlock': 'ellipse',
 			'ShapePolyStarBlock': s + 'basic.star',
 			'ShapeDiamondBlock': 'rhombus',
@@ -306,7 +308,7 @@ LucidImporter = {};
 //BPMN 2.0
 			'BPMNActivity' : cs,
 			'BPMNEvent' : cs,
-//			'BPMNChoreography' : cs, //TODO
+			'BPMNChoreography' : cs,
 			'BPMNConversation' : cs,
 			'BPMNGateway' : cs,
 			'BPMNData' : cs,
@@ -1364,7 +1366,7 @@ LucidImporter = {};
 //Cisco Basic
 			'Cisco_cisco_androgenous_person' : s + 'cisco.people.androgenous_person;' + c,
 			'Cisco_cisco_atm_switch' : s + 'cisco.switches.atm_switch;' + c,
-			'Cisco_cisco_cloud' : s + 'cisco.storage.cloud;strokeColor=#036897;fillColor=#ffffff',
+			'Cisco_cisco_cloud' : s + 'cisco.storage.cloud;verticalLabelPosition=bottom;verticalAlign=top;strokeColor=#036897;fillColor=#ffffff',
 			'Cisco_cisco_fileserver' : s + 'cisco.servers.fileserver;' + c,
 			'Cisco_cisco_firewall' : s + 'cisco.security.firewall;' + c,
 			'Cisco_cisco_generic_building' : s + 'cisco.buildings.generic_building;' + c,
@@ -1458,7 +1460,7 @@ LucidImporter = {};
 			'Cisco_cisco_end_office' : s + 'cisco.buildings.end_office;' + c,
 			'Cisco_cisco_fax' : s + 'cisco.modems_and_phones.fax;' + c,
 			'Cisco_cisco_fc_storage' : s + 'cisco.storage.fc_storage;' + c,
-			'Cisco_cisco_fddi_ring' : s + 'cisco.misc.fddi_ring;strokeColor=#036897;',
+			'Cisco_cisco_fddi_ring' : s + 'cisco.misc.fddi_ring;verticalLabelPosition=bottom;verticalAlign=top;strokeColor=#036897;',
 			'Cisco_cisco_fibre_channel_disk_subsystem' : s + 'cisco.storage.fibre_channel_disk_subsystem;' + c,
 			'Cisco_cisco_fibre_channel_fabric_switch' : s + 'cisco.switches.fibre_channel_fabric_switch;' + c,
 			'Cisco_cisco_file_cabinet' : s + 'cisco.storage.file_cabinet;' + c,
@@ -1552,7 +1554,7 @@ LucidImporter = {};
 			'Cisco_cisco_optical_transport' : s + 'cisco.misc.optical_transport;' + c,
 			'Cisco_cisco_pad' : s + 'cisco.misc.pad_2;' + c,
 			'Cisco_cisco_pad_x' : s + 'cisco.misc.pad_1;' + c,
-			'Cisco_cisco_page_icon' : s + 'cisco.misc.page_icon;strokeColor=#036897;',
+			'Cisco_cisco_page_icon' : s + 'cisco.misc.page_icon;verticalLabelPosition=bottom;verticalAlign=top;strokeColor=#036897;',
 			'Cisco_cisco_pbx' : s + 'cisco.misc.pbx;' + c,
 			'Cisco_cisco_pbx_switch' : s + 'cisco.switches.pbx_switch;' + c,
 			'Cisco_cisco_pc_adapter_card' : s + 'cisco.computers_and_peripherals.pc_adapter_card;' + c,
@@ -1566,7 +1568,7 @@ LucidImporter = {};
 			'Cisco_cisco_programmable_switch' : s + 'cisco.switches.programmable_switch;' + c,
 			'Cisco_cisco_protocol_translator' : s + 'cisco.misc.protocol_translator;' + c,
 			'Cisco_cisco_pxf' : s + 'cisco.misc.pxf;' + c,
-			'Cisco_cisco_radio_tower' : s + 'cisco.wireless.radio_tower;strokeColor=#036897',
+			'Cisco_cisco_radio_tower' : s + 'cisco.wireless.radio_tower;verticalLabelPosition=bottom;verticalAlign=top;strokeColor=#036897',
 			'Cisco_cisco_ratemux' : s + 'cisco.misc.ratemux;' + c,
 			'Cisco_cisco_repeater' : s + 'cisco.misc.repeater;' + c,
 			'Cisco_cisco_RF_modem' : s + 'cisco.modems_and_phones.rf_modem;' + c,
@@ -1619,7 +1621,7 @@ LucidImporter = {};
 			'Cisco_cisco_Telepresence_3200' : s + 'cisco.misc.telepresence;' + c,
 //			'Cisco_cisco_Telepresence_500' NA
 			'Cisco_cisco_terminal' : s + 'cisco.computers_and_peripherals.terminal;' + c,
-			'Cisco_cisco_token' : s + 'cisco.misc.token;strokeColor=#036897',
+			'Cisco_cisco_token' : s + 'cisco.misc.token;verticalLabelPosition=bottom;verticalAlign=top;strokeColor=#036897',
 			'Cisco_cisco_TP_MCU' : s + 'cisco.misc.tp_mcu;' + c,
 			'Cisco_cisco_transpath' : s + 'cisco.misc.transpath;' + c,
 			'Cisco_cisco_truck' : s + 'cisco.misc.truck;' + c,
@@ -2645,13 +2647,13 @@ LucidImporter = {};
 			'UI2HorizontalRadioBlock' : cs,
 			'UI2ColorPickerBlock' : s + 'mockup.forms.colorPicker;chosenColor=#aaddff',
 			'UI2TextInputBlock' : '',
-			'UI2SelectBlock' : s + 'mockup.forms.comboBox;strokeColor=#999999;fillColor=#ddeeff;align=left;fillColor2=#aaddff;mainText=;fontColor=#666666',
+			'UI2SelectBlock' : cs,
 			'UI2VSliderBlock' : cs,
 			'UI2HSliderBlock' : cs,
 			'UI2DatePickerBlock' : cs,
 			'UI2SearchBlock' : cs,
 			'UI2NumericStepperBlock' : cs,
-			'UI2TableBlock' : cs, //TODO
+			'UI2TableBlock' : cs,
 //UI Menus
 			'UI2ButtonBarBlock' : cs,
 			'UI2VerticalButtonBarBlock' : cs,
@@ -3814,7 +3816,8 @@ LucidImporter = {};
 //Infographics
 			'InfographicsBlock': cs,
 //Other
-			'FlexiblePolygonBlock': cs
+			'FlexiblePolygonBlock': cs,
+			'PersonRoleBlock' : cs
 	};
 	
 	function mapFontFamily(fontFamily)
@@ -3937,7 +3940,7 @@ LucidImporter = {};
 			var str = '';
 			var t = styles['t'];
 
-			var l = styles['l'] || {};
+			var l = styles['l'] || {v: t && t.v == 'ul'? 'auto' : 'decimal'};
 			
 			if (t != null && (listActive == false || listActive != t.v || listType != l.v))
 			{
@@ -3960,7 +3963,7 @@ LucidImporter = {};
 					openBlockTags.push('ol');
 				}
 				
-				str += 'style="margin: 0px; padding: 10px;list-style-position: inside; list-style-type:';
+				str += 'style="margin: 0px; padding-left: 10px;list-style-position: inside; list-style-type:';
 				
 				if (t.v == 'hl')
 				{
@@ -5136,7 +5139,7 @@ LucidImporter = {};
 			{
 				if (properties.Rounding > 0)
 				{
-					return 'rounded=1;absoluteArcSize=1;arcSize=' + Math.round(properties.Rounding * 0.6) + ';';
+					return 'rounded=1;absoluteArcSize=1;arcSize=' + Math.round(properties.Rounding * scale) + ';';
 				}
 			}
 //			else if (properties.Rounding == null)
@@ -6734,6 +6737,19 @@ LucidImporter = {};
 		return false;
 	}
 	
+	function getDarkerClr(clr, perc)
+	{
+		function modComp(comp)
+		{
+			var v = Math.round(parseInt('0x' + comp) * perc).toString(16);
+			return v.length == 1? '0' + v : v;
+		}
+		
+		return '#' + modComp(clr.substr(1, 2)) +
+						 		modComp(clr.substr(3, 2)) +
+								modComp(clr.substr(5, 2));
+	};
+					
 	//composite shapes
 	function addCompositeShape(obj, select, graph)
 	{
@@ -6917,7 +6933,7 @@ LucidImporter = {};
 			    var isBPMN = cls.indexOf('BPMN') == 0;
 			    var hasTxt = p[mainTxtFld] != null;
 				
-				v.style = (isPool? 'swimlane;startSize=' + mainTxtHeight + ';' : 'fillColor=none;strokeColor=none;pointerEvents=0;') + 
+				v.style = (isPool? 'swimlane;startSize=' + mainTxtHeight + ';' : 'fillColor=none;strokeColor=none;pointerEvents=0;fontStyle=0;') + 
 					'html=1;whiteSpace=wrap;container=1;collapsible=0;childLayout=stackLayout;' +
 					'resizeParent=1;dropTarget=0;' + (rotatedSL? 'horizontalStack=0;' : '');
 				v.style += addAllStyles(v.style, p, a, v);
@@ -6945,7 +6961,7 @@ LucidImporter = {};
 				var totalOffset = 0; //relative
 				var lane = new Array();
 
-				var laneStyle = 'swimlane;html=1;whiteSpace=wrap;container=1;connectable=0;collapsible=0;startSize=' + laneTxtHeight + ';dropTarget=0;rounded=0;' + 
+				var laneStyle = 'swimlane;html=1;whiteSpace=wrap;container=1;connectable=0;collapsible=0;fontStyle=0;startSize=' + laneTxtHeight + ';dropTarget=0;rounded=0;' + 
 								(rotatedSL? 'horizontal=0;': '') +
 								(isBPMN? 'swimlaneLine=0;fillColor=none;' : '');
 				p['Rotation'] = 0; //Override rotation such that it doesn't mess with our coordinates
@@ -7052,7 +7068,7 @@ LucidImporter = {};
 				v.insert(cols);
 				var y = 0;
 				
-				var rowStyle = 'swimlane;html=1;whiteSpace=wrap;container=1;connectable=0;collapsible=0;dropTarget=0;horizontal=0;startSize=' + rowStartSize + ';';
+				var rowStyle = 'swimlane;html=1;whiteSpace=wrap;container=1;connectable=0;collapsible=0;dropTarget=0;horizontal=0;fontStyle=0;startSize=' + rowStartSize + ';';
 				
 				for (var j = 0; j < rowsNum; j++)
 				{
@@ -7089,7 +7105,7 @@ LucidImporter = {};
 									getTextVerticalAlignment(p[curRow]);
 				}
 				
-				var colStyle = 'swimlane;html=1;whiteSpace=wrap;container=1;connectable=0;collapsible=0;dropTarget=0;startSize=' + colStartSize + ';';
+				var colStyle = 'swimlane;html=1;whiteSpace=wrap;container=1;connectable=0;collapsible=0;dropTarget=0;fontStyle=0;startSize=' + colStartSize + ';';
 				var x = 0;
 				
 				for (var j = 0; j < colsNum; j++)
@@ -7137,7 +7153,7 @@ LucidImporter = {};
 				else
 				{
 					v.style = 'swimlane;startSize=25;html=1;whiteSpace=wrap;container=1;collapsible=0;childLayout=stackLayout;' +
-								'resizeParent=1;dropTarget=0;rounded=1;arcSize=20;fontStyle=0';
+								'resizeParent=1;dropTarget=0;rounded=1;arcSize=20;fontStyle=0;';
 					v.value = convertText(p.State, true);
 					v.style += addAllStyles(v.style, p, a, v, isLastLblHTML);
 					v.style += getFillColor(p, a).replace('fillColor', 'swimlaneFillColor');
@@ -7151,7 +7167,7 @@ LucidImporter = {};
 				break;
 			case 'GSDFDProcessBlock' : 
 				var startSize = Math.round(p.nameHeight * scale);
-				v.style = 'shape=swimlane;html=1;rounded=1;arcSize=10;collapsible=0;startSize=' + startSize;
+				v.style = 'shape=swimlane;html=1;rounded=1;arcSize=10;collapsible=0;fontStyle=0;startSize=' + startSize;
 				v.value = convertText(p.Number, true);
 				v.style += addAllStyles(v.style, p, a, v, isLastLblHTML);
 				v.style += getFillColor(p, a).replace('fillColor', 'swimlaneFillColor');
@@ -9060,6 +9076,59 @@ LucidImporter = {};
 
 				break;
 			case 'BPMNChoreography' :
+				try
+				{
+					var st = getColor(p.FillColor);
+					var darkerClr = getDarkerClr(st, 0.75);
+					
+					var fz = getFontSize(p.Name).match(/\d+/);
+					var th = Math.max(mxUtils.getSizeForString(p.Name.t, fz? fz[0] : defaultFontSize, null, w - 10).height, 24);
+					st = 'swimlaneFillColor=' + darkerClr + ';'
+					
+					v.value = convertText(p.Name);
+					v.style += 'swimlane;childLayout=stackLayout;horizontal=1;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;' + st +
+						'startSize=' + th + ';spacingLeft=3;spacingRight=3;fontStyle=0;' +
+						getLabelStyle(p.Name, isLastLblHTML);
+					v.style += addAllStyles(v.style, p, a, v, isLastLblHTML);
+					
+					var curY = th;
+					var fz = getFontSize(p.TaskName).match(/\d+/);
+					var curH = p.TaskHeight? p.TaskHeight * scale : Math.max(mxUtils.getSizeForString(p.TaskName.t, fz? fz[0] : defaultFontSize, null, w - 10).height + 15, 24);
+					var task = new mxCell('', new mxGeometry(0, curY, w, curH), 'part=1;html=1;resizeHeight=0;spacingTop=-1;spacingLeft=3;spacingRight=3;');
+					task.value = convertText(p.TaskName);
+					task.vertex = true;
+					v.insert(task);
+					task.style += getLabelStyle(p.TaskName, isLastLblHTML);
+					task.style += addAllStyles(task.style, p, a, task, isLastLblHTML);
+					curY += curH;
+					
+					var item = [];
+					
+					for (var i = 0; i < p.Fields; i++)
+					{
+						var pTxt = p['Participant' + (i + 1)];
+						var fz = getFontSize(pTxt).match(/\d+/);
+						var curH =  Math.max(mxUtils.getSizeForString(pTxt.t, fz? fz[0] : defaultFontSize, null, w - 10).height, 24);
+						item[i] = new mxCell('', new mxGeometry(0, curY, w, curH), 'part=1;html=1;resizeHeight=0;fillColor=none;spacingTop=-1;spacingLeft=3;spacingRight=3;');
+						curY += curH;
+						item[i].vertex = true;
+						v.insert(item[i]);
+						item[i].style += getLabelStyle(pTxt, isLastLblHTML);
+						item[i].style += addAllStyles(item[i].style, p, a, item[i], isLastLblHTML);
+						item[i].value = convertText(pTxt);
+					}
+	/*
+	TODO: Add support for the following
+					"bpmnChoreographyType": 0, //Plus sign
+	                "initiatingMessage": 0, //Envelop before
+	                "responseMessage": 0, //Envelop after
+	*/
+				}
+				catch(e)
+				{
+					//Ignore
+					console.log(e);
+				}
 				break;
 			case 'BPMNConversation' :
 				v.style += 'shape=hexagon;perimeter=hexagonPerimeter2;';
@@ -9405,7 +9474,7 @@ LucidImporter = {};
 				v.insert(text1);
 				text1.value = convertText(p.Title);
 				text1.style += getLabelStyle(p.Title, isLastLblHTML);
-
+				p.Text = null;
 				break;
 				
 			case 'VSMSharedProcessBlock' :
@@ -11012,7 +11081,7 @@ LucidImporter = {};
 				}
 
 				v.style += addAllStyles(v.style, p, a, v);
-
+				p.Text = null;
 				break;
 			case 'UI2AccordionBlock' :
 				
@@ -11589,7 +11658,10 @@ LucidImporter = {};
 				}
 				
 				break;
-				
+			case 'UI2SelectBlock' : 
+				v.style += 'shape=mxgraph.mockup.forms.comboBox;strokeColor=#999999;fillColor=#ddeeff;align=left;fillColor2=#aaddff;mainText=;fontColor=#666666';
+				v.value = convertText(p.Selected);
+				break;
 			case 'UI2HSliderBlock' :
 			case 'UI2VSliderBlock' :
 				v.style += 'shape=mxgraph.mockup.forms.horSlider;sliderStyle=basic;handleStyle=handle;';
@@ -11660,8 +11732,103 @@ LucidImporter = {};
 				break;
 				
 			case 'UI2TableBlock' :
-				//TODO Add this (probably a table support in general)
-				LucidImporter.hasUnknownShapes = true;
+				//Create table as HTML one
+				try
+				{
+					var fillClr = getColor(p.FillColor), lineClr = getColor(p.LineColor), header, altRow, borderStyle = '', rowH = 20;
+					v.style = 'html=1;overflow=fill;verticalAlign=top;spacing=0;';
+					var htmlTable = '<table style="width:100%;height:100%;border-collapse: collapse;border: 1px solid ' + lineClr + ';">';
+					var csvLines = p.Data.split('\n');
+					
+					if (!p.AltRow || p.AltRow == 'default')
+					{
+						altRow = getDarkerClr(fillClr, 0.95);
+					}
+					else if (p.AltRow == 'none')
+					{
+						altRow = fillClr;
+					}
+					else
+					{
+						altRow = getColor(p.AltRow);
+					}
+					
+					if (!p.Header || p.Header == 'default')
+					{
+						header = getDarkerClr(fillClr, 0.8);
+					}
+					else if (p.Header == 'none')
+					{
+						header = altRow;
+					}
+					else
+					{
+						header = getColor(p.Header);
+					}
+					
+					if (p.GridLines == 'full')
+					{
+						borderStyle = 'border: 1px solid ' + lineClr;
+						rowH = 19;
+					}
+					else if (p.GridLines == 'row')
+					{
+						borderStyle = 'border-bottom: 1px solid ' + lineClr;
+						rowH = 19;
+					}
+					else if (p.GridLines == 'default' || p.GridLines == 'column')
+					{
+						borderStyle = 'border-right: 1px solid ' + lineClr;
+					}
+					
+					csvLines = csvLines.filter(function(l)
+					{
+						return l;
+					});
+					
+					if (/^\{[^}]*\}$/.test(csvLines[csvLines.length - 1]))
+					{
+						csvLines.pop();
+					}
+					
+					var cols = csvLines[0].split(',').length;
+					
+					var emptyRow = '';
+					
+					for (var j = 0; j < cols - 1; j++)
+					{
+						emptyRow += ' , ';
+					}
+							
+					for (var i = csvLines.length; i < Math.ceil(h / 20); i++)
+					{
+						csvLines.push(emptyRow)
+					}
+					
+					for (var i = 0; i < csvLines.length; i++)
+					{
+						htmlTable += '<tr style="height: ' + rowH + 'px;background:' + (i == 0? header : 
+								(i % 2? fillClr : altRow)) + '">';
+						var els = csvLines[i].split(',');
+						
+						for (var j = 0; j < els.length; j++)
+						{
+							var cellProp = p['Cell_' + i + '_' + j];
+							var txtClr = cellProp && cellProp.m && cellProp.m[0] && cellProp.m[0].n == 'c'?  getColor(cellProp.m[0].v) : lineClr;
+							htmlTable += '<td style="height: ' + rowH + 'px;color:' + txtClr + ';' + borderStyle + '">' + mxUtils.htmlEntities(els[j]) + '</td>';
+						}
+						
+						htmlTable += '</tr>';
+					}
+					
+					htmlTable += '</table>';
+					v.value = htmlTable;
+				}
+				catch(e)
+				{
+					//Ignore
+					console.log(e);
+				}
 				break;
 			case 'UI2ButtonBarBlock' :
 				v.style += addAllStyles(v.style, p, a, v);
@@ -11946,13 +12113,14 @@ LucidImporter = {};
 				v.style += 'shape=mxgraph.mockup.misc.progressBar;fillColor2=#888888;barPos=' + (p.ScrollVal * 100) + ';';
 				
 				break;
-				
+			
+			case 'CalloutSquareBlock':
 			case 'UI2TooltipSquareBlock' :
-				v.value = convertText(p.Tip);
+				v.value = convertText(p.Tip || p.Text);
 				v.style += 'html=1;shape=callout;flipV=1;base=13;size=7;position=0.5;position2=0.66;rounded=1;arcSize=' + (p.RoundCorners) + ';' +
-					getLabelStyle(p.Tip, isLastLblHTML);
+					getLabelStyle(p.Tip || p.Text, isLastLblHTML);
 				v.style += addAllStyles(v.style, p, a, v, isLastLblHTML);
-				
+				v.geometry.height += 10;
 				break;
 			case 'UI2CalloutBlock' :
 				v.value = convertText(p.Txt);
@@ -12017,7 +12185,7 @@ LucidImporter = {};
 					}
 					
 					v.value = convertText(p.Title);
-					v.style += 'swimlane;childLayout=stackLayout;horizontal=1;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;' + st +
+					v.style += 'swimlane;childLayout=stackLayout;horizontal=1;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;fontStyle=0;marginBottom=0;' + st +
 						'startSize=' + th + ';' +
 						getLabelStyle(p.Title, isLastLblHTML);
 					v.style += addAllStyles(v.style, p, a, v, isLastLblHTML);
@@ -12095,7 +12263,7 @@ LucidImporter = {};
 				}
 				
 				v.value = convertText(p.Name);
-				v.style += 'swimlane;childLayout=stackLayout;horizontal=1;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;' + st +
+				v.style += 'swimlane;childLayout=stackLayout;horizontal=1;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;fontStyle=0;marginBottom=0;' + st +
 					'startSize=' + th + ';' +
 					getLabelStyle(p.Name, isLastLblHTML);
 				v.style += addAllStyles(v.style, p, a, v, isLastLblHTML);
@@ -12152,7 +12320,7 @@ LucidImporter = {};
 				}
 				
 				v.value = convertText(p.Name);
-				v.style += 'swimlane;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;' + st +
+				v.style += 'swimlane;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontStyle=0;' + st +
 					'startSize=' + th + ';' +
 					getLabelStyle(p.Name, isLastLblHTML);
 
@@ -12237,7 +12405,7 @@ LucidImporter = {};
 					st = 'swimlaneFillColor=#ffffff;'
 				}
 				
-				v.style += 'swimlane;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;' + st +
+				v.style += 'swimlane;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontStyle=0;' + st +
 					'startSize=' + th + ';' +
 					getLabelStyle(p.Name);
 
@@ -12323,7 +12491,7 @@ LucidImporter = {};
 					st = 'swimlaneFillColor=#ffffff;'
 				}
 				
-				v.style += 'swimlane;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;' + st +
+				v.style += 'swimlane;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fontStyle=0;' + st +
 					'startSize=' + th + ';' +
 					getLabelStyle(p.Name);
 
@@ -13094,6 +13262,37 @@ LucidImporter = {};
 				v.value = convertText(p);
 				v.style += addAllStyles(v.style, p, a, v, isLastLblHTML);
 			break;
+			case 'PersonRoleBlock' :
+				try
+				{
+					var st = getFillColor(p, a);
+					var th = h/2;
+					st = st.replace('fillColor', 'swimlaneFillColor');
+					
+					if (st == '')
+					{
+						st = 'swimlaneFillColor=#ffffff;'
+					}
+				
+					v.value = convertText(p.Role);
+					v.style += 'swimlane;childLayout=stackLayout;horizontal=1;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;' + st +
+						'startSize=' + th + ';spacingLeft=3;spacingRight=3;fontStyle=0;' +
+						getLabelStyle(p.Role, isLastLblHTML);
+					v.style += addAllStyles(v.style, p, a, v, isLastLblHTML);
+					
+					var name = new mxCell('', new mxGeometry(0, h/2, w, h/2), 'part=1;html=1;resizeHeight=0;spacingTop=-1;spacingLeft=3;spacingRight=3;');
+					name.value = convertText(p.Name);
+					name.vertex = true;
+					v.insert(name);
+					name.style += getLabelStyle(p.Name, isLastLblHTML);
+					name.style += addAllStyles(name.style, p, a, name, isLastLblHTML);
+				}
+				catch(e)
+				{
+					//Ignore
+					console.log(e);
+				}
+			break;
 		}
 
 		if (v.style && v.style.indexOf('html') < 0)
@@ -13139,9 +13338,9 @@ LucidImporter = {};
 					{
 						lblW = h;
 						lblH = w;
-						var diff = Math.abs(h - w) / 2;
-						x = diff / w;
-						y = -diff/ h;
+						var diff = (h - w) / 2;
+						x = -diff / w;
+						y = diff/ h;
 					}
 					
 					deg += mxUtils.toDegree(p.Rotation);

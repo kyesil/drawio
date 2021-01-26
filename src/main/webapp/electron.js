@@ -43,7 +43,7 @@ var queryObj = {
 	'browser': 0,
 	'picker': 0,
 	'mode': 'device',
-	'export': 'https://exp.draw.io/ImageExport4/export'
+	'export': 'https://convert.diagrams.net/node/export'
 };
 
 try
@@ -572,11 +572,15 @@ app.on('ready', e =>
     	app.on('second-instance', (event, commandLine, workingDirectory) => {
     		//Create another window
     		let win = createWindow()
-    	    
-    	    win.webContents.on('did-finish-load', function()
-    	    {
-    	    	ipcMain.once('app-load-finished', (evt, data) =>
-    			{
+
+			let loadEvtCount = 0;
+			
+			function loadFinished()
+			{
+				loadEvtCount++;
+				
+				if (loadEvtCount == 2)
+				{
 	    	    	//Open the file if new app request is from opening a file
 	    	    	var potFile = commandLine.pop();
 	    	    	
@@ -584,16 +588,41 @@ app.on('ready', e =>
 	    	    	{
 	    	    		win.webContents.send('args-obj', {args: [potFile]});
 	    	    	}
-    			});
-    			
+				}
+			}
+			
+			//Order of these two events is not guaranteed, so wait for them async.
+			//TOOD There is still a chance we catch another window 'app-load-finished' if user created multiple windows quickly 
+	    	ipcMain.once('app-load-finished', loadFinished);
+    	    
+    	    win.webContents.on('did-finish-load', function()
+    	    {    			
     	        win.webContents.zoomFactor = 1;
     	        win.webContents.setVisualZoomLevelLimits(1, 1);
+				loadFinished();
     	    });
     	})
     }
 
     let win = createWindow()
     
+	let loadEvtCount = 0;
+			
+	function loadFinished()
+	{
+		loadEvtCount++;
+		
+		if (loadEvtCount == 2)
+		{
+			//Sending entire program is not allowed in Electron 9 as it is not native JS object
+			win.webContents.send('args-obj', {args: program.args, create: program.create});
+		}
+	}
+	
+	//Order of these two events is not guaranteed, so wait for them async.
+	//TOOD There is still a chance we catch another window 'app-load-finished' if user created multiple windows quickly 
+	ipcMain.once('app-load-finished', loadFinished);
+
     win.webContents.on('did-finish-load', function()
     {
     	if (firstWinFilePath != null)
@@ -610,14 +639,9 @@ app.on('ready', e =>
     	
     	firstWinLoaded = true;
     	
-    	ipcMain.once('app-load-finished', (evt, data) =>
-		{
-			//Sending entire program is not allowed in Electron 9 as it is not native JS object
-			win.webContents.send('args-obj', {args: program.args, create: program.create});
-		});
-    	
         win.webContents.zoomFactor = 1;
         win.webContents.setVisualZoomLevelLimits(1, 1);
+		loadFinished();
     });
 	
     let updateNoAvailAdded = false;
@@ -779,15 +803,27 @@ app.on('will-finish-launching', function()
 	    {
 		    let win = createWindow();
 		    
+			let loadEvtCount = 0;
+			
+			function loadFinished()
+			{
+				loadEvtCount++;
+				
+				if (loadEvtCount == 2)
+				{
+	    	    	win.webContents.send('args-obj', {args: [path]});
+				}
+			}
+			
+			//Order of these two events is not guaranteed, so wait for them async.
+			//TOOD There is still a chance we catch another window 'app-load-finished' if user created multiple windows quickly 
+	    	ipcMain.once('app-load-finished', loadFinished);
+    	    
 		    win.webContents.on('did-finish-load', function()
 		    {
-		    	ipcMain.once('app-load-finished', (evt, data) =>
-		    	{
-		    		win.webContents.send('args-obj', {args: [path]});
-		    	});
-		    	
 		        win.webContents.zoomFactor = 1;
 		        win.webContents.setVisualZoomLevelLimits(1, 1);
+				loadFinished();
 		    });
 	    }
 	    else
@@ -818,17 +854,12 @@ autoUpdater.on('update-available', (a, b) =>
 			
 			var progressBar = new ProgressBar({
 				title: 'draw.io Update',
-			    text: 'Downloading draw.io update...',
-				browserWindow: {
-					webPreferences: {
-						nodeIntegration: true
-					}
-				}
+			    text: 'Downloading draw.io update...'
 			});
 			
 			function reportUpdateError(e)
 			{
-				progressBar.detail = 'Error occured while fetching updates. ' + e
+				progressBar.detail = 'Error occured while fetching updates. ' + (e && e.message? e.message : e)
 				progressBar._window.setClosable(true);
 			}
 
@@ -868,12 +899,7 @@ autoUpdater.on('update-available', (a, b) =>
 						title: 'draw.io Update',
 						text: 'Downloading draw.io update...',
 						detail: `${percent}% ...`,
-						initialValue: percent,
-						browserWindow: {
-							webPreferences: {
-								nodeIntegration: true
-							}
-						}
+						initialValue: percent
 					});
 				
 					progressBar
@@ -1076,9 +1102,13 @@ function exportVsdx(event, args, directFinalize)
 		show : false
 	});
 
-    win.webContents.on('did-finish-load', function()
-    {
-    	ipcMain.once('app-load-finished', (evt, data) =>
+	let loadEvtCount = 0;
+			
+	function loadFinished()
+	{
+		loadEvtCount++;
+		
+		if (loadEvtCount == 2)
 		{
 	    	win.webContents.send('export-vsdx', args);
 	    	
@@ -1116,8 +1146,13 @@ function exportVsdx(event, args, directFinalize)
 					event.reply('export-success', data);
 				}
 			});
-		});
-    });
+		}
+	}
+	
+	//Order of these two events is not guaranteed, so wait for them async.
+	//TOOD There is still a chance we catch another window 'app-load-finished' if user created multiple windows quickly 
+	ipcMain.once('app-load-finished', loadFinished);
+    win.webContents.on('did-finish-load', loadFinished);
 };
 
 //TODO Use canvas to export images if math is not used to speedup export (no capturePage). Requires change to export3.html also

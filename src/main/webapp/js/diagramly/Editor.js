@@ -194,6 +194,11 @@
 	Editor.svgBrokenImage = Graph.createSvgImage(10, 10, '<rect x="0" y="0" width="10" height="10" stroke="#000" fill="transparent"/><path d="m 0 0 L 10 10 L 0 10 L 10 0" stroke="#000" fill="transparent"/>');
 
 	/**
+	 * Error image for not found images
+	 */	
+	Editor.errorImage = 'data:image/gif;base64,R0lGODlhEAAQAPcAAADGAIQAAISEhP8AAP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////yH5BAEAAAAALAAAAAAQABAAAAhoAAEIFBigYMGBCAkGGMCQ4cGECxtKHBAAYUQCEzFSHLiQgMeGHjEGEAAg4oCQJz86LCkxpEqHAkwyRClxpEyXGmGaREmTIsmOL1GO/DkzI0yOE2sKIMlRJsWhCQHENDiUaVSpS5cmDAgAOw==';
+	
+	/**
 	 * Default value for custom libraries in mxSettings.
 	 */
 	Editor.defaultCustomLibraries = [];
@@ -1246,7 +1251,7 @@
 		}
 		else
 		{
-			return pako.deflateRaw(data, {to: 'string'});
+			return Graph.arrayBufferToString(pako.deflateRaw(data));
 		}
 	};
 
@@ -1261,7 +1266,7 @@
 		}
 		else
 		{
-			return pako.inflateRaw(data, {to: 'string'});
+			return pako.inflateRaw(Graph.stringToArrayBuffer(atob(data)), {to: 'string'});
 		}
 	};
 
@@ -1585,8 +1590,8 @@
 					if (value.substring(0, idx) == 'mxGraphModel')
 					{
 						// Workaround for Java URL Encoder using + for spaces, which isn't compatible with JS
-						var xmlData = pako.inflateRaw(value.substring(idx + 2),
-							{to: 'string'}).replace(/\+/g,' ');
+						var xmlData = pako.inflateRaw(Graph.stringToArrayBuffer(
+							value.substring(idx + 2)), {to: 'string'}).replace(/\+/g,' ');
 						
 						if (xmlData != null && xmlData.length > 0)
 						{
@@ -1616,6 +1621,7 @@
 		}
 		catch (e)
 		{
+			console.log('here', e);
 			// ignores decoding errors
 		}
 		
@@ -2187,6 +2193,12 @@
 			this.graph.isCssTransformsSupported();
 		this.graph.updateCssTransform();
 	};
+	
+	/**
+	 * Overrides relative position to fix clipping bug in Webkit.
+	 */
+	Editor.mathJaxWebkitCss = 'div.MathJax_SVG_Display { position: static; }\n' +
+		'span.MathJax_SVG { position: static !important; }';
 		
 	/**
 	 * Initializes math typesetting and loads respective code.
@@ -2300,15 +2312,14 @@
 				tags[0].parentNode.appendChild(s);
 			}
 			
-			// Overrides position relative for block elements to fix
-			// zoomed math clipping in Webkit (drawio/issues/1213)
+			// Workaround for zoomed math clipping in Webkit
 			try
 			{
 				if (mxClient.IS_GC || mxClient.IS_SF)
 				{
 					var style = document.createElement('style')
 					style.type = 'text/css';
-					style.innerHTML = 'div.MathJax_SVG_Display { position: static; }';
+					style.innerHTML = Editor.mathJaxWebkitCss;
 					document.getElementsByTagName('head')[0].appendChild(style);
 				}
 			}
@@ -4636,6 +4647,15 @@
 				{
 					td.appendChild(createStaticArrList(pName, pValue, prop.subType, prop.subDefVal, prop.size, row, flipBkg));
 				}
+				else if (pType == 'readOnly')
+				{
+					var inp = document.createElement('input');
+					inp.setAttribute('readonly', '');
+					inp.value = pValue;
+					inp.style.width = '96px';
+					inp.style.borderWidth = '0px';
+					td.appendChild(inp);
+				}
 				else
 				{
 					td.innerHTML = pValue;
@@ -4807,6 +4827,23 @@
 			
 			var isOdd = false;
 			var flipBkg = false;
+			
+			var cellId = null;
+			
+			if (state.vertices.length == 1 && state.edges.length == 0)
+			{
+				cellId = state.vertices[0].id;
+			}
+			else if (state.vertices.length == 0 && state.edges.length == 1)
+			{
+				cellId = state.edges[0].id;
+			}
+			
+			//Add it to top (always)
+			if (cellId != null)
+			{
+				grid.appendChild(createPropertyRow('id', mxUtils.htmlEntities(cellId), {dispName: 'ID', type: 'readOnly'}, true, false));
+			}
 			
 			for (var key in properties)
 			{
@@ -7019,12 +7056,12 @@
 					pv.writeHead = function(doc)
 					{
 						writeHead.apply(this, arguments);
-												
-						// Fixes clipping for transformed math
+						
+						// Workaround for zoomed math clipping in Webkit
 						if (mxClient.IS_GC || mxClient.IS_SF)
 						{
 							doc.writeln('<style type="text/css">');
-							doc.writeln('div.MathJax_SVG_Display { position: static; }');
+							doc.writeln(Editor.mathJaxWebkitCss);
 							doc.writeln('</style>');
 						}
 
