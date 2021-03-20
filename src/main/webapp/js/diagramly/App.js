@@ -304,23 +304,23 @@ App.startTime = new Date();
  * Defines plugin IDs for loading via p URL parameter. Update the table at
  * https://www.diagrams.net/doc/faq/supported-url-parameters
  */
-App.pluginRegistry = {'4xAKTrabTpTzahoLthkwPNUn': '/plugins/explore.js',
-	'ex': '/plugins/explore.js', 'p1': '/plugins/p1.js',
-	'ac': '/plugins/connect.js', 'acj': '/plugins/connectJira.js',
-	'ac148': '/plugins/cConf-1-4-8.js', 'ac148cmnt': '/plugins/cConf-comments.js', 
-	'voice': '/plugins/voice.js',
-	'tips': '/plugins/tooltips.js', 'svgdata': '/plugins/svgdata.js',
+App.pluginRegistry = {'4xAKTrabTpTzahoLthkwPNUn': 'plugins/explore.js',
+	'ex': 'plugins/explore.js', 'p1': 'plugins/p1.js',
+	'ac': 'plugins/connect.js', 'acj': 'plugins/connectJira.js',
+	'ac148': 'plugins/cConf-1-4-8.js', 'ac148cmnt': 'plugins/cConf-comments.js', 
+	'voice': 'plugins/voice.js',
+	'tips': 'plugins/tooltips.js', 'svgdata': 'plugins/svgdata.js',
 	'electron': 'plugins/electron.js',
-	'number': '/plugins/number.js', 'sql': '/plugins/sql.js',
-	'props': '/plugins/props.js', 'text': '/plugins/text.js',
-	'anim': '/plugins/animation.js', 'update': '/plugins/update.js',
-	'trees': '/plugins/trees/trees.js', 'import': '/plugins/import.js',
-	'replay': '/plugins/replay.js', 'anon': '/plugins/anonymize.js',
-	'tr': '/plugins/trello.js', 'f5': '/plugins/rackF5.js',
-	'tickets': '/plugins/tickets.js', 'flow': '/plugins/flow.js',
-	'webcola': '/plugins/webcola/webcola.js', 'rnd': '/plugins/random.js',
-	'page': '/plugins/page.js', 'gd': '/plugins/googledrive.js',
-	'tags': '/plugins/tags.js'};
+	'number': 'plugins/number.js', 'sql': 'plugins/sql.js',
+	'props': 'plugins/props.js', 'text': 'plugins/text.js',
+	'anim': 'plugins/animation.js', 'update': 'plugins/update.js',
+	'trees': 'plugins/trees/trees.js', 'import': 'plugins/import.js',
+	'replay': 'plugins/replay.js', 'anon': 'plugins/anonymize.js',
+	'tr': 'plugins/trello.js', 'f5': 'plugins/rackF5.js',
+	'tickets': 'plugins/tickets.js', 'flow': 'plugins/flow.js',
+	'webcola': 'plugins/webcola/webcola.js', 'rnd': 'plugins/random.js',
+	'page': 'plugins/page.js', 'gd': 'plugins/googledrive.js',
+	'tags': 'plugins/tags.js'};
 
 App.publicPlugin = [
 	'ex',
@@ -601,6 +601,17 @@ App.main = function(callback, createUi)
 		EditorUi.logError('Global: ' + ((message != null) ? message : ''),
 			url, linenumber, colno, err, null, true);
 	};
+
+	// Blocks stand-alone mode for certain subdomains
+	if (window.top == window.self &&
+		(/ac\.draw\.io$/.test(window.location.hostname) ||
+		/ac-ent\.draw\.io$/.test(window.location.hostname) ||
+		/aj\.draw\.io$/.test(window.location.hostname)))
+	{
+		document.body.innerHTML = '<div style="margin-top:10%;text-align:center;">Stand-alone mode not allowed for this domain.</div>';
+		
+		return;
+	}
 	
 	// Removes info text in embed mode
 	if (urlParams['embed'] == '1' || urlParams['lightbox'] == '1')
@@ -652,29 +663,25 @@ App.main = function(callback, createUi)
 			}
 		}
 
-		// Runs as progressive web app if service workers are supported
 		try
 		{
-			if (Editor.enableServiceWorker)
+			// Removes PWA cache on www.draw.io to force use of new domain via redirect
+			if (Editor.enableServiceWorker && (urlParams['offline'] == '0' ||
+				/www\.draw\.io$/.test(window.location.hostname) ||
+				(urlParams['offline'] != '1' && urlParams['dev'] == '1')))
 			{
-				// Removes PWA cache on www.draw.io to force use of new domain via redirect
-				if (urlParams['offline'] == '0' || /www\.draw\.io$/.test(window.location.hostname) ||
-					(urlParams['offline'] != '1' && urlParams['dev'] == '1'))
+				App.clearServiceWorker(function()
 				{
-					App.clearServiceWorker(function()
+					if (urlParams['offline'] == '0')
 					{
-						if (urlParams['offline'] == '0')
-						{
-							alert('Cache cleared');
-						}
-					});
-				}
-				else
-				{
-					mxStencilRegistry.allowEval = false;
-					navigator.serviceWorker.register('/service-worker.js');
-					App.loadScripts(['js/shapes.min.js', 'js/stencils.min.js', 'js/extensions.min.js']);
-				}
+						alert('Cache cleared');
+					}
+				});
+			}
+			else if (Editor.enableServiceWorker)
+			{
+				// Runs as progressive web app if service workers are supported
+				navigator.serviceWorker.register('/service-worker.js');
 			}
 		}
 		catch (e)
@@ -871,100 +878,113 @@ App.main = function(callback, createUi)
 			}
 			
 			// Main
-			var ui = (createUi != null) ? createUi() : new App(new Editor(
-					urlParams['chrome'] == '0' || uiTheme == 'min',
-					null, null, null, urlParams['chrome'] != '0'));
-			
-			if (window.mxscript != null)
+			function realMain()
 			{
-				// Loads dropbox for all browsers but IE8 and below (no CORS) if not disabled or if enabled and in embed mode
-				// KNOWN: Picker does not work in IE11 (https://dropbox.zendesk.com/requests/1650781)
-				if (typeof window.DropboxClient === 'function' &&
-					(window.Dropbox == null && window.DrawDropboxClientCallback != null &&
-					(((urlParams['embed'] != '1' && urlParams['db'] != '0') ||
-					(urlParams['embed'] == '1' && urlParams['db'] == '1')) &&
-					isSvgBrowser && (document.documentMode == null || document.documentMode > 9))))
+				var ui = (createUi != null) ? createUi() : new App(new Editor(
+						urlParams['chrome'] == '0' || uiTheme == 'min',
+						null, null, null, urlParams['chrome'] != '0'));
+				
+				if (window.mxscript != null)
 				{
-					mxscript(App.DROPBOX_URL, function()
+					// Loads dropbox for all browsers but IE8 and below (no CORS) if not disabled or if enabled and in embed mode
+					// KNOWN: Picker does not work in IE11 (https://dropbox.zendesk.com/requests/1650781)
+					if (typeof window.DropboxClient === 'function' &&
+						(window.Dropbox == null && window.DrawDropboxClientCallback != null &&
+						(((urlParams['embed'] != '1' && urlParams['db'] != '0') ||
+						(urlParams['embed'] == '1' && urlParams['db'] == '1')) &&
+						isSvgBrowser && (document.documentMode == null || document.documentMode > 9))))
 					{
-						// Must load this after the dropbox SDK since they use the same namespace
-						mxscript(App.DROPINS_URL, function()
+						mxscript(App.DROPBOX_URL, function()
 						{
-							DrawDropboxClientCallback();
-						}, 'dropboxjs', App.DROPBOX_APPKEY);
-					});
-				}
-				// Disables client
-				else if (typeof window.Dropbox === 'undefined' || typeof window.Dropbox.choose === 'undefined')
-				{
-					window.DropboxClient = null;
-				}
+							// Must load this after the dropbox SDK since they use the same namespace
+							mxscript(App.DROPINS_URL, function()
+							{
+								DrawDropboxClientCallback();
+							}, 'dropboxjs', App.DROPBOX_APPKEY);
+						});
+					}
+					// Disables client
+					else if (typeof window.Dropbox === 'undefined' || typeof window.Dropbox.choose === 'undefined')
+					{
+						window.DropboxClient = null;
+					}
+						
+					// Loads OneDrive for all browsers but IE6/IOS if not disabled or if enabled and in embed mode
+					if (typeof window.OneDriveClient === 'function' &&
+						(typeof OneDrive === 'undefined' && window.DrawOneDriveClientCallback != null &&
+						(((urlParams['embed'] != '1' && urlParams['od'] != '0') || (urlParams['embed'] == '1' &&
+						urlParams['od'] == '1')) && (navigator.userAgent == null ||
+						navigator.userAgent.indexOf('MSIE') < 0 || document.documentMode >= 10))))
+					{
+						if (urlParams['inlinePicker'] == '1' || mxClient.IS_ANDROID || mxClient.IS_IOS)
+						{
+							mxscript(App.ONEDRIVE_INLINE_PICKER_URL, function()
+							{
+								window.OneDrive = {}; //Needed to allow code that check its existance to work BUT it's not used 
+								window.DrawOneDriveClientCallback();
+							});
+						}
+						else
+						{
+							mxscript(App.ONEDRIVE_URL, window.DrawOneDriveClientCallback);
+						}
+					}
+					// Disables client
+					else if (typeof window.OneDrive === 'undefined')
+					{
+						window.OneDriveClient = null;
+					}
 					
-				// Loads OneDrive for all browsers but IE6/IOS if not disabled or if enabled and in embed mode
-				if (typeof window.OneDriveClient === 'function' &&
-					(typeof OneDrive === 'undefined' && window.DrawOneDriveClientCallback != null &&
-					(((urlParams['embed'] != '1' && urlParams['od'] != '0') || (urlParams['embed'] == '1' &&
-					urlParams['od'] == '1')) && (navigator.userAgent == null ||
-					navigator.userAgent.indexOf('MSIE') < 0 || document.documentMode >= 10))))
-				{
-					if (urlParams['inlinePicker'] == '1' || mxClient.IS_ANDROID || mxClient.IS_IOS)
+					// Loads Trello for all browsers but < IE10 if not disabled or if enabled and in embed mode
+					if (typeof window.TrelloClient === 'function' && !mxClient.IS_IE11 &&
+						typeof window.Trello === 'undefined' && window.DrawTrelloClientCallback != null &&
+						urlParams['tr'] == '1' && (navigator.userAgent == null ||
+						navigator.userAgent.indexOf('MSIE') < 0 || document.documentMode >= 10))
 					{
-						mxscript(App.ONEDRIVE_INLINE_PICKER_URL, function()
+						mxscript(App.TRELLO_JQUERY_URL, function()
 						{
-							window.OneDrive = {}; //Needed to allow code that check its existance to work BUT it's not used 
-							window.DrawOneDriveClientCallback();
+							// Must load this after the dropbox SDK since they use the same namespace
+							mxscript(App.TRELLO_URL, function()
+							{
+								DrawTrelloClientCallback();
+							});
 						});
 					}
-					else
+					// Disables client
+					else if (typeof window.Trello === 'undefined')
 					{
-						mxscript(App.ONEDRIVE_URL, window.DrawOneDriveClientCallback);
+						window.TrelloClient = null;
+					}
+		
+				}
+				
+				if (callback != null)
+				{
+					callback(ui);
+				}
+				
+				/**
+				 * For developers only
+				 */
+				if (urlParams['chrome'] != '0' && urlParams['test'] == '1')
+				{
+					EditorUi.debug('App.start', [ui, (new Date().getTime() - t0.getTime()) + 'ms']);
+					
+					if (urlParams['export'] != null)
+					{
+						EditorUi.debug('Export:', EXPORT_URL);
 					}
 				}
-				// Disables client
-				else if (typeof window.OneDrive === 'undefined')
-				{
-					window.OneDriveClient = null;
-				}
-				
-				// Loads Trello for all browsers but < IE10 if not disabled or if enabled and in embed mode
-				if (typeof window.TrelloClient === 'function' && !mxClient.IS_IE11 &&
-					typeof window.Trello === 'undefined' && window.DrawTrelloClientCallback != null &&
-					urlParams['tr'] == '1' && (navigator.userAgent == null ||
-					navigator.userAgent.indexOf('MSIE') < 0 || document.documentMode >= 10))
-				{
-					mxscript(App.TRELLO_JQUERY_URL, function()
-					{
-						// Must load this after the dropbox SDK since they use the same namespace
-						mxscript(App.TRELLO_URL, function()
-						{
-							DrawTrelloClientCallback();
-						});
-					});
-				}
-				// Disables client
-				else if (typeof window.Trello === 'undefined')
-				{
-					window.TrelloClient = null;
-				}
-	
-			}
+			};
 			
-			if (callback != null)
+			if (urlParams['dev'] == '1' || EditorUi.isElectronApp) //TODO check if we can remove these scripts loading from index.html
 			{
-				callback(ui);
+				realMain();
 			}
-			
-			/**
-			 * For developers only
-			 */
-			if (urlParams['chrome'] != '0' && urlParams['test'] == '1')
+			else
 			{
-				EditorUi.debug('App.start', [ui, (new Date().getTime() - t0.getTime()) + 'ms']);
-				
-				if (urlParams['export'] != null)
-				{
-					EditorUi.debug('Export:', EXPORT_URL);
-				}
+				App.loadScripts(['js/shapes.min.js', 'js/stencils.min.js',
+					'js/extensions.min.js'], realMain);
 			}
 		}, function(xhr)
 		{
@@ -1604,7 +1624,8 @@ App.prototype.init = function()
 				else if (urlParams['embed'] != '1' && this.getServiceName() == 'draw.io')
 
 				{
-					this.showNameConfBanner();
+					// just app.diagrams.net users
+					// this.showNameConfBanner();
 				}
 			}));
 		}
@@ -1683,11 +1704,6 @@ App.prototype.init = function()
 		{
 			this.appIconClicked(evt);
 		}));
-		
-		if (mxClient.IS_QUIRKS)
-		{
-			this.icon.style.marginTop = '12px';
-		}
 		
 		this.menubar.container.insertBefore(this.icon, this.menubar.container.firstChild);
 	}
@@ -2297,8 +2313,8 @@ App.prototype.getThumbnail = function(width, fn)
 		// LATER: Add caching for the graph or SVG while not on first page
 		// To avoid refresh during save dark theme uses separate graph instance
 		var darkTheme = graph.themes != null && graph.defaultThemeName == 'darkTheme';
-		
-		if (darkTheme || (this.pages != null && this.currentPage != this.pages[0]))
+
+		if (this.pages != null && (darkTheme || this.currentPage != this.pages[0]))
 		{
 			var graphGetGlobalVariable = graph.getGlobalVariable;
 			graph = this.createTemporaryGraph((darkTheme) ? graph.getDefaultStylesheet() : graph.getStylesheet());
@@ -2458,6 +2474,11 @@ App.prototype.getThumbnail = function(width, fn)
 		}
 	}
 	
+	if (!result)
+	{
+		window.clearTimeout(timeoutThread);
+	}
+	
 	return result;
 };
 
@@ -2479,11 +2500,6 @@ App.prototype.createBackground = function()
 	
 	mxUtils.setOpacity(bg, 100);
 	
-	if (mxClient.IS_QUIRKS)
-	{
-		new mxDivResizer(bg);
-	}
-
 	return bg;
 };
 
@@ -3028,7 +3044,6 @@ App.prototype.start = function()
 				// ignore
 			}
 			
-			// KNOWN: Does not work in quirks mode
 			mxEvent.addListener(window, 'hashchange', mxUtils.bind(this, function(evt)
 			{
 				try
@@ -3367,7 +3382,17 @@ App.prototype.start = function()
 					}
 					
 					this.setMode(App.MODE_GOOGLE);
-					this.actions.get('new').funct();
+
+					if (urlParams['splash'] == '0')
+					{
+						this.createFile((urlParams['title'] != null) ?
+							decodeURIComponent(urlParams['title']) :
+							this.defaultFilename);
+					}
+					else
+					{
+						this.actions.get('new').funct();
+					}
 				}
 				else
 				{
@@ -4355,7 +4380,7 @@ App.prototype.saveFile = function(forceDialog, success)
 							input.value = name.split('.').slice(0, -1).join('.');
 							input.focus();
 							
-							if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5 || mxClient.IS_QUIRKS)
+							if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5)
 							{
 								input.select();
 							}
@@ -4943,9 +4968,9 @@ App.prototype.loadFile = function(id, sameWindow, file, success, force)
 			{
 				this.spinner.stop();
 				
-				this.alert('[Deprecation] #S is no longer supportd, go to https://www.draw.io/?desc=' + id.substring(1).substring(0, 10) + '...', mxUtils.bind(this, function()
+				this.alert('[Deprecation] #S is no longer supported, go to https://app.diagrams.net/?desc=' + id.substring(1).substring(0, 10), mxUtils.bind(this, function()
 				{
-					window.location.href = 'https://www.draw.io/?desc=' + id.substring(1);
+					window.location.href = 'https://app.diagrams.net/?desc=' + id.substring(1);
 				}));
 			}
 			else if (id.charAt(0) == 'R')
@@ -5648,53 +5673,236 @@ App.prototype.updateButtonContainer = function()
 		// Share
 		if (urlParams['embed'] != '1' && this.getServiceName() == 'draw.io' &&
 			!mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp &&
-			!this.isOfflineApp() && file != null)
+			!this.isOfflineApp())
 		{
-			if (this.shareButton == null)
+			if (file != null)
 			{
-				this.shareButton = document.createElement('div');
-				this.shareButton.className = 'geBtn gePrimaryBtn';
-				this.shareButton.style.display = 'inline-block';
-				this.shareButton.style.backgroundColor = '#F2931E';
-				this.shareButton.style.borderColor = '#F08705';
-				this.shareButton.style.backgroundImage = 'none';
-				this.shareButton.style.padding = '2px 10px 0 10px';
-				this.shareButton.style.marginTop = '-10px';
-				this.shareButton.style.height = '28px';
-				this.shareButton.style.lineHeight = '28px';
-				this.shareButton.style.minWidth = '0px';
-				this.shareButton.style.cssFloat = 'right';
-				this.shareButton.setAttribute('title', mxResources.get('share'));
-				
-				var icon = document.createElement('img');
-				icon.setAttribute('src', this.shareImage);
-				icon.setAttribute('align', 'absmiddle');
-				icon.style.marginRight = '4px';
-				icon.style.marginTop = '-3px';
-				this.shareButton.appendChild(icon);
-				
-				if (uiTheme != 'dark' && uiTheme != 'atlas')
+				if (this.shareButton == null)
 				{
-					this.shareButton.style.color = 'black';
-					icon.style.filter = 'invert(100%)';
+					this.shareButton = document.createElement('div');
+					this.shareButton.className = 'geBtn gePrimaryBtn';
+					this.shareButton.style.display = 'inline-block';
+					this.shareButton.style.backgroundColor = '#F2931E';
+					this.shareButton.style.borderColor = '#F08705';
+					this.shareButton.style.backgroundImage = 'none';
+					this.shareButton.style.padding = '2px 10px 0 10px';
+					this.shareButton.style.marginTop = '-10px';
+					this.shareButton.style.height = '28px';
+					this.shareButton.style.lineHeight = '28px';
+					this.shareButton.style.minWidth = '0px';
+					this.shareButton.style.cssFloat = 'right';
+					this.shareButton.setAttribute('title', mxResources.get('share'));
+					
+					var icon = document.createElement('img');
+					icon.setAttribute('src', this.shareImage);
+					icon.setAttribute('align', 'absmiddle');
+					icon.style.marginRight = '4px';
+					icon.style.marginTop = '-3px';
+					this.shareButton.appendChild(icon);
+					
+					if (uiTheme != 'dark' && uiTheme != 'atlas')
+					{
+						this.shareButton.style.color = 'black';
+						icon.style.filter = 'invert(100%)';
+					}
+					
+					mxUtils.write(this.shareButton, mxResources.get('share'));
+					
+					mxEvent.addListener(this.shareButton, 'click', mxUtils.bind(this, function()
+					{
+						this.actions.get('share').funct();
+					}));
+					
+					this.buttonContainer.appendChild(this.shareButton);
 				}
-				
-				mxUtils.write(this.shareButton, mxResources.get('share'));
-				
-				mxEvent.addListener(this.shareButton, 'click', mxUtils.bind(this, function()
-				{
-					this.actions.get('share').funct();
-				}));
-				
-				this.buttonContainer.appendChild(this.shareButton);
 			}
-		}
-		else if (this.shareButton != null)
-		{
-			this.shareButton.parentNode.removeChild(this.shareButton);
-			this.shareButton = null;
+			else if (this.shareButton != null)
+			{
+				this.shareButton.parentNode.removeChild(this.shareButton);
+				this.shareButton = null;
+			}
+			
+			//Fetch notifications
+			this.fetchAndShowNotification(this.mode == 'device' || this.mode == 'google'? this.mode : null);
 		}
 	}
+};
+
+
+App.prototype.fetchAndShowNotification = function(target)
+{
+	target = target || 'online';
+	
+	mxUtils.get(NOTIFICATIONS_URL + '?target=' + target, mxUtils.bind(this, function(req)
+	{
+		if (req.getStatus() >= 200 && req.getStatus() <= 299)
+		{
+		    var notifs = JSON.parse(req.getText());
+			
+			//Process and sort
+			var lsReadFlag = target + 'NotifReadTS';
+			var lastRead = parseInt(localStorage.getItem(lsReadFlag));
+			
+			for (var i = 0; i < notifs.length; i++)
+			{
+				notifs[i].isNew = (!lastRead || notifs[i].timestamp > lastRead);
+			}
+			
+			notifs.sort(function(a, b)
+			{
+				return b.timestamp - a.timestamp;
+			});
+			
+			this.showNotification(notifs, lsReadFlag);
+		}
+	}));
+};
+
+App.prototype.showNotification = function(notifs, lsReadFlag)
+{
+	function shouldAnimate(newNotif)
+	{
+		var countEl = document.querySelector('.geNotification-count');
+		
+		if (countEl == null)
+		{
+			EditorUi.logError('Error: element (.geNotification-count) is null in showNotification in shouldAnimate', null, 5769);
+			return;
+		}
+		
+		countEl.innerHTML = newNotif;
+		countEl.style.display = newNotif == 0? 'none' : '';
+		var notifBell = document.querySelector('.geNotification-bell');
+		notifBell.style.animation = newNotif == 0? 'none' : '';
+		notifBell.className = 'geNotification-bell' + (newNotif == 0? ' geNotification-bellOff' : '');
+		document.querySelector('.geBell-rad').style.animation = newNotif == 0? 'none' : '';
+	}
+	
+	var markAllAsRead = mxUtils.bind(this, function()
+	{
+		this.notificationWin.style.display = 'none';
+		var unread = this.notificationWin.querySelectorAll('.circle.active');
+		
+		for (var i = 0; i < unread.length; i++)
+		{
+			unread[i].className = 'circle';
+		}
+		
+		if (notifs[0])
+		{
+			localStorage.setItem(lsReadFlag, notifs[0].timestamp);
+		}
+	});
+	
+	if (this.notificationBtn == null)
+	{
+		this.notificationBtn = document.createElement('div');
+		this.notificationBtn.className = 'geNotification-box';
+		
+		if (uiTheme == 'min')
+		{
+			this.notificationBtn.style.top = '4px';
+		}
+		
+		this.notificationBtn.innerHTML = '<span class="geNotification-count"></span>' +
+										 '<div class="geNotification-bell"' + (uiTheme == 'min'? ' style="opacity: 0.5"' : '') + '>'+
+											'<span class="geBell-top"></span>' + 
+											'<span class="geBell-middle"></span>' +
+											'<span class="geBell-bottom"></span>' +
+											'<span class="geBell-rad"></span>' +
+										 '</div>';
+		//Add as first child such that it is the left-most one
+		this.buttonContainer.insertBefore(this.notificationBtn, this.buttonContainer.firstChild);
+		
+		this.notificationWin = document.createElement('div');
+		this.notificationWin.className = 'geNotifPanel';
+		this.notificationWin.style.display = 'none';
+		document.body.appendChild(this.notificationWin);
+		this.notificationWin.innerHTML ='<div class="header">' + 
+										'    <div class="menu-icon">' + 
+										'        <div class="dash-top"></div>' + 
+										'        <div class="dash-bottom"></div>' + 
+										'        <div class="circle"></div>' + 
+										'    </div>' + 
+										'    <span class="title">' + mxResources.get('notifications') + '</span>' + 
+										'    <span id="geNotifClose" class="closeBtn">x</span>' + 
+										'</div>' + 
+										'<div class="notifications clearfix">' +
+										'	<div id="geNotifList"  style="position: relative"></div>' + 
+										'</div>';
+		
+		mxEvent.addListener(this.notificationBtn, 'click', mxUtils.bind(this, function()
+		{
+			if (this.notificationWin.style.display == 'none')
+			{
+				this.notificationWin.style.display = '';
+				document.querySelector('.notifications').scrollTop = 0;
+				var r = this.notificationBtn.getBoundingClientRect();
+				this.notificationWin.style.top = (r.top + this.notificationBtn.clientHeight) + 'px';
+				this.notificationWin.style.left = (r.right - this.notificationWin.clientWidth) + 'px';
+				shouldAnimate(0); //Stop animation once notifications are open
+			}
+			else
+			{
+				markAllAsRead();
+			}
+		}));
+		
+		mxEvent.addListener(document.getElementById('geNotifClose'), 'click', markAllAsRead);
+	}
+		
+	var newNotif = 0;
+	var notifListEl = document.getElementById('geNotifList');
+	
+	if (notifListEl == null)
+	{
+		EditorUi.logError('Error: element (geNotifList) is null in showNotification', null, 5859);
+	}
+	else if (notifs.length == 0)
+	{
+		notifListEl.innerHTML = '<div class="line"></div><div class="notification">' +
+								mxUtils.htmlEntities(mxResources.get('none')) + '</div>';
+	}
+	else
+	{
+		notifListEl.innerHTML = '<div class="line"></div>';
+		
+		for (var i = 0; i < notifs.length; i++)
+		{
+			(function(editorUi, notif)
+			{
+				if (notif.isNew)
+				{
+					newNotif++;
+				}
+				
+				var notifEl = document.createElement('div');
+				notifEl.className = 'notification';
+				var ts = new Date(notif.timestamp);
+				var str = editorUi.timeSince(ts);
+		
+				if (str == null)
+				{
+					str = mxResources.get('lessThanAMinute');
+				}
+				
+				notifEl.innerHTML = '<div class="circle' + (notif.isNew? ' active' : '') + '"></div><span class="time">' + 
+										mxUtils.htmlEntities(mxResources.get('timeAgo', [str], '{1} ago')) + '</span>' + 
+										'<p>' + mxUtils.htmlEntities(notif.content) + '</p>';
+				if (notif.link)
+				{
+					mxEvent.addListener(notifEl, 'click', function()
+					{
+						window.open(notif.link, 'notifWin');
+					});
+				}
+				
+				notifListEl.appendChild(notifEl);
+			})(this, notifs[i]);
+		}
+	}
+	
+	shouldAnimate(newNotif);
 };
 
 /**
@@ -6001,10 +6209,14 @@ App.prototype.descriptorChanged = function()
 	}
 	
 	this.updateUi();
-
-	if (this.format != null && this.editor.graph.isSelectionEmpty())
+	
+	// Refresh if editable state has changed
+	if (this.format != null && (file == null ||
+		this.fileEditable != file.isEditable()) &&
+		this.editor.graph.isSelectionEmpty())
 	{
 		this.format.refresh();
+		this.fileEditable = (file != null) ? file.isEditable() : null;
 	}
 };
 

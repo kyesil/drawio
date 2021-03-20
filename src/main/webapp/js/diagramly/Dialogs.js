@@ -18,12 +18,6 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 	buttons.style.borderWidth = '1px 0px 1px 0px';
 	buttons.style.padding = '10px 0px 20px 0px';
 	
-	if (mxClient.IS_QUIRKS)
-	{
-		buttons.style.whiteSpace = 'nowrap';
-		buttons.style.cssFloat = 'left';
-	}
-
 	var count = 0;
 	var container = document.createElement('div');
 	container.style.paddingTop = '2px';
@@ -41,7 +35,7 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 		
 		var button = document.createElement('a');
 		button.style.overflow = 'hidden';
-		button.style.display = (mxClient.IS_QUIRKS) ? 'inline' : 'inline-block';
+		button.style.display = 'inline-block';
 		button.className = 'geBaseButton';
 		button.style.boxSizing = 'border-box';
 		button.style.fontSize = '11px';
@@ -55,13 +49,6 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 		button.style.whiteSpace = 'nowrap';
 		button.setAttribute('title', title);
 		
-		// Workaround for quirks is a vertical list (limited to max 2 items)
-		if (mxClient.IS_QUIRKS)
-		{
-			button.style.cssFloat = 'left';
-			button.style.zoom = '1';
-		}
-
 		var label = document.createElement('div');
 		label.style.textOverflow = 'ellipsis';
 		label.style.overflow = 'hidden';
@@ -424,17 +411,6 @@ var SplashDialog = function(editorUi)
 		btn.style.marginBottom = '12px';
 	}
 
-	if (mxClient.IS_QUIRKS)
-	{
-		buttons.style.whiteSpace = 'nowrap';
-		buttons.style.cssFloat = 'left';
-	}
-
-	if (mxClient.IS_QUIRKS)
-	{
-		btn.style.width = '340px';
-	}
-	
 	mxUtils.write(btn, mxResources.get('createNewDiagram'));
 	
 	mxEvent.addListener(btn, 'click', function()
@@ -452,11 +428,6 @@ var SplashDialog = function(editorUi)
 	btn.style.fontSize = '18px';
 	btn.style.padding = '10px';
 	btn.style.width = '340px';
-	
-	if (mxClient.IS_QUIRKS)
-	{
-		btn.style.width = '340px';
-	}
 	
 	mxUtils.write(btn, mxResources.get('openExistingDiagram'));
 	
@@ -712,7 +683,7 @@ var EmbedDialog = function(editorUi, result, timeout, ignoreSize, previewFn, tit
 				text.value = result;
 				text.focus();
 					
-				if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5 || mxClient.IS_QUIRKS)
+				if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5)
 				{
 					text.select();
 				}
@@ -898,7 +869,7 @@ var EmbedDialog = function(editorUi, result, timeout, ignoreSize, previewFn, tit
 	{
 		text.focus();
 		
-		if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5 || mxClient.IS_QUIRKS)
+		if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5)
 		{
 			text.select();
 		}
@@ -969,7 +940,7 @@ var GoogleSitesDialog = function(editorUi, publicUrl)
 	{
 		gadgetInput.focus();
 		
-		if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5 || mxClient.IS_QUIRKS)
+		if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5)
 		{
 			gadgetInput.select();
 		}
@@ -1190,7 +1161,7 @@ var GoogleSitesDialog = function(editorUi, publicUrl)
 	{
 		gadgetInput.focus();
 		
-		if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5 || mxClient.IS_QUIRKS)
+		if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5)
 		{
 			gadgetInput.select();
 		}
@@ -2506,7 +2477,7 @@ var NewDialog = function(editorUi, compact, showName, callback, createOnly, canc
 		{
 			nameInput.focus();
 			
-			if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5 || mxClient.IS_QUIRKS)
+			if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5)
 			{
 				nameInput.select();
 			}
@@ -3409,7 +3380,7 @@ var CreateDialog = function(editorUi, title, createFn, cancelFn, dlgTitle, btnLa
 	{
 		nameInput.focus();
 		
-		if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5 || mxClient.IS_QUIRKS)
+		if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5)
 		{
 			nameInput.select();
 		}
@@ -3434,6 +3405,8 @@ var CreateDialog = function(editorUi, title, createFn, cancelFn, dlgTitle, btnLa
 		div.appendChild(FilenameDialog.createTypeHint(editorUi, nameInput, hints));
 	}
 	
+	var copyBtn = null;
+	
 	// Disables SVG preview if SVG is not supported in browser
 	if (data != null && mimeType != null && (mimeType.substring(0, 6) == 'image/' &&
 		(mimeType.substring(0, 9) != 'image/svg' || mxClient.IS_SVG)))
@@ -3451,13 +3424,41 @@ var CreateDialog = function(editorUi, title, createFn, cancelFn, dlgTitle, btnLa
 			'translate(50%,-50%)');
 		div.appendChild(preview);
 		
+		if (!mxClient.IS_FF && navigator.clipboard != null && mimeType == 'image/png')
+		{
+			copyBtn = mxUtils.button(mxResources.get('copy'), function()
+			{
+				// Only PNG can be copied to clipboard natively
+				if (mimeType == 'image/png')
+				{
+					var blob = this.base64ToBlob(temp, 'image/png');
+					var cbi = new ClipboardItem({'image/png': blob});
+					navigator.clipboard.write([cbi]);
+				}
+				else
+				{
+					var html = '<img src="' + 'data:' + mimeType + ';base64,' + temp + '">';
+					var cbi = new ClipboardItem({'text/html':
+						new Blob([html], {type: 'text/html'})});
+					navigator.clipboard.write([cbi]);
+				}
+				
+				editorUi.alert(mxResources.get('copiedToClipboard'));
+			});
+			
+			copyBtn.className = 'geBtn';
+		}
+		
 		if (allowTab && Editor.popupsAllowed)
 		{
 			preview.style.cursor = 'pointer';
 			
-			mxEvent.addGestureListeners(preview, null, null, function()
+			mxEvent.addGestureListeners(preview, null, null, function(evt)
 			{
-				create('_blank');
+				if (!mxEvent.isPopupTrigger(evt))
+				{
+					create('_blank');
+				}
 			});
 		}
 	}
@@ -3480,7 +3481,7 @@ var CreateDialog = function(editorUi, title, createFn, cancelFn, dlgTitle, btnLa
 		logo.style.width = '60px';
 		logo.style.height = '60px';
 		logo.style.paddingBottom = '6px';
-		button.style.display = (mxClient.IS_QUIRKS) ? 'inline' : 'inline-block';
+		button.style.display = 'inline-block';
 		button.className = 'geBaseButton';
 		button.style.position = 'relative';
 		button.style.margin = '4px';
@@ -3488,13 +3489,6 @@ var CreateDialog = function(editorUi, title, createFn, cancelFn, dlgTitle, btnLa
 		button.style.whiteSpace = 'nowrap';
 		
 		button.appendChild(logo);
-		
-		// Workaround for quirks is a vertical list (limited to max 2 items)
-		if (mxClient.IS_QUIRKS)
-		{
-			button.style.cssFloat = 'left';
-			button.style.zoom = '1';
-		}
 		
 		button.style.color = 'gray';
 		button.style.fontSize = '11px';
@@ -3825,6 +3819,12 @@ var CreateDialog = function(editorUi, title, createFn, cancelFn, dlgTitle, btnLa
 		btns.appendChild(openBtn);
 	}
 	
+	if (copyBtn != null)
+	{
+		btns.appendChild(copyBtn);
+		mxUtils.br(btns);
+	}
+	
 	if (CreateDialog.showDownloadButton)
 	{
 		var downloadButton = mxUtils.button(mxResources.get('download'), function()
@@ -3834,6 +3834,12 @@ var CreateDialog = function(editorUi, title, createFn, cancelFn, dlgTitle, btnLa
 		
 		downloadButton.className = 'geBtn';
 		btns.appendChild(downloadButton);
+		
+		if (copyBtn != null)
+		{
+			downloadButton.style.marginTop = '6px';
+			btns.style.marginTop = '6px';
+		}
 	}
 	
 	if (/*!mxClient.IS_IOS || */!showButtons)
@@ -3952,11 +3958,7 @@ var ImageDialog = function(editorUi, title, initialValue, fn, ignoreExisting, co
 	inner.style.whiteSpace = 'nowrap';
 	inner.style.textOverflow = 'clip';
 	inner.style.cursor = 'default';
-	
-	if (!mxClient.IS_VML)
-	{
-		inner.style.paddingRight = '20px';
-	}
+	inner.style.paddingRight = '20px';
 	
 	var linkInput = document.createElement('input');
 	linkInput.setAttribute('value', initialValue);
@@ -3967,7 +3969,7 @@ var ImageDialog = function(editorUi, title, initialValue, fn, ignoreExisting, co
 	linkInput.setAttribute('autocapitalize', 'off');
 	linkInput.style.marginTop = '6px';
 	var realWidth = (Graph.fileSupport) ? 460 : 340;
-	linkInput.style.width = realWidth + ((mxClient.IS_QUIRKS) ? 20 : -20) + 'px';
+	linkInput.style.width = realWidth - 20 + 'px';
 	linkInput.style.backgroundImage = 'url(\'' + Dialog.prototype.clearImage + '\')';
 	linkInput.style.backgroundRepeat = 'no-repeat';
 	linkInput.style.backgroundPosition = '100% 50%';
@@ -3982,8 +3984,8 @@ var ImageDialog = function(editorUi, title, initialValue, fn, ignoreExisting, co
 	cross.style.cursor = 'pointer';
 
 	// Workaround for inline-block not supported in IE
-	cross.style.display = (mxClient.IS_VML) ? 'inline' : 'inline-block';
-	cross.style.top = ((mxClient.IS_VML) ? 0 : 3) + 'px';
+	cross.style.display = 'inline-block';
+	cross.style.top = '3px';
 	
 	// Needed to block event transparency in IE
 	cross.style.background = 'url(\'' + editorUi.editor.transparentImage + '\')';
@@ -4155,7 +4157,7 @@ var ImageDialog = function(editorUi, title, initialValue, fn, ignoreExisting, co
 	};
 	
 	var btns = document.createElement('div');
-	btns.style.marginTop = (mxClient.IS_QUIRKS) ? '22px' : '14px';
+	btns.style.marginTop = '14px';
 	btns.style.textAlign = 'center';
 	
 	var cancelBtn = mxUtils.button(mxResources.get('cancel'), function()
@@ -4309,7 +4311,7 @@ var ImageDialog = function(editorUi, title, initialValue, fn, ignoreExisting, co
 /**
  * Overrides link dialog to add Google Picker.
  */
-var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
+var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages, showNewWindowOption, linkTarget)
 {
 	var div = document.createElement('div');
 	mxUtils.write(div, mxResources.get('editLink') + ':');
@@ -4321,11 +4323,7 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 	inner.style.whiteSpace = 'nowrap';
 	inner.style.textOverflow = 'clip';
 	inner.style.cursor = 'default';
-	
-	if (!mxClient.IS_VML)
-	{
-		inner.style.paddingRight = '20px';
-	}
+	inner.style.paddingRight = '20px';
 
 	var linkInput = document.createElement('input');
 	linkInput.setAttribute('placeholder', mxResources.get('dragUrlsHere'));
@@ -4337,7 +4335,7 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 	linkInput.style.backgroundRepeat = 'no-repeat';
 	linkInput.style.backgroundPosition = '100% 50%';
 	linkInput.style.paddingRight = '14px';
-	
+
 	var cross = document.createElement('div');
 	cross.setAttribute('title', mxResources.get('reset'));
 	cross.style.position = 'relative';
@@ -4347,8 +4345,8 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 	cross.style.cursor = 'pointer';
 	
 	// Workaround for inline-block not supported in IE
-	cross.style.display = (mxClient.IS_VML) ? 'inline' : 'inline-block';
-	cross.style.top = ((mxClient.IS_VML) ? 0 : 3) + 'px';
+	cross.style.display = 'inline-block';
+	cross.style.top = '3px';
 	
 	// Needed to block event transparency in IE
 	cross.style.background = 'url(\'' + editorUi.editor.transparentImage + '\')';
@@ -4373,6 +4371,25 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 
 	var pageSelect = document.createElement('select');
 	pageSelect.style.width = '100%';
+
+	var newWindowCheckbox = document.createElement('input');
+	newWindowCheckbox.setAttribute('type', 'checkbox');
+
+	newWindowCheckbox.style.margin = '0 6p 0 6px';
+
+	if (linkTarget != null)
+	{
+		newWindowCheckbox.setAttribute('checked', 'checked');
+		newWindowCheckbox.defaultChecked = true;
+	}
+	
+	linkTarget = (linkTarget != null) ? linkTarget : '_blank';
+	newWindowCheckbox.setAttribute('title', linkTarget);
+	
+	if (showNewWindowOption)
+	{
+		linkInput.style.width = '340px';
+	}
 	
 	if (showPages && editorUi.pages != null)
 	{
@@ -4391,6 +4408,13 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 		inner.appendChild(urlRadio);
 		inner.appendChild(linkInput);
 		inner.appendChild(cross);
+		
+		if (showNewWindowOption)
+		{
+			inner.appendChild(newWindowCheckbox);
+			mxUtils.write(inner, mxResources.get('openInNewWindow'));
+		}
+		
 		mxUtils.br(inner);
 		inner.appendChild(pageRadio);
 		
@@ -4447,7 +4471,7 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 		editorUi.hideDialog();
 		var value = (pageRadio.checked) ? ((pageSelect.value !== 'pageNotFound') ?
 			pageSelect.value : initialValue) : linkInput.value;
-		fn(value, LinkDialog.selectedDocs);
+		fn(value, LinkDialog.selectedDocs, (newWindowCheckbox.checked) ? linkTarget : null);
 	});
 	mainBtn.style.verticalAlign = 'middle';
 	mainBtn.className = 'geBtn gePrimaryBtn';
@@ -4462,7 +4486,7 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 		{
 			linkInput.focus();
 			
-			if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5 || mxClient.IS_QUIRKS)
+			if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5)
 			{
 				linkInput.select();
 			}
@@ -4629,26 +4653,7 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 					// Creates one picker and reuses it to avoid polluting the DOM
 					if (editorUi.linkPicker == null)
 					{
-						var view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
-				        		.setParent('root')
-				        		.setIncludeFolders(true)
-				        		.setSelectFolderEnabled(true);
-						var view2 = new google.picker.DocsView()
-							.setIncludeFolders(true)
-				            .setSelectFolderEnabled(true);
-						var view21 = new google.picker.DocsView()
-							.setIncludeFolders(true)
-							.setEnableDrives(true)
-				            .setSelectFolderEnabled(true);
-						var picker = new google.picker.PickerBuilder()
-							.setAppId(editorUi.drive.appId)	
-							.setLocale(mxLanguage)
-							.setOAuthToken(editorUi.drive.token)
-							.enableFeature(google.picker.Feature.SUPPORT_DRIVES)
-						    .addView(view)
-							.addView(view2)
-							.addView(view21)
-							.addView(google.picker.ViewId.RECENTLY_PICKED);
+						var picker = editorUi.drive.createLinkPicker();
 
 						editorUi.linkPicker = picker.setCallback(function(data)
 						{
@@ -6113,31 +6118,56 @@ var DraftDialog = function(editorUi, title, xml, editFn, discardFn, editLabel, d
 /**
  * 
  */
-var FindWindow = function(ui, x, y, w, h)
+var FindWindow = function(ui, x, y, w, h, withReplace)
 {
-	var action = ui.actions.get('find');
+	var action = ui.actions.get('findReplace');
+	
 	var graph = ui.editor.graph;
 	var lastSearch = null;
 	var lastFound = null;
+	var lastSearchSuccessful = false;
 	var allChecked = false;
-
+	var lblMatch = null;
+	var lblMatchPos = 0;
+	var marker = 1;
+	
 	var div = document.createElement('div');
 	div.style.userSelect = 'none';
 	div.style.overflow = 'hidden';
 	div.style.padding = '10px';
 	div.style.height = '100%';
-
+	
+	var txtWidth = withReplace? '260px' : '200px';
 	var searchInput = document.createElement('input');
 	searchInput.setAttribute('placeholder', mxResources.get('find'));
 	searchInput.setAttribute('type', 'text');
 	searchInput.style.marginTop = '4px';
 	searchInput.style.marginBottom = '6px';
-	searchInput.style.width = '200px';
+	searchInput.style.width = txtWidth;
 	searchInput.style.fontSize = '12px';
 	searchInput.style.borderRadius = '4px';
 	searchInput.style.padding = '6px';
 	div.appendChild(searchInput);
 	mxUtils.br(div);
+	
+	var replaceInput;
+	
+	if (withReplace)
+	{
+		replaceInput = document.createElement('input');
+		replaceInput.setAttribute('placeholder', mxResources.get('replaceWith'));
+		replaceInput.setAttribute('type', 'text');
+		replaceInput.style.marginTop = '4px';
+		replaceInput.style.marginBottom = '6px';
+		replaceInput.style.width = txtWidth;
+		replaceInput.style.fontSize = '12px';
+		replaceInput.style.borderRadius = '4px';
+		replaceInput.style.padding = '6px';
+		div.appendChild(replaceInput);
+		mxUtils.br(div);
+		
+		mxEvent.addListener(replaceInput, 'input', updateReplBtns);
+	}
 	
 	var regexInput = document.createElement('input');
 	regexInput.setAttribute('id', 'geFindWinRegExChck');
@@ -6197,12 +6227,37 @@ var FindWindow = function(ui, x, y, w, h)
 		return false;
 	};
 	
-	function search(internalCall)
+	function updateReplBtns()
 	{
+		if (lastSearchSuccessful && replaceInput.value)
+		{
+			replaceFindBtn.removeAttribute('disabled');
+			replaceBtn.removeAttribute('disabled');
+		}
+		else
+		{
+			replaceFindBtn.setAttribute('disabled', 'disabled');
+			replaceBtn.setAttribute('disabled', 'disabled');
+		}
+		
+		if (replaceInput.value && searchInput.value)
+		{
+			replaceAllBtn.removeAttribute('disabled');
+		}
+		else
+		{
+			replaceAllBtn.setAttribute('disabled', 'disabled');
+		}
+	}
+				
+	function search(internalCall, trySameCell, stayOnPage)
+	{
+		replAllNotif.innerHTML = '';
 		var cells = graph.model.getDescendants(graph.model.getRoot());
 		var searchStr = searchInput.value.toLowerCase();
 		var re = (regexInput.checked) ? new RegExp(searchStr) : null;
 		var firstMatch = null;
+		lblMatch = null;
 		
 		if (lastSearch != searchStr)
 		{
@@ -6243,18 +6298,26 @@ var FindWindow = function(ui, x, y, w, h)
 					graph.model.setRoot(nextPage.root);
 					nextPageIndex = (nextPageIndex + 1) % ui.pages.length;
 				}
-				while(!search(true) && nextPageIndex != currentPageIndex);
+				while(!search(true, trySameCell, stayOnPage) && nextPageIndex != currentPageIndex);
 				
 				if (lastFound)
 				{
 					lastFound = null;
-					ui.selectPage(nextPage);
+					
+					if (!stayOnPage)
+					{
+						ui.selectPage(nextPage);
+					}
+					else
+					{
+						ui.editor.graph.model.execute(new SelectPage(ui, nextPage));
+					}
 				}
 				
 				allChecked = false;
 				graph = ui.editor.graph;
 				
-				return search(true);
+				return search(true, trySameCell, stayOnPage);
 			}
 			
 			var i;
@@ -6263,10 +6326,16 @@ var FindWindow = function(ui, x, y, w, h)
 			{
 				var state = graph.view.getState(cells[i]);
 				
+				//Try the same cell with replace to find other occurances
+				if (trySameCell && re != null)
+				{
+					active = active || state == lastFound;
+				}
+							
 				if (state != null && state.cell.value != null && (active || firstMatch == null) &&
 					(graph.model.isVertex(state.cell) || graph.model.isEdge(state.cell)))
 				{
-					if (graph.isHtmlLabel(state.cell))
+					if (state.style != null && state.style['html'] == '1')
 					{
 						tmp.innerHTML = graph.sanitizeHtml(graph.getLabel(state.cell));
 						label = mxUtils.extractTextWithWhitespace([tmp]);
@@ -6277,10 +6346,32 @@ var FindWindow = function(ui, x, y, w, h)
 					}
 		
 					label = mxUtils.trim(label.replace(/[\x00-\x1F\x7F-\x9F]|\s+/g, ' ')).toLowerCase();
+					var lblPosShift = 0;
 					
-					if ((re == null && (label.substring(0, searchStr.length) === searchStr || testMeta(re, state.cell, searchStr))) ||
-						(re != null && (re.test(label) || testMeta(re, state.cell, searchStr))))
+					if (trySameCell && withReplace && re != null && state == lastFound)
 					{
+						label = label.substr(lblMatchPos);
+						lblPosShift = lblMatchPos;
+					}
+					
+					if ((re == null && (label.substring(0, searchStr.length) === searchStr || (!withReplace && testMeta(re, state.cell, searchStr)))) ||
+						(re != null && (re.test(label) || (!withReplace && testMeta(re, state.cell, searchStr)))))
+					{
+						if (withReplace)
+						{
+							if (re != null)
+							{
+								var result = label.match(re);
+								lblMatch = result[0].toLowerCase();
+								lblMatchPos = lblPosShift + result.index + lblMatch.length;
+							}
+							else
+							{
+								lblMatch = searchStr;
+								lblMatchPos = lblMatch.length;
+							} 	
+						}
+						
 						if (active)
 						{
 							firstMatch = state;
@@ -6304,7 +6395,7 @@ var FindWindow = function(ui, x, y, w, h)
 			{
 				lastFound = null;
 				allChecked = true;
-				return search(true);
+				return search(true, trySameCell, stayOnPage);
 			}
 			
 			lastFound = firstMatch;
@@ -6312,7 +6403,12 @@ var FindWindow = function(ui, x, y, w, h)
 			
 			if (graph.isEnabled())
 			{
-				graph.setSelectionCell(lastFound.cell);
+				if (!stayOnPage &&
+					(graph.getSelectionCell() != lastFound.cell ||
+					graph.getSelectionCount() != 1))
+				{
+					graph.setSelectionCell(lastFound.cell);
+				}
 			}
 			else
 			{
@@ -6323,22 +6419,45 @@ var FindWindow = function(ui, x, y, w, h)
 		else if (!internalCall && allPagesInput.checked)
 		{
 			allChecked = true;
-			return search(true);
+			return search(true, trySameCell, stayOnPage);
 		}
-		else if (graph.isEnabled())
+		else if (graph.isEnabled() && !stayOnPage)
 		{
 			graph.clearSelection();
+		}
+		
+		lastSearchSuccessful = firstMatch != null;
+		
+		if (withReplace && !internalCall)
+		{
+			updateReplBtns();
 		}
 		
 		return searchStr.length == 0 || firstMatch != null;
 	};
 
 	mxUtils.br(div);
+	
+	var btnsCont = document.createElement('div');
+	btnsCont.style.left = '0px';
+	btnsCont.style.right = '0px';
+	btnsCont.style.marginTop = '6px';
+	btnsCont.style.padding = '0 6px 0 6px';
+	btnsCont.style.textAlign = 'center';
+	div.appendChild(btnsCont);
 
 	var resetBtn = mxUtils.button(mxResources.get('reset'), function()
 	{
+		replAllNotif.innerHTML = '';
 		searchInput.value = '';
 		searchInput.style.backgroundColor = '';
+		
+		if (withReplace)
+		{
+			replaceInput.value = '';
+			updateReplBtns();
+		}
+		
 		lastFound = null;
 		lastSearch = null;
 		allChecked = false;
@@ -6346,18 +6465,24 @@ var FindWindow = function(ui, x, y, w, h)
 	});
 	
 	resetBtn.setAttribute('title', mxResources.get('reset'));
+	resetBtn.style.float = 'none';
+	resetBtn.style.width = '120px';
 	resetBtn.style.marginTop = '6px';
-	resetBtn.style.marginRight = '4px';
-	resetBtn.style.marginLeft = ((w - 20 - 2 * 78) / 2) + 'px'; // 20 are window padding, and 78 is btn width
+	resetBtn.style.overflow = 'hidden';
+	resetBtn.style.textOverflow = 'ellipsis';
 	resetBtn.className = 'geBtn';
 	
-	div.appendChild(resetBtn);
+	if (!withReplace)
+	{
+		btnsCont.appendChild(resetBtn);		
+	}
 
 	var btn = mxUtils.button(mxResources.get('find'), function()
 	{
 		try
 		{
-			searchInput.style.backgroundColor = search() ? '' : '#ffcfcf';
+			searchInput.style.backgroundColor = search() ? '' :
+				((uiTheme == 'dark') ? '#ff0000' : '#ffcfcf');
 		}
 		catch (e)
 		{
@@ -6365,11 +6490,229 @@ var FindWindow = function(ui, x, y, w, h)
 		}
 	});
 	
+	// TODO: Reset state after selection change
 	btn.setAttribute('title', mxResources.get('find') + ' (Enter)');
+	btn.style.float = 'none';
+	btn.style.width = '120px';
 	btn.style.marginTop = '6px';
+	btn.style.overflow = 'hidden';
+	btn.style.textOverflow = 'ellipsis';
 	btn.className = 'geBtn gePrimaryBtn';
 	
-	div.appendChild(btn);
+	btnsCont.appendChild(btn);
+
+	var replAllNotif = document.createElement('div');
+	replAllNotif.style.marginTop = '10px';
+	
+	if (!withReplace)
+	{
+		resetBtn.style.width = '90px';	
+		btn.style.width = '90px';
+	}
+	else
+	{
+		function replaceInLabel(str, substr, newSubstr, startIndex, style)
+		{
+			if (style == null || style['html'] != '1')
+			{
+				var replStart = str.toLowerCase().indexOf(substr, startIndex);
+				return replStart < 0? str : str.substr(0, replStart) + newSubstr + str.substr(replStart + substr.length);
+			}
+			
+			var origStr = str;
+			substr = mxUtils.htmlEntities(substr);
+			var tagPos = [], p = -1;
+			
+			while((p = str.indexOf('<', p + 1)) > -1)
+			{
+				tagPos.push(p);
+			}
+			
+			var tags = str.match(/<[^>]*>/g);
+			str = str.replace(/<[^>]*>/g, '');
+			var lStr = str.toLowerCase();
+			var replStart = lStr.indexOf(substr, startIndex);
+			
+			if (replStart < 0)
+			{
+				return origStr;	
+			}
+			
+			var replEnd = replStart + substr.length;
+			var newSubstr = mxUtils.htmlEntities(newSubstr);
+			
+			//Tags within the replaced text is added before it
+			var newStr = str.substr(0, replStart) + newSubstr + str.substr(replEnd);
+			var tagDiff = 0;
+			
+			for (var i = 0; i < tagPos.length; i++)
+			{
+				if (tagPos[i] - tagDiff < replStart)
+				{
+					newStr = newStr.substr(0, tagPos[i]) + tags[i] + newStr.substr(tagPos[i]);
+				}
+				else if (tagPos[i] - tagDiff < replEnd)
+				{
+					var inPos = replStart + tagDiff;
+					newStr = newStr.substr(0, inPos) + tags[i] + newStr.substr(inPos);
+				}
+				else
+				{
+					var inPos = tagPos[i] + (newSubstr.length - substr.length);
+					newStr = newStr.substr(0, inPos) + tags[i] + newStr.substr(inPos);
+				}
+				
+				tagDiff += tags[i].length;
+			}
+			
+			return newStr;
+		};
+		
+		var replaceFindBtn = mxUtils.button(mxResources.get('replFind'), function()
+		{
+			try
+			{
+				if (lblMatch != null && lastFound != null && replaceInput.value)
+				{
+					var cell = lastFound.cell, lbl = graph.getLabel(cell);
+					
+					graph.model.setValue(cell, replaceInLabel(lbl, lblMatch, replaceInput.value, lblMatchPos - lblMatch.length, graph.getCurrentCellStyle(cell)));
+					searchInput.style.backgroundColor = search(false, true) ? '' :
+						((uiTheme == 'dark') ? '#ff0000' : '#ffcfcf');
+				}
+			}
+			catch (e)
+			{
+				ui.handleError(e);
+			}
+		});
+		
+		replaceFindBtn.setAttribute('title', mxResources.get('replFind'));
+		replaceFindBtn.style.float = 'none';
+		replaceFindBtn.style.width = '120px';
+		replaceFindBtn.style.marginTop = '6px';
+		replaceFindBtn.style.overflow = 'hidden';
+		replaceFindBtn.style.textOverflow = 'ellipsis';
+		replaceFindBtn.className = 'geBtn gePrimaryBtn';
+		replaceFindBtn.setAttribute('disabled', 'disabled');
+		
+		btnsCont.appendChild(replaceFindBtn);
+		mxUtils.br(btnsCont);
+		
+		var replaceBtn = mxUtils.button(mxResources.get('replace'), function()
+		{
+			try
+			{
+				if (lblMatch != null && lastFound != null && replaceInput.value)
+				{
+					var cell = lastFound.cell, lbl = graph.getLabel(cell);
+					
+					graph.model.setValue(cell, replaceInLabel(lbl, lblMatch, replaceInput.value, lblMatchPos - lblMatch.length, graph.getCurrentCellStyle(cell)));
+					replaceFindBtn.setAttribute('disabled', 'disabled');
+					replaceBtn.setAttribute('disabled', 'disabled');
+				}
+			}
+			catch (e)
+			{
+				ui.handleError(e);	
+			}
+		});
+		
+		replaceBtn.setAttribute('title', mxResources.get('replace'));
+		replaceBtn.style.float = 'none';
+		replaceBtn.style.width = '120px';
+		replaceBtn.style.marginTop = '6px';
+		replaceBtn.style.overflow = 'hidden';
+		replaceBtn.style.textOverflow = 'ellipsis';
+		replaceBtn.className = 'geBtn gePrimaryBtn';
+		replaceBtn.setAttribute('disabled', 'disabled');
+		
+		btnsCont.appendChild(replaceBtn);
+		
+		var replaceAllBtn = mxUtils.button(mxResources.get('replaceAll'), function()
+		{
+			replAllNotif.innerHTML = '';
+			
+			if (replaceInput.value)
+			{
+				var currentPage = ui.currentPage;
+				var cells = ui.editor.graph.getSelectionCells();
+				ui.editor.graph.rendering = false;
+				
+				graph.getModel().beginUpdate();
+				try
+				{
+					var safeguard = 0;
+					var seen = {};
+					
+					while (search(false, true, true) && safeguard < 100)
+					{
+						var cell = lastFound.cell, lbl = graph.getLabel(cell);
+						var oldSeen = seen[cell.id];
+						
+						if (oldSeen && oldSeen.replAllMrk == marker && oldSeen.replAllPos >= lblMatchPos)
+						{
+							break;
+						}
+						
+						seen[cell.id] = {replAllMrk: marker, replAllPos: lblMatchPos};
+						
+						graph.model.setValue(cell, replaceInLabel(lbl, lblMatch, replaceInput.value, lblMatchPos - lblMatch.length, graph.getCurrentCellStyle(cell)));
+						safeguard++;
+					}
+					
+					if (currentPage != ui.currentPage)
+					{
+						ui.editor.graph.model.execute(new SelectPage(ui, currentPage));
+					}
+					
+					mxUtils.write(replAllNotif, mxResources.get('matchesRepl', [safeguard]));
+				}
+				catch (e)
+				{
+					ui.handleError(e);
+				}
+				finally
+				{
+					graph.getModel().endUpdate();
+					ui.editor.graph.setSelectionCells(cells);
+					ui.editor.graph.rendering = true;
+				}
+				
+				marker++;
+			}
+		});
+		
+		replaceAllBtn.setAttribute('title', mxResources.get('replaceAll'));
+		replaceAllBtn.style.float = 'none';
+		replaceAllBtn.style.width = '120px';
+		replaceAllBtn.style.marginTop = '6px';
+		replaceAllBtn.style.overflow = 'hidden';
+		replaceAllBtn.style.textOverflow = 'ellipsis';
+		replaceAllBtn.className = 'geBtn gePrimaryBtn';
+		replaceAllBtn.setAttribute('disabled', 'disabled');
+		
+		btnsCont.appendChild(replaceAllBtn);
+		mxUtils.br(btnsCont);
+		btnsCont.appendChild(resetBtn);		
+
+		var closeBtn = mxUtils.button(mxResources.get('close'), mxUtils.bind(this, function()
+		{
+			this.window.setVisible(false);
+		}));
+		
+		closeBtn.setAttribute('title', mxResources.get('close'));
+		closeBtn.style.float = 'none';
+		closeBtn.style.width = '120px';
+		closeBtn.style.marginTop = '6px';
+		closeBtn.style.overflow = 'hidden';
+		closeBtn.style.textOverflow = 'ellipsis';
+		closeBtn.className = 'geBtn';
+		
+		btnsCont.appendChild(closeBtn);
+		mxUtils.br(btnsCont);
+		btnsCont.appendChild(replAllNotif);
+	}
 	
 	mxEvent.addListener(searchInput, 'keyup', function(evt)
 	{
@@ -6381,21 +6724,24 @@ var FindWindow = function(ui, x, y, w, h)
 		}
 		else if (evt.keyCode == 27)
 		{
+			// Escape closes window
 			action.funct();
 		}
 		else if (lastSearch != searchInput.value.toLowerCase() || evt.keyCode == 13)
 		{
 			try
 			{
-				searchInput.style.backgroundColor = search() ? '' : '#ffcfcf';
+				searchInput.style.backgroundColor = search() ? '' :
+					((uiTheme == 'dark') ? '#ff0000' : '#ffcfcf');
 			}
 			catch (e)
 			{
-				searchInput.style.backgroundColor = '#ffcfcf';
+				searchInput.style.backgroundColor = (uiTheme == 'dark') ? '#ff0000' : '#ffcfcf';
 			}
 		}
 	});
 
+	// Ctrl+F closes window
 	mxEvent.addListener(div, 'keydown', function(evt)
 	{
 		if (evt.keyCode == 70 && ui.keyHandler.isControlDown(evt) && !mxEvent.isShiftDown(evt))
@@ -6405,7 +6751,9 @@ var FindWindow = function(ui, x, y, w, h)
 		}
 	});
 
-	this.window = new mxWindow(mxResources.get('find'), div, x, y, w, h, true, true);
+	this.window = new mxWindow(mxResources.get('find') + ((withReplace) ?
+		'/' + mxResources.get('replace') : ''),
+		div, x, y, w, h, true, true);
 	this.window.destroyOnClose = false;
 	this.window.setMaximizable(false);
 	this.window.setResizable(false);
@@ -6419,7 +6767,7 @@ var FindWindow = function(ui, x, y, w, h)
 		{
 			searchInput.focus();
 			
-			if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5 || mxClient.IS_QUIRKS)
+			if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5)
 			{
 				searchInput.select();
 			}
@@ -6720,7 +7068,7 @@ var TagsWindow = function(editorUi, x, y, w, h)
 		{
 			searchInput.focus();
 			
-			if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5 || mxClient.IS_QUIRKS)
+			if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5)
 			{
 				searchInput.select();
 			}
@@ -7040,11 +7388,6 @@ var MoreShapesDialog = function(editorUi, expanded, entries)
 		hd.style.height = '40px';
 		hd.style.right = '0px';
 		
-		if (mxClient.IS_QUIRKS)
-		{
-			hd.style.width = '718px';
-		}
-		
 		var list = document.createElement('div');
 		var preview = document.createElement('div');
 		
@@ -7055,12 +7398,6 @@ var MoreShapesDialog = function(editorUi, expanded, entries)
 		list.style.bottom = '60px';
 		list.style.overflow = 'auto';
 		
-		if (mxClient.IS_QUIRKS)
-		{
-			list.style.height = '437px';
-			list.style.marginTop = '1px';
-		}
-		
 		preview.style.position = 'absolute';
 		preview.style.left = '202px';
 		preview.style.right = '0px';
@@ -7069,13 +7406,6 @@ var MoreShapesDialog = function(editorUi, expanded, entries)
 		preview.style.overflow = 'auto';
 		preview.style.borderLeft = '1px solid rgb(211, 211, 211)';
 		preview.style.textAlign = 'center';
-		
-		if (mxClient.IS_QUIRKS)
-		{
-			preview.style.width = parseInt(hd.style.width) - 202 + 'px';
-			preview.style.height = list.style.height;
-			preview.style.marginTop = list.style.marginTop;
-		}
 		
 		var currentListItem = null;
 		var applyFunctions = [];
@@ -7103,12 +7433,6 @@ var MoreShapesDialog = function(editorUi, expanded, entries)
 		buttons.style.height = '60px';
 		buttons.style.lineHeight = '52px';
 		
-		if (mxClient.IS_QUIRKS)
-		{
-			buttons.style.width = hd.style.width;
-			buttons.style.paddingTop = '12px';
-		}
-
 		var cb = document.createElement('input');
 		cb.setAttribute('type', 'checkbox');
 		
@@ -7130,12 +7454,6 @@ var MoreShapesDialog = function(editorUi, expanded, entries)
 				}
 			});
 			
-			if (mxClient.IS_QUIRKS)
-			{
-				span.style.position = 'relative';
-				span.style.top = '-6px';
-			}
-
 			buttons.appendChild(span);
 		}
 		
@@ -7992,7 +8310,7 @@ var LibraryDialog = function(editorUi, name, library, initialImages, file, mode)
 		{
 			nameInput.focus();
 			
-			if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5 || mxClient.IS_QUIRKS)
+			if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5)
 			{
 				nameInput.select();
 			}
@@ -8123,7 +8441,7 @@ var LibraryDialog = function(editorUi, name, library, initialImages, file, mode)
 					
 					var wrapper = document.createElement('div');
 					wrapper.setAttribute('draggable', 'true');
-					wrapper.style.display = (mxClient.IS_QUIRKS) ? 'inline' : 'inline-block';
+					wrapper.style.display = 'inline-block';
 					wrapper.style.position = 'relative';
 					wrapper.style.cursor = 'move';
 					mxUtils.setPrefixedStyle(wrapper.style, 'transition', 'transform .1s ease-in-out');
@@ -8150,7 +8468,7 @@ var LibraryDialog = function(editorUi, name, library, initialImages, file, mode)
 							editorUi.sidebar.createThumb(cells, ew, eh, wrapper, null, true, false);
 							
 							// Needs inline block on SVG for delete icon to appear on same line
-							wrapper.firstChild.style.display = (mxClient.IS_QUIRKS) ? 'inline' : 'inline-block';
+							wrapper.firstChild.style.display = 'inline-block';
 							wrapper.firstChild.style.cursor = '';
 						}
 					}
@@ -8285,7 +8603,7 @@ var LibraryDialog = function(editorUi, name, library, initialImages, file, mode)
 					var startEditing = function(evt)
 					{
 						// Workaround for various issues in IE
-						if (!mxClient.IS_IOS && !mxClient.IS_QUIRKS && !mxClient.IS_FF &&
+						if (!mxClient.IS_IOS && !mxClient.IS_FF &&
 							(document.documentMode == null || document.documentMode > 9))
 						{
 							if (label.getAttribute('contentEditable') != 'true')
@@ -10183,7 +10501,7 @@ var FontDialog = function(editorUi, curFontname, curUrl, curType, fn)
 		
 		input.focus();
 		
-		if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5 || mxClient.IS_QUIRKS)
+		if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5)
 		{
 			input.select();
 		}
@@ -10330,7 +10648,7 @@ var FontDialog = function(editorUi, curFontname, curUrl, curType, fn)
  */
 function AspectDialog(editorUi, pageId, layerIds, okFn, cancelFn)
 {
-	this.aspect = {pageId : pageId || editorUi.pages[0].getId(), layerIds : layerIds || []};
+	this.aspect = {pageId : pageId || (editorUi.pages? editorUi.pages[0].getId() : null), layerIds : layerIds || []};
 	var div = document.createElement('div');
 	
 	var title = document.createElement('h5');
@@ -10399,13 +10717,20 @@ function AspectDialog(editorUi, pageId, layerIds, okFn, cancelFn)
 //Drawing the graph with dialog not visible doesn't get dimensions right. It has to be visible!
 AspectDialog.prototype.init = function()
 {
-	this.ui.getFileData(true); //Force pages to update their nodes
+	var xml = this.ui.getFileData(true); //Force pages to update their nodes
 	
-	for (var i = 0; i < this.ui.pages.length; i++)
+	if (this.ui.pages)
 	{
-		var page = this.ui.updatePageRoot(this.ui.pages[i]);
-
-		this.createPageItem(page.getId(), page.getName(), page.node, page.root);
+		for (var i = 0; i < this.ui.pages.length; i++)
+		{
+			var page = this.ui.updatePageRoot(this.ui.pages[i]);
+	
+			this.createPageItem(page.getId(), page.getName(), page.node);
+		}
+	}
+	else
+	{
+		this.createPageItem('1', 'Page-1', mxUtils.parseXml(xml).documentElement);
 	}
 };
 
@@ -10458,7 +10783,7 @@ AspectDialog.prototype.createViewer = function(container, pageNode, layerId)
 	return graph;
 };
 
-AspectDialog.prototype.createPageItem = function(pageId, pageName, pageNode, pageRoot)
+AspectDialog.prototype.createPageItem = function(pageId, pageName, pageNode)
 {
 	var $listItem = document.createElement('div');
 	$listItem.className = 'geAspectDlgListItem';
@@ -10619,7 +10944,7 @@ var FilePropertiesDialog = function(editorUi)
 		{
 			zoomInput.focus();
 			
-			if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5 || mxClient.IS_QUIRKS)
+			if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5)
 			{
 				zoomInput.select();
 			}

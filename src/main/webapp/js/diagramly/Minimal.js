@@ -813,7 +813,7 @@ EditorUi.initMinimalTheme = function()
 				ui.menus.addMenuItems(menu, ['comments'], parent);
 			}
 			
-			ui.menus.addMenuItems(menu, ['-', 'find', 'tags'], parent);
+			ui.menus.addMenuItems(menu, ['-', 'findReplace', 'tags'], parent);
 			
 			if (file != null && ui.fileNode != null)
 			{
@@ -859,7 +859,7 @@ EditorUi.initMinimalTheme = function()
 				
 				if (ui.isOfflineApp())
 				{
-					if (navigator.onLine && urlParams['stealth'] != '1')
+					if (navigator.onLine && urlParams['stealth'] != '1' && urlParams['lockdown'] != '1')
 					{
 						this.addMenuItems(menu, ['upload'], parent);
 					}

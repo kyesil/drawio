@@ -8,7 +8,7 @@ LucidImporter = {};
 (function()
 {
 	// Global import transformation
-	var defaultFontSize = '11';
+	var defaultFontSize = '13';
 	var defaultLucidFont = 'Liberation Sans';
 	var scale = 0.75;
 	var dx = 0;
@@ -2161,10 +2161,10 @@ LucidImporter = {};
 //Equation
 			'Equation' : cs,
 //Walls
-			'fpWall' : '',
+			'fpWall' : cs,
 //Rooms
 //Doors & Windows
-			'fpWindow' : s + 'floorplan.window',
+			'fpWindow' : s + 'floorplan.window;strokeWidth=3',
 			'fpOpening' : 'shape=rect',
 			'fpDoor' : cs,
 			'fpDoubleDoor' : cs,
@@ -3801,9 +3801,9 @@ LucidImporter = {};
 			'PresentationFrameBlock' : cs,
 //Timeline
 //TODO Timeline shapes are postponed, this code is a work-in-progress
-			//'TimelineBlock' : cs,
-			//'TimelineMilestoneBlock' : cs,
-			//'TimelineIntervalBlock' : cs,
+			'TimelineBlock' : cs,
+			'TimelineMilestoneBlock' : cs,
+			'TimelineIntervalBlock' : cs,
 			'MinimalTextBlock' : 'strokeColor=none;fillColor=none',
 //Freehand			
 			'FreehandBlock' : cs,
@@ -3855,6 +3855,11 @@ LucidImporter = {};
 		catch(e) {}
 		
 		return '';
+	};
+	
+	function fix1Digit(num)
+	{
+		return  Math.round(num * 10) / 10;	
 	};
 	
 	// actual code start
@@ -4016,21 +4021,67 @@ LucidImporter = {};
 			if (t != null)
 			{
 				str += '<li style="text-align:' + (styles['a']? styles['a'].v : (props.TextAlign || 'center')) + ';';
+				var color, fontSize;
 				
-				if (nonBlockStyles != null && nonBlockStyles['c'])
+				// Find font size/color
+				if (nonBlockStyles != null)
 				{
-					var v = rgbToHex(nonBlockStyles['c'].v);
-					
-					if (v != null)
+					if (nonBlockStyles['c'])
 					{
-						v = v.substring(0, 7);
-						str += 'color:' + v + ';';
+						color = nonBlockStyles['c'].v;
 					}
+					
+					if (nonBlockStyles['s'])
+					{
+						fontSize = nonBlockStyles['s'].v;
+					}
+				}
+					
+				try
+				{
+					var s = m[i], e = ends[j];
+					var it = i;
+					
+					if (s && e && s.s < e.e) //s can be null when all starts are used, e ends after s BUT sometimes there are errors in the file
+					{
+						var curS = s.s;
+		
+						while(s != null && s.s == curS)
+						{
+							if (s.n == 's')
+							{
+								fontSize = s.v;
+							}
+							else if (s.n == 'c')
+							{
+								color = s.v;
+							}
+							
+							s = m[++it];
+						}
+					}					
+				}
+				catch(e)
+				{
+					console.log(e);
+				}
+				
+				color = rgbToHex(color);
+				
+				if (color != null)
+				{
+					color = color.substring(0, 7);
+					str += 'color:' + color + ';';
+				}
+				
+				if (fontSize != null)
+				{
+					str += 'font-size:' + fix1Digit(fontSize * scale) + 'px;';
 				}
 				
 				str += '">';
 				openBlockTags.push('li');
-				str += '<span style="font-size:' + defaultFontSize + 'px;';
+				str += '<span style="';
 				openBlockTags.push('span');
 			}
 			
@@ -4048,34 +4099,34 @@ LucidImporter = {};
 					jc = 'flex-end';
 				}
 				
-				str += 'display: flex; justify-content: ' + jc + '; text-align: ' + tmp + '; align-items: baseline; font-size: 0; line-height: 1;';
+				str += 'display: flex; justify-content: ' + jc + '; text-align: ' + tmp + '; align-items: baseline; font-size: 0; line-height: 1.25;';
 			}
 			
 			if (styles['il'])
 			{
-				str += 'margin-left: ' + Math.max(0, Math.round(styles['il'].v * scale - (listActive? 28 : 0))) + 'px;';
+				str += 'margin-left: ' + Math.max(0, fix1Digit(styles['il'].v * scale - (listActive? 28 : 0))) + 'px;';
 			}
 
 			if (styles['ir'])
 			{
-				str += 'margin-right: ' + Math.round(styles['ir'].v * scale) + 'px;';
+				str += 'margin-right: ' + fix1Digit(styles['ir'].v * scale) + 'px;';
 			}
 
 			if (styles['mt'])
 			{
-				str += 'margin-top: ' + Math.round(styles['mt'].v * scale) + 'px;';
+				str += 'margin-top: ' + fix1Digit(styles['mt'].v * scale) + 'px;';
 			}
 
 			if (styles['mb'])
 			{
-				str += 'margin-bottom: ' + Math.round(styles['mb'].v * scale) + 'px;';
+				str += 'margin-bottom: ' + fix1Digit(styles['mb'].v * scale) + 'px;';
 			}
 
-			str += '">';
+			str += 'margin-top: -2px;">';
 			
 			if (!listActive)
 			{
-				str += '<span style="font-size:' + defaultFontSize + 'px;">';
+				str += '<span>';// Is this needed?
 				openBlockTags.push('span');
 			}
 			
@@ -4106,7 +4157,7 @@ LucidImporter = {};
 			openTags.push('span');
 			tagCount++;
 
-			str += 'font-size:' + (styles['s']? Math.floor(styles['s'].v * scale) : defaultFontSize) + 'px;';
+			str += 'font-size:' + (styles['s']? fix1Digit(styles['s'].v * scale) : defaultFontSize) + 'px;';
 
 			if (styles['c'])
 			{
@@ -4199,6 +4250,12 @@ LucidImporter = {};
 			if (listActive)
 			{
 				str = str.trim();
+			}
+			
+			//If an endTag is called with no open tags, add a dummy startTag to have a font size
+			if (openTags.length == 0 && str.length > 0)
+			{
+				str = startTag({dummy: 1}) + str;
 			}
 			
 			str = str.replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -4321,7 +4378,7 @@ LucidImporter = {};
 		{
 			if (curE != maxE)
 			{
-				html += txt.substring(curE, maxE);
+				html += startTag({dummy: 1}) + endTag(txt, curE, maxE);
 			}
 			
 			html += endBlockTag(true); 
@@ -4400,7 +4457,7 @@ LucidImporter = {};
 				{
 					for (var i = 0; i < m.length; i++)
 					{
-						if (m[i].s > 0 || (m[i].e != null && m[i].e < txt.length) || m[i].n == 't' || m[i].n == 'ac')
+						if (m[i].s > 0 || (m[i].e != null && m[i].e < txt.length) || m[i].n == 't' || m[i].n == 'ac' || m[i].n == 'lk')
 						{
 							isLastLblHTML = true;
 							break;
@@ -4481,6 +4538,20 @@ LucidImporter = {};
 			if (properties.Title.m != null)
 			{
 				return properties.Title.m;
+			}
+		}
+		else if (properties.State != null)
+		{
+			if (properties.State.m != null)
+			{
+				return properties.State.m;
+			}
+		}
+		else if (properties.Note != null)
+		{
+			if (properties.Note.m != null)
+			{
+				return properties.Note.m;
 			}
 		}
 		
@@ -4658,7 +4729,7 @@ LucidImporter = {};
 					{
 						isV = true;
 						
-						return 'fontSize=' + Math.floor(currM.v * scale) + ';';
+						return 'fontSize=' + fix1Digit(currM.v * scale) + ';';
 					}
 				}
 				i++;
@@ -4723,23 +4794,6 @@ LucidImporter = {};
 		}
 	};
 	
-	function getLinkFromM(m)
-	{
-		if (m != null)
-		{
-			for (var i = 0; i < m.length; i++)
-			{
-				if (m[i].n == 'lk' && m[i].v != null &&
-					m[i].v.length > 0)
-				{
-					return getLink(m[i].v[0]);
-				}
-			}
-		}
-		
-		return null;
-	}
-
 	function getFontColor(properties)
 	{
 		//adds font color
@@ -4914,7 +4968,7 @@ LucidImporter = {};
 				{
 					if (currM.n == 'il')
 					{
-						return 'spacingLeft=' + currM.v * scale + ';';
+						return 'spacingLeft=' + fix1Digit(currM.v * scale) + ';';
 					}
 					/*else
 					{
@@ -4955,7 +5009,7 @@ LucidImporter = {};
 					{
 						isIR = true;
 						
-						return 'spacingRight=' + currM.v * scale + ';';
+						return 'spacingRight=' + fix1Digit(currM.v * scale) + ';';
 					}
 				}
 				
@@ -4985,7 +5039,7 @@ LucidImporter = {};
 					if (currM.v != null)
 					{
 						isMT = true;
-						return 'spacingTop=' + currM.v * scale + ';';
+						return 'spacingTop=' + fix1Digit(currM.v * scale) + ';';
 					}
 				}
 				
@@ -5015,7 +5069,7 @@ LucidImporter = {};
 					if (currM.v != null)
 					{
 						isMB = true;
-						return 'spacingBottom=' + currM.v * scale + ';';
+						return 'spacingBottom=' + fix1Digit(currM.v * scale) + ';';
 					}
 				}
 				
@@ -5031,7 +5085,7 @@ LucidImporter = {};
 		//adds global spacing
 		if (typeof properties.InsetMargin === 'number')
 		{
-				return 'spacing=' + Math.max(0, Math.round(parseInt(properties.InsetMargin) * scale)) + ';';
+			return 'spacing=' + Math.max(0, fix1Digit((properties.InsetMargin) * scale)) + ';';
 		}
 	
 		return '';
@@ -5139,7 +5193,7 @@ LucidImporter = {};
 			{
 				if (properties.Rounding > 0)
 				{
-					return 'rounded=1;absoluteArcSize=1;arcSize=' + Math.round(properties.Rounding * scale) + ';';
+					return 'rounded=1;absoluteArcSize=1;arcSize=' + fix1Digit(properties.Rounding * scale) + ';';
 				}
 			}
 //			else if (properties.Rounding == null)
@@ -5289,44 +5343,44 @@ LucidImporter = {};
 		// Stroke style
 		if (properties.StrokeStyle == 'dotted')
 		{
-			return 'dashed=1;dashPattern=1 4;';
+			return 'dashed=1;fixDash=1;dashPattern=1 4;';
 		}
 		else if (properties.StrokeStyle == 'dashdot')
 		{
-			return 'dashed=1;dashPattern=10 5 1 5;';
+			return 'dashed=1;fixDash=1;dashPattern=10 5 1 5;';
 		}
 		else if (properties.StrokeStyle == 'dashdotdot')
 		{
-			return 'dashed=1;dashPattern=10 5 1 5 1 5;';
+			return 'dashed=1;fixDash=1;dashPattern=10 5 1 5 1 5;';
 		}
 		else if (properties.StrokeStyle == 'dotdotdot')
 		{
-			return 'dashed=1;dashPattern=1 2;';
+			return 'dashed=1;fixDash=1;dashPattern=1 2;';
 		}
 		else if (properties.StrokeStyle == 'longdash')
 		{
-			return 'dashed=1;dashPattern=16 6;';
+			return 'dashed=1;fixDash=1;dashPattern=16 6;';
 		}
 		else if (properties.StrokeStyle == 'dashlongdash')
 		{
-			return 'dashed=1;dashPattern=10 6 16 6;';
+			return 'dashed=1;fixDash=1;dashPattern=10 6 16 6;';
 		}
 		else if (properties.StrokeStyle == 'dashed24')
 		{
-			return 'dashed=1;dashPattern=3 8;';
+			return 'dashed=1;fixDash=1;dashPattern=3 8;';
 		}
 		else if (properties.StrokeStyle == 'dashed32')
 		{
-			return 'dashed=1;dashPattern=6 5;';
+			return 'dashed=1;fixDash=1;dashPattern=6 5;';
 		}
 		else if (properties.StrokeStyle == 'dashed44')
 		{
-			return 'dashed=1;dashPattern=8 8;';
+			return 'dashed=1;fixDash=1;dashPattern=8 8;';
 		}
 		else if (properties.StrokeStyle != null && properties.
 			StrokeStyle.substring(0, 6) == 'dashed')
 		{
-			return 'dashed=1;';
+			return 'dashed=1;fixDash=1;';
 		} 
 		
 		return '';
@@ -5334,7 +5388,7 @@ LucidImporter = {};
 	
 	function getStrokeWidth(properties)
 	{
-		return properties.LineWidth != null? createStyle(mxConstants.STYLE_STROKEWIDTH, Math.round(parseFloat(properties.LineWidth) * scale), '1') : '';
+		return properties.LineWidth != null? createStyle(mxConstants.STYLE_STROKEWIDTH, fix1Digit(parseFloat(properties.LineWidth) * scale), '1') : '';
 	}
 	
 	function getImage(properties, action, url)
@@ -5395,16 +5449,6 @@ LucidImporter = {};
 		{
 			graph.setAttributeForCell(cell, 'link', getLink(p.Link[0]));
 		}
-		//If the text has a link, it will be handled by html labels
-		/*else if (p.Text != null)
-		{
-			var link = getLinkFromM(getTextM(p.Text));
-			
-			if (link != null)
-			{
-				graph.setAttributeForCell(cell, 'link', link);
-			}
-		}*/
 		
 		replacePlaceholders(cell, graph);
 		
@@ -5556,6 +5600,7 @@ LucidImporter = {};
 					{
 						cell.style += 'rounded=0;';
 					}
+					var isCurved = false;
 					
 					if (p.Shape != 'diagonal')
 					{
@@ -5581,6 +5626,7 @@ LucidImporter = {};
 							if (p.Shape == 'curve')
 							{
 								cell.style += 'curved=1;';
+								isCurved = true;
 							}
 						}
 					}
@@ -5631,7 +5677,7 @@ LucidImporter = {};
 					}
 
 					var waypoints = p.ElbowControlPoints != null && p.ElbowControlPoints.length > 0? p.ElbowControlPoints : 
-						(p.BezierJoints != null && p.BezierJoints.length > 0? p.BezierJoints : p.Joints);
+						(isCurved && p.BezierJoints != null && p.BezierJoints.length > 0? p.BezierJoints : p.Joints);
 					
 					if (waypoints != null)
 					{
@@ -5750,7 +5796,12 @@ LucidImporter = {};
     	}
 	    
 	    handleTextRotation(v, p);
-	    
+
+	    if (p.Hidden)
+		{
+			v.visible = false;
+		}
+		
 	    return v;
 	};
 	
@@ -5804,6 +5855,11 @@ LucidImporter = {};
 			}
 		}
 		
+		if (obj.Hidden)
+		{
+			e.visible = false;
+		}
+		
 		return e;
 	}
 
@@ -5843,7 +5899,7 @@ LucidImporter = {};
 			{
 				if (obj.Value.m[i].n == 's')
 				{
-					size = scale * parseFloat(obj.Value.m[i].v);
+					size = fix1Digit(scale * parseFloat(obj.Value.m[i].v));
 				}
 				else if (obj.Value.m[i].n == 'c')
 				{
@@ -6076,12 +6132,14 @@ LucidImporter = {};
 				{
 					for (var key in g.Generators)
 					{
-						//TODO We don't support any generators currently, so probably we should mark any generator as unknow shape
 						if (g.Generators[key].ClassName == 'OrgChart2018')
 						{
 							LucidImporter.hasUnknownShapes = true;
-							console.log('Lucid diagram has an Org Chart!');
-							//createOrgChart(obj, graph, lookup, queue);
+							createOrgChart(key, g.Generators[key], g.Data, graph, lookup);
+						}
+						else
+						{
+							LucidImporter.hasUnknownShapes = true;
 						}
 					}
 				}
@@ -6106,8 +6164,11 @@ LucidImporter = {};
 						if (obj.GeneratorData.p.ClassName == 'OrgChart2018')
 						{
 							LucidImporter.hasUnknownShapes = true;
-							console.log('Lucid diagram has an Org Chart!');
-							//createOrgChart(obj, graph, lookup, queue);
+							createOrgChart(obj.GeneratorData.id, obj.GeneratorData.p, obj.GeneratorData.gs, graph, lookup);
+						}
+						else
+						{
+							LucidImporter.hasUnknownShapes = true;
 						}
 					}
 					
@@ -6185,6 +6246,12 @@ LucidImporter = {};
 				var src = (p.Endpoint1.Block != null) ? lookup[p.Endpoint1.Block] : null;
 				var trg = (p.Endpoint2.Block != null) ? lookup[p.Endpoint2.Block] : null;
 				var e = createEdge(obj, graph, src, trg);
+
+				if ((p.Endpoint1 && p.Endpoint1.Line) || (p.Endpoint2 && p.Endpoint2.Line))
+				{
+					console.log('Edge to Edge case');
+					LucidImporter.hasUnknownShapes = true;
+				}
 				
 				if (src == null && p.Endpoint1 != null)
 				{
@@ -6487,6 +6554,8 @@ LucidImporter = {};
 		LucidImporter.globalProps = {};
 		LucidImporter.pageIdsMap = {};
 		LucidImporter.hasUnknownShapes = false;
+		LucidImporter.hasOrgChart = false;
+		LucidImporter.hasTimeLine = false;
 		var xml = ['<?xml version=\"1.0\" encoding=\"UTF-8\"?>', '<mxfile>'];
 		
 		if (advImpConfig && advImpConfig.transparentEdgeLabels)
@@ -6517,6 +6586,7 @@ LucidImporter = {};
 			{
 				var pg = obj.Pages[id];
 				pg.id = id;
+				pg.Data = obj.Data;
 				pages.push(pg);
 			}
 			
@@ -7181,7 +7251,7 @@ LucidImporter = {};
 			case 'AndroidDevice' :
 				if (p.AndroidDeviceName != null)
 				{
-					
+					var rotation = getRotation(p, a, v);
 					v.style = "fillColor=#000000;strokeColor=#000000;";
 					var background = null;
 					var keyboard = null;
@@ -7190,35 +7260,36 @@ LucidImporter = {};
 					if (p.AndroidDeviceName == 'Tablet' || p.AndroidDeviceName == 'Mini Tablet' ||  (p.AndroidDeviceName == 'custom' && p.CustomDeviceType == 'Tablet'))
 					{
 						v.style += "shape=mxgraph.android.tab2;"
-						background = new mxCell('', new mxGeometry(w * 0.112, h * 0.077, w * 0.77, h * 0.85), '');
+						background = new mxCell('', new mxGeometry(0.112, 0.077, w * 0.77, h * 0.85), rotation);
 						
 						if (p.KeyboardShown)
 						{
-							keyboard = new mxCell('', new mxGeometry(w * 0.112, h * 0.727, w * 0.77, h * 0.2), 'shape=mxgraph.android.keyboard;');
+							keyboard = new mxCell('', new mxGeometry(0.112, 0.727, w * 0.77, h * 0.2), 'shape=mxgraph.android.keyboard;' + rotation);
 						}
 
 						if (!p.FullScreen)
 						{
-							statusBar = new mxCell('', new mxGeometry(w * 0.112, h * 0.077, w * 0.77, h * 0.03), 'shape=mxgraph.android.statusBar;strokeColor=#33b5e5;fillColor=#000000;fontColor=#33b5e5;fontSize=' + h * 0.015 + ';');
+							statusBar = new mxCell('', new mxGeometry(0.112, 0.077, w * 0.77, h * 0.03), 'shape=mxgraph.android.statusBar;strokeColor=#33b5e5;fillColor=#000000;fontColor=#33b5e5;fontSize=' + h * 0.015 + ';' + rotation);
 						}
 					}
 					else if (p.AndroidDeviceName == 'Large Phone' || p.AndroidDeviceName == 'Phone' ||  (p.AndroidDeviceName == 'custom' && p.CustomDeviceType == 'Phone'))
 					{
 						v.style += "shape=mxgraph.android.phone2;"
-						background = new mxCell('', new mxGeometry(w * 0.04, h * 0.092, w * 0.92, h * 0.816), '');
+						background = new mxCell('', new mxGeometry(0.04, 0.092, w * 0.92, h * 0.816), rotation);
 						
 						if (p.KeyboardShown)
 						{
-							keyboard = new mxCell('', new mxGeometry(w * 0.04, h * 0.708, w * 0.92, h * 0.2), 'shape=mxgraph.android.keyboard;');
+							keyboard = new mxCell('', new mxGeometry(0.04, 0.708, w * 0.92, h * 0.2), 'shape=mxgraph.android.keyboard;' + rotation);
 						}
 						
 						if (!p.FullScreen)
 						{
-							statusBar = new mxCell('', new mxGeometry(w * 0.04, h * 0.092, w * 0.92, h * 0.03), 'shape=mxgraph.android.statusBar;strokeColor=#33b5e5;fillColor=#000000;fontColor=#33b5e5;fontSize=' + h * 0.015 + ';');
+							statusBar = new mxCell('', new mxGeometry(0.04, 0.092, w * 0.92, h * 0.03), 'shape=mxgraph.android.statusBar;strokeColor=#33b5e5;fillColor=#000000;fontColor=#33b5e5;fontSize=' + h * 0.015 + ';' + rotation);
 						}
 					}
 					
 					background.vertex = true;
+					background.geometry.relative = true;
 					v.insert(background);
 					
 					if (p.Scheme == "Dark")
@@ -7233,12 +7304,14 @@ LucidImporter = {};
 					if (keyboard != null)
 					{
 						keyboard.vertex = true;
+						keyboard.geometry.relative = true;
 						v.insert(keyboard);
 					}
 
 					if (statusBar != null)
 					{
 						statusBar.vertex = true;
+						statusBar.geometry.relative = true;
 						v.insert(statusBar);
 					}
 				}
@@ -10419,7 +10492,12 @@ LucidImporter = {};
 		    	v.style += addAllStyles(v.style, p, a, v);
 
 				break;
-				
+			case 'fpWall' :
+				v.style += 'labelPosition=center;verticalAlign=bottom;verticalLabelPosition=top;';
+				v.value = convertText(p);
+				v.style += addAllStyles(v.style, p, a, v, isLastLblHTML);
+				v.style = v.style.replace('rotation=180;', ''); //180 rotation cause the labels to be upside down which doesn't match Lucid 
+			break;
 			case 'fpDoubleDoor' :
 				v.style += 'shape=mxgraph.floorplan.doorDouble;';
 
@@ -12229,7 +12307,7 @@ LucidImporter = {};
 						var extH = p.ExtraHeightSet && i == 1? (p.ExtraHeight * scale) : 0;
 						
 						var curH = Math.round((h - th) * itemH) + extH;
-						item[i] = new mxCell('', new mxGeometry(0, curY, w, curH), 'part=1;html=1;resizeHeight=0;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+						item[i] = new mxCell('', new mxGeometry(0, curY, w, curH), 'part=1;html=1;whiteSpace=wrap;resizeHeight=0;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
 						curY += curH;
 						item[i].vertex = true;
 						v.insert(item[i]);
@@ -12285,7 +12363,7 @@ LucidImporter = {};
 				{
 					var itemH = 0;
 					var curH = p['Field' + (i + 1) + '_h'] * scale;
-					item[i] = new mxCell('', new mxGeometry(0, curY, w, curH), 'part=1;resizeHeight=0;strokeColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;');
+					item[i] = new mxCell('', new mxGeometry(0, curY, w, curH), 'part=1;resizeHeight=0;strokeColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;');
 					curY += curH;
 					item[i].vertex = true;
 					v.insert(item[i]);
@@ -12349,7 +12427,7 @@ LucidImporter = {};
 				{
 					var itemH = 0;
 
-					key[i] = new mxCell('', new mxGeometry(0, currH, keyW, p['Key' + (i + 1) + '_h'] * scale), 'strokeColor=none;part=1;resizeHeight=0;align=center;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;');
+					key[i] = new mxCell('', new mxGeometry(0, currH, keyW, p['Key' + (i + 1) + '_h'] * scale), 'strokeColor=none;part=1;resizeHeight=0;align=center;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;');
 					key[i].vertex = true;
 					v.insert(key[i]);
 					key[i].style += st +
@@ -12369,7 +12447,7 @@ LucidImporter = {};
 
 					key[i].value = convertText(p['Key' + (i + 1)]);
 					
-					item[i] = new mxCell('', new mxGeometry(keyW, currH, w - keyW, p['Field' + (i + 1) + '_h'] * scale), 'shape=partialRectangle;top=0;right=0;bottom=0;part=1;resizeHeight=0;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;');
+					item[i] = new mxCell('', new mxGeometry(keyW, currH, w - keyW, p['Field' + (i + 1) + '_h'] * scale), 'shape=partialRectangle;top=0;right=0;bottom=0;part=1;resizeHeight=0;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;');
 					item[i].vertex = true;
 					v.insert(item[i]);
 					item[i].style += st +
@@ -12435,7 +12513,7 @@ LucidImporter = {};
 				{
 					var itemH = 0;
 
-					key[i] = new mxCell('', new mxGeometry(0, currH, keyW, p['Field' + (i + 1) + '_h'] * scale), 'strokeColor=none;part=1;resizeHeight=0;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+					key[i] = new mxCell('', new mxGeometry(0, currH, keyW, p['Field' + (i + 1) + '_h'] * scale), 'strokeColor=none;part=1;resizeHeight=0;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;');
 					key[i].vertex = true;
 					v.insert(key[i]);
 					key[i].style += st +
@@ -12456,7 +12534,7 @@ LucidImporter = {};
 					key[i].value = convertText(p['Field' + (i + 1)]);
 					key[i].style += addAllStyles(key[i].style, p, a, key[i], isLastLblHTML);
 					
-					item[i] = new mxCell('', new mxGeometry(keyW, currH, w - keyW, p['Type' + (i + 1) + '_h'] * scale), 'shape=partialRectangle;top=0;right=0;bottom=0;part=1;resizeHeight=0;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+					item[i] = new mxCell('', new mxGeometry(keyW, currH, w - keyW, p['Type' + (i + 1) + '_h'] * scale), 'shape=partialRectangle;top=0;right=0;bottom=0;part=1;resizeHeight=0;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;');
 					item[i].vertex = true;
 					v.insert(item[i]);
 					item[i].style += st +
@@ -12528,7 +12606,7 @@ LucidImporter = {};
 				{
 					var itemH = 0;
 
-					key[i] = new mxCell('', new mxGeometry(0, currH, keyW, p['Key' + (i + 1) + '_h'] * scale), 'strokeColor=none;part=1;resizeHeight=0;align=center;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+					key[i] = new mxCell('', new mxGeometry(0, currH, keyW, p['Key' + (i + 1) + '_h'] * scale), 'strokeColor=none;part=1;resizeHeight=0;align=center;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;');
 					key[i].vertex = true;
 					v.insert(key[i]);
 					key[i].style += st +
@@ -12549,7 +12627,7 @@ LucidImporter = {};
 					key[i].value = convertText(p['Key' + (i + 1)]);
 					key[i].style += addAllStyles(key[i].style, p, a, key[i], isLastLblHTML);
 					
-					item[i] = new mxCell('', new mxGeometry(keyW, currH, w - keyW - typeW, p['Field' + (i + 1) + '_h'] * scale), 'shape=partialRectangle;top=0;right=0;bottom=0;part=1;resizeHeight=0;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+					item[i] = new mxCell('', new mxGeometry(keyW, currH, w - keyW - typeW, p['Field' + (i + 1) + '_h'] * scale), 'shape=partialRectangle;top=0;right=0;bottom=0;part=1;resizeHeight=0;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;');
 					item[i].vertex = true;
 					v.insert(item[i]);
 					item[i].style += st +
@@ -12570,7 +12648,7 @@ LucidImporter = {};
 					item[i].value = convertText(p['Field' + (i + 1)]);
 					item[i].style += addAllStyles(item[i].style, p, a, item[i], isLastLblHTML);
 					
-					type[i] = new mxCell('', new mxGeometry(w - typeW, currH, typeW, p['Type' + (i + 1) + '_h'] * scale), 'shape=partialRectangle;top=0;right=0;bottom=0;part=1;resizeHeight=0;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+					type[i] = new mxCell('', new mxGeometry(w - typeW, currH, typeW, p['Type' + (i + 1) + '_h'] * scale), 'shape=partialRectangle;top=0;right=0;bottom=0;part=1;resizeHeight=0;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;');
 					type[i].vertex = true;
 					v.insert(type[i]);
 					type[i].style += st +
@@ -12856,7 +12934,7 @@ LucidImporter = {};
 				break;
 			case 'TimelineBlock':
 			//TODO Timeline shapes are postponed, this code is a work-in-progress
-				try
+			/*	try
 				{
 					var daysMap = {
 						'Sunday': 0,
@@ -12928,10 +13006,12 @@ LucidImporter = {};
 				{
 					console.log(e); //Ignore
 				}
-				break;
+				break;*/
 			case 'TimelineMilestoneBlock':
-				break;
+			//	break;
 			case 'TimelineIntervalBlock':
+				LucidImporter.hasTimeLine = true;
+				LucidImporter.hasUnknownShapes = true;
 				break;
 			case 'FreehandBlock':
 				try
@@ -13318,6 +13398,11 @@ LucidImporter = {};
 				
 		handleTextRotation(v, p);
 		
+		if (p.Hidden)
+		{
+			v.visible = false;
+		}
+		
 	    return v;
 	};
 	
@@ -13365,94 +13450,244 @@ LucidImporter = {};
 		}
 	};
 	
-	//TODO A lot of work is still needed to build the cell, do the layout, ...
-	function createOrgChart(obj, graph, lookup, queue)
+	function createOrgChart(objId, props, data, graph, lookup)
 	{
+		function getLineTxtStyle(cellDefaultStyle, fieldName)
+		{
+			var style = '';
+			
+			try
+			{
+				for (var i = 0; i < cellDefaultStyle.text.length; i++)
+				{
+					var item = cellDefaultStyle.text[i];
+					
+					if (item[0] == 't_' + fieldName)
+					{
+						for (var key in item[1])
+						{
+							var val = item[1][key];
+							
+							if (!val) continue;
+							
+							switch(key)
+							{
+								case 'font':
+									style += mapFontFamily(val);
+								break;
+								case 'bold':
+									style += 'font-weight: bold;';
+								break;
+								case 'italic':
+									style += 'font-style: italic;';
+								break;
+								case 'underline':
+									style += 'text-decoration: underline;';
+								break;
+								case 'size':
+									style += 'font-size:' + fix1Digit(val * scale) + 'px;';
+								break;
+								case 'color':
+									style += 'color:' + rgbToHex(val).substring(0, 7) + ';';
+								break;
+								case 'fill':
+									style += 'background-color:' + rgbToHex(val).substring(0, 7) + ';';
+								break;
+								case 'align':
+									style += 'text-align:' + val + ';';
+								break;
+							}
+						}
+						
+						break;
+					}
+				}
+			}
+			catch(e){}
+			
+			return style;
+		};
+		
 		try
 		{
-			var chartType = obj.GeneratorData.p.OrgChartBlockType;
-			var fields = obj.GeneratorData.p.FieldNames;
-			var layoutSettings = obj.GeneratorData.p.LayoutSettings;
-			var cellDefaultStyle = obj.GeneratorData.p.BlockItemDefaultStyle;
-			var edgeDefaultStyle = obj.GeneratorData.p.EdgeItemDefaultStyle;
-			var chartDataSrc = obj.GeneratorData.gs.Items.n;
-			var chartData = [];
+			//TODO Cell specific styles and chartType defaults
+			var defImg = 'https://cdn4.iconfinder.com/data/icons/basic-user-interface-elements/700/user-account-profile-human-avatar-face-head--128.png';
+			var chartType = props.OrgChartBlockType;
+			var pos = props.Location;
+			var x = pos.x * scale, y = pos.y * scale;
+			var chartGroup = new mxCell('', new mxGeometry(x, y, 200, 100), 'group');
+			chartGroup.vertex = true;
+			graph.addCell(chartGroup);
+			var fields = props.FieldNames;
+			var layoutSettings = props.LayoutSettings;
+			var cellDefaultStyle = props.BlockItemDefaultStyle;
+			var edgeDefaultStyle = props.EdgeItemDefaultStyle;
 			var parents = {};
-			var idPrefix = Date.now() + '_';
+			var idPrefix = (objId || Date.now()) + '_';
 			
-			for (var i = 0; i < chartDataSrc.length; i++)
+			if (chartType == 4)
 			{
-				var d = chartDataSrc[i];
-				chartData.push(d.f);
-				var id = idPrefix + d.pk;
-				parents[id] = d.ie;
-				var cell = new mxCell('', new mxGeometry(0, 0, 200, 100), '');
+				cellDefaultStyle.props.LineWidth = 0;
+			}
+			
+			var txtStyles = [], marginW = 25, marginH = 40, imgSize = 54, hasImage = true, cellStyle = addAllStyles('', cellDefaultStyle.props, {}, chartGroup, true);
+			
+			if (chartType == 0) //Image top-center
+			{
+				cellStyle += 'spacingTop=' + imgSize + ';imageWidth=' + imgSize + ';imageHeight=' + imgSize + ';imageAlign=center;imageVerticalAlign=top;image=';
+				marginH += imgSize;
+			}
+			else if (chartType == 1 || chartType == 2) //Image to top-left (or outsize top-left which we don't support)
+			{
+				cellStyle += 'spacingLeft=' + imgSize + ';imageWidth=' + (imgSize - 4) + ';imageHeight=' + (imgSize - 4) + ';imageAlign=left;imageVerticalAlign=top;image=';
+				marginW += imgSize;
+			}
+			else if (chartType >= 3)
+			{
+				hasImage = false;
+			}
+			
+			for (var j = 0; j < fields.length; j++)
+			{
+				txtStyles.push(getLineTxtStyle(cellDefaultStyle, fields[j]));
+			}
+			
+			
+			function createNode(pk, pId, dObj)
+			{
+				var id = idPrefix + pk;
+				parents[id] = pId;
+				var lbl = '';
+				
+				for (var j = 0; j < fields.length; j++)
+				{
+					lbl += '<div style="' + txtStyles[j] + '">' + 
+							 (dObj[fields[j]] || '&nbsp;') + '</div>';
+				}
+				
+				var size = mxUtils.getSizeForString(lbl);
+				//TODO Is image always in Image/018__ImageUrl__?
+				var imgUrl = dObj['Image'] || dObj['018__ImageUrl__'] || defImg;
+				
+				if (LucidImporter.imgSrcRepl != null)
+				{
+					for (var i = 0; i < LucidImporter.imgSrcRepl.length; i++)
+					{
+						var repl = LucidImporter.imgSrcRepl[i];
+						imgUrl = imgUrl.replace(repl.searchVal, repl.replVal);
+					}
+				}
+				
+				var cell = new mxCell(lbl, new mxGeometry(0, 0, size.width + marginW, size.height + marginH), 
+									cellStyle + (hasImage? imgUrl : ''));
 			    cell.vertex = true;
 				lookup[id] = cell;
-				queue.push({id: id});
+				graph.addCell(cell, chartGroup);	
+			};
+			
+			if (data.Items)
+			{
+				var chartDataSrc = data.Items.n;
+				
+				for (var i = 0; i < chartDataSrc.length; i++)
+				{
+					var d = chartDataSrc[i];
+					createNode(d.pk, d.ie[0]? d.ie[0].nf : null, d.f);
+				}
+			}
+			else
+			{
+				var dataId, derivative = props.ContractMap.derivative;
+				
+				for (var i = 0; i < derivative.length; i++)
+				{
+					if (derivative[i].type == 'ForeignKeyGraph')
+					{
+						dataId = derivative[i].c[0].id;
+						dataId = dataId.substr(0, dataId.indexOf('_'));
+					}
+					else if (derivative[i].type == 'MappedGraph')
+					{
+						for (var j = 0; j < fields.length; j++)
+						{
+							fields[j] = derivative[i].nfs[fields[j]] || fields[j];
+						}
+					}
+				}
+				
+				var chartDataSrc, foreignKey, primaryKey;
+				
+				for (var key in data)
+				{
+					var d = data[key].Collections;
+					
+					for (var key2 in d)
+					{
+						if (key2 == dataId)
+						{
+							chartDataSrc = d[key2].Items;
+						}
+						else if (d[key2].Properties.ForeignKeys && d[key2].Properties.ForeignKeys[0])
+						{
+							foreignKey = d[key2].Properties.ForeignKeys[0].SourceFields[0];
+							primaryKey = d[key2].Properties.Schema.PrimaryKey[0];
+						}
+					}
+					
+					if (chartDataSrc)
+					{
+						break;
+					}
+				}
+				
+				for (var pk in chartDataSrc)
+				{
+					var d = chartDataSrc[pk];
+					createNode(d[primaryKey], d[foreignKey], d);
+				}
 			}
 			
 			for (var key in parents)
 			{
 				var p = parents[key];
 				
-				if (p[0] && p[0].nf)
+				if (p)
 				{
-					var src = lookup[idPrefix + p[0].nf];
+					var src = lookup[idPrefix + p];
 					var trg = lookup[key];
 					var e = new mxCell('', new mxGeometry(0, 0, 100, 100), '');
 					e.geometry.relative = true;
 					e.edge = true;
-					graph.addCell(e, null, null, src, trg);
+					updateCell(e, edgeDefaultStyle.props, graph, null, null, true);
+					graph.addCell(e, chartGroup, null, src, trg);
 				}
 			}
+
+			//TODO Support other layout options like LayoutType
+			var levelSps = layoutSettings.NodeSpacing.LevelSeparation * scale;
+			var orgChartLayout = new mxOrgChartLayout(graph, 0, levelSps, layoutSettings.NodeSpacing.NeighborSeparation * scale);
+			orgChartLayout.execute(chartGroup);
 			
-			var chartCells = obj.GeneratorData.povs;
+			//Find out the group size and
+			var maxX = 0, maxY = 0;
 			
-			if (chartCells != null)
+			for (var i = 0; chartGroup.children && i < chartGroup.children.length; i++)
 			{
-				for (var key in chartCells)
-				{
-					var items = chartCells[key];
-					
-					for (var i = 0; i < items.length; i++)
-					{
-						var item = JSON.parse(items[i]);
-						console.log(item);
-						if (key.indexOf('-line') > 0) 
-						{
-							//No Endpoint1 so not useful as is
-//							queue.push({
-//								id: key + i,
-//								IsLine: true,
-//								Action: {
-//									Properties: item
-//								}
-//							});
-						}
-						else
-						{
-							//Sometimes it has no boundingBox as well as being not in sync
-//							var mainKey = Object.keys(item)[0];
-//							var constItem = {
-//								"id": key + i,
-//								"IsBlock": true,
-//								"Action": {
-//									"Action": "CreateBlock",
-//									"Class": "DefaultSquareBlock",
-//									"Properties": item
-//								}
-//							};
-//							
-//							constItem.Action.Properties.Text = item[mainKey];
-//							constItem.Action.Properties.TextVAlign = item[mainKey + '_VAlign'];
-//							lookup[key + i] = createVertex(constItem, graph);
-//							queue.push(constItem);
-						}
-					}
-				}
+				var geo = chartGroup.children[i].geometry;
+				maxX = Math.max(maxX, geo.x + geo.width);
+				maxY = Math.max(maxY, geo.y + geo.height); 
 			}
+			
+			var gGeo = chartGroup.geometry;
+			gGeo.y -= levelSps; //Our org chart layout leave a space on top
+			gGeo.width = maxX;
+			gGeo.height = maxY;
 		}
-		catch(e){}
+		catch(e)
+		{
+			LucidImporter.hasUnknownShapes = true;
+			LucidImporter.hasOrgChart = true;
+			console.log(e);
+		}
 	};
 })();

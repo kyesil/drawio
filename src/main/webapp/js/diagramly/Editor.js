@@ -351,7 +351,8 @@
         {name: 'cloneable', dispName: 'Cloneable', type: 'bool', defVal: true},
         {name: 'deletable', dispName: 'Deletable', type: 'bool', defVal: true},
         {name: 'orthogonalLoop', dispName: 'Loop Routing', type: 'bool', defVal: false},
-        {name: 'noJump', dispName: 'No Jumps', type: 'bool', defVal: false}
+        {name: 'noJump', dispName: 'No Jumps', type: 'bool', defVal: false},
+        {name: 'flowAnimation', dispName: 'Flow Animation', type: 'bool', defVal: false}
 	].concat(Editor.commonProperties);
 
 	/**
@@ -1443,6 +1444,29 @@
 
 		// Workaround for invalid character error in Safari
 		var f = (window.atob && !mxClient.IS_SF) ? atob(base64) : Base64.decode(base64, true);
+		
+		//The new format of embedding diagram XML as embedded file (attachment) is in PDF 1.7
+		if (f.substring(0, 8) == '%PDF-1.7')
+		{
+			var blockStart = f.indexOf('EmbeddedFile'); 
+			
+			if (blockStart > -1)
+			{
+				var streamStart = f.indexOf('stream', blockStart) + 9; //the start of the stream [skipping header check]
+				var fileInfo = f.substring(blockStart, streamStart);
+				
+				if (fileInfo.indexOf('application#2Fvnd.jgraph.mxfile') > 0)
+				{
+					var streamEnd = f.indexOf('endstream', streamStart - 1);
+				
+					return pako.inflateRaw(Graph.stringToArrayBuffer(f.substring(streamStart, streamEnd)), {to: 'string'});
+				}
+			}
+			
+			//Not found
+			return null;
+		}
+		
 		var check = '/Subject (%3Cmxfile';
 		var result = null;
 		var curline = '';
@@ -1786,6 +1810,17 @@
 			if (config.defaultEdgeStyle != null)
 			{
 				Graph.prototype.defaultEdgeStyle = config.defaultEdgeStyle;
+			}
+
+			// Overrides grid steps
+			if (config.gridSteps != null)
+			{
+				var val = parseInt(config.gridSteps);
+				
+				if (!isNaN(val) && val > 0)
+				{
+					mxGraphView.prototype.gridSteps = val;
+				}
 			}
 			
 			if (config.emptyDiagramXml)
@@ -3100,7 +3135,7 @@
 	 */
 	Editor.prototype.exportToCanvas = function(callback, width, imageCache, background, error, limitHeight,
 		ignoreSelection, scale, transparentBackground, addShadow, converter, graph, border, noCrop, grid,
-		keepTheme, exportType)
+		keepTheme, exportType, cells)
 	{
 		try
 		{
@@ -3128,7 +3163,7 @@
 			}
 			
 			this.convertImages(graph.getSvg(null, null, border, noCrop, null, ignoreSelection,
-				null, null, null, addShadow, null, keepTheme, exportType),
+				null, null, null, addShadow, null, keepTheme, exportType, cells),
 				mxUtils.bind(this, function(svgRoot)
 			{
 				try
@@ -3178,13 +3213,13 @@
 									window.setTimeout(function()
 									{
 										ctx.drawImage(img, 0, 0);
-										callback(canvas);
+										callback(canvas, svgRoot);
 									}, 0);
 						   		}
 						   		else
 						   		{
 						   			ctx.drawImage(img, 0, 0);
-						   			callback(canvas);
+						   			callback(canvas, svgRoot);
 						   		}
 						    };
 						    
@@ -5071,7 +5106,7 @@
 					{
 						if (colorset['gradient'] != null)
 						{
-							if (mxClient.IS_IE && (mxClient.IS_QUIRKS || document.documentMode < 10))
+							if (mxClient.IS_IE && (document.documentMode < 10))
 							{
 						    	btn.style.filter = 'progid:DXImageTransform.Microsoft.Gradient('+
 				                	'StartColorStr=\'' + colorset['fill'] +
@@ -5327,7 +5362,7 @@
 	/**
 	 * Adds a font to the document.
 	 */
-	Graph.addFont = function(name, url)
+	Graph.addFont = function(name, url, callback)
 	{
 		if (name != null && name.length > 0 && url != null && url.length > 0)
 		{
@@ -5360,10 +5395,27 @@
 					Graph.recentCustomFonts[key] = entry;
 					var head = document.getElementsByTagName('head')[0];
 					
+					if (callback != null)
+					{
+						if (entry.elt.nodeName.toLowerCase() == 'link')
+						{
+							entry.elt.onload = callback;
+							entry.elt.onerror = callback;
+						}
+						else
+						{
+							callback();
+						}
+					}
+						
 					if (head != null)
 					{
 						head.appendChild(entry.elt);
 					}
+				}
+				else if (callback != null)
+				{
+					callback();
 				}
 			}
 		}
@@ -5512,34 +5564,6 @@
 		function setMouseEvent(evt)
 		{
 			mouseEvent = evt;
-			
-			// Workaround for member not found in IE8-
-			try
-			{
-				if (mxClient.IS_QUIRKS || document.documentMode == 7 || document.documentMode == 8)
-				{
-					mouseEvent = document.createEventObject(evt);
-					mouseEvent.type = evt.type;
-					mouseEvent.canBubble = evt.canBubble;
-					mouseEvent.cancelable = evt.cancelable;
-					mouseEvent.view = evt.view;
-					mouseEvent.detail = evt.detail;
-					mouseEvent.screenX = evt.screenX;
-					mouseEvent.screenY = evt.screenY;
-					mouseEvent.clientX = evt.clientX;
-					mouseEvent.clientY = evt.clientY;
-					mouseEvent.ctrlKey = evt.ctrlKey;
-					mouseEvent.altKey = evt.altKey;
-					mouseEvent.shiftKey = evt.shiftKey;
-					mouseEvent.metaKey = evt.metaKey;
-					mouseEvent.button = evt.button;
-					mouseEvent.relatedTarget = evt.relatedTarget;
-				}
-			}
-			catch (e)
-			{
-				// ignores possible event cloning errors
-			}
 		};
 		
 		mxEvent.addListener(this.container, 'mouseenter', setMouseEvent);
@@ -5825,7 +5849,7 @@
 	
 	Graph.prototype.getSvg = function(background, scale, border, nocrop, crisp,
 		ignoreSelection, showText, imgExport, linkTarget, hasShadow,
-		incExtFonts, keepTheme, exportType)
+		incExtFonts, keepTheme, exportType, cells)
 	{
 		var temp = null;
 		
@@ -6619,10 +6643,11 @@
 	mxStencilRegistry.libraries['ios7icons'] = [STENCIL_PATH + '/ios7/icons.xml'];
 	mxStencilRegistry.libraries['ios7ui'] = [SHAPES_PATH + '/ios7/mxIOS7Ui.js', STENCIL_PATH + '/ios7/misc.xml'];
 	mxStencilRegistry.libraries['android'] = [SHAPES_PATH + '/mxAndroid.js', STENCIL_PATH + '/android/android.xml'];
-	mxStencilRegistry.libraries['electrical/miscellaneous'] = [SHAPES_PATH + '/mxElectrical.js', STENCIL_PATH + '/electrical/miscellaneous.xml'];
-	mxStencilRegistry.libraries['electrical/transmission'] = [SHAPES_PATH + '/mxElectrical.js', STENCIL_PATH + '/electrical/transmission.xml'];
-	mxStencilRegistry.libraries['electrical/logic_gates'] = [SHAPES_PATH + '/mxElectrical.js', STENCIL_PATH + '/electrical/logic_gates.xml'];
 	mxStencilRegistry.libraries['electrical/abstract'] = [SHAPES_PATH + '/mxElectrical.js', STENCIL_PATH + '/electrical/abstract.xml'];
+	mxStencilRegistry.libraries['electrical/logic_gates'] = [SHAPES_PATH + '/mxElectrical.js', STENCIL_PATH + '/electrical/logic_gates.xml'];
+	mxStencilRegistry.libraries['electrical/miscellaneous'] = [SHAPES_PATH + '/mxElectrical.js', STENCIL_PATH + '/electrical/miscellaneous.xml'];
+	mxStencilRegistry.libraries['electrical/sources'] = [SHAPES_PATH + '/mxElectrical.js', STENCIL_PATH + '/electrical/signal_sources.xml'];
+	mxStencilRegistry.libraries['electrical/transmission'] = [SHAPES_PATH + '/mxElectrical.js', STENCIL_PATH + '/electrical/transmission.xml'];
 	mxStencilRegistry.libraries['infographic'] = [SHAPES_PATH + '/mxInfographic.js'];
 	mxStencilRegistry.libraries['mockup/buttons'] = [SHAPES_PATH + '/mockup/mxMockupButtons.js'];
 	mxStencilRegistry.libraries['mockup/containers'] = [SHAPES_PATH + '/mockup/mxMockupContainers.js'];
@@ -7135,6 +7160,10 @@
 					// Switches stylesheet for print output in dark mode
 					var temp = null;
 					
+					// Disables dashed printing of flowAnimation
+					var enableFlowAnimation = graph.enableFlowAnimation;
+					graph.enableFlowAnimation = false;
+					
 					if (graph.themes != null && graph.defaultThemeName == 'darkTheme')
 					{
 						temp = graph.stylesheet;
@@ -7144,6 +7173,9 @@
 					
 					// Generates the print output
 					pv.open(null, null, forcePageBreaks, true);
+					
+					// Restores flowAnimation
+					graph.enableFlowAnimation = enableFlowAnimation;
 					
 					// Restores the stylesheet
 					if (temp != null)
@@ -7242,7 +7274,7 @@
 
 					if (tempGraph == null)
 					{
-						tempGraph = editorUi.createTemporaryGraph(graph.stylesheet);//getStylesheet());
+						tempGraph = editorUi.createTemporaryGraph(graph.stylesheet);
 
 						// Restores graph settings that are relevant for printing
 						var pageVisible = true;

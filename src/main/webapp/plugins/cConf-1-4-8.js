@@ -13,15 +13,11 @@ Draw.loadPlugin(function(ui)
 	{
 		var region = urlParams['dataGov'];
 		var urls = {
-			'DRAWIO_LIGHTBOX_URL': 'viewer',
 			'EXPORT_URL': 'export',
 			'PLANT_URL': 'plant',
 			'VSD_CONVERT_URL': 'vsd',
 			'EMF_CONVERT_URL': 'emf',
-			'REALTIME_URL': 'cach',
-			'SAVE_URL': 'save',
-			'OPEN_URL': 'import',
-			'PROXY_URL': 'proxy'
+			'OPEN_URL': 'import'
 		};
 		
 		for (var key in urls)
@@ -33,8 +29,6 @@ Draw.loadPlugin(function(ui)
 				window[key] = '/region-' + urls[key] + '-' + region;
 			}
 		}
-		
-		EditorUi.cacheUrl = window.REALTIME_URL;
 	}
 
 	// Extracts macro data from JSON protocol
@@ -62,6 +56,9 @@ Draw.loadPlugin(function(ui)
 				
 				ui.initComments(macroData.contentId || macroData.custContentId);
 				macroData.diagramDisplayName = data.title;
+				
+				//Fetch notifications
+				ui.fetchAndShowNotification('conf');	
 			}
 		}
 		catch (e)
