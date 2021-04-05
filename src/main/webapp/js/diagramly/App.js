@@ -288,6 +288,13 @@ App.PUSHER_CLUSTER = 'eu';
 App.PUSHER_URL = 'https://js.pusher.com/4.3/pusher.min.js';
 
 /**
+ * Socket.io library 
+ */
+App.SOCKET_IO_URL = window.DRAWIO_BASE_URL + '/js/socket.io/socket.io.min.js';
+App.SIMPLE_PEER_URL = window.DRAWIO_BASE_URL + '/js/socket.io/simplepeer9.10.0.min.js';
+App.SOCKET_IO_SRV = 'http://localhost:3030';
+
+/**
  * Google APIs to load. The realtime API is needed to notify collaborators of conversion
  * of the realtime files, but after Dec 11 it's read-only and hence no longer needed.
  */
@@ -700,6 +707,12 @@ App.main = function(callback, createUi)
 		{
 			// TODO: Check if async loading is fast enough
 			mxscript(App.PUSHER_URL);
+			
+			if (urlParams['rtCursors'] == '1')
+			{
+				mxscript(App.SOCKET_IO_URL);
+				mxscript(App.SIMPLE_PEER_URL);
+			}
 		}
 		
 		// Loads plugins
@@ -5625,7 +5638,7 @@ App.prototype.updateButtonContainer = function()
 		var file = this.getCurrentFile();
 		
 		// Comments
-		if (this.commentsSupported())
+		if (this.commentsSupported() && urlParams['sketch'] != '1')
 		{
 			if (this.commentButton == null)
 			{
@@ -5731,31 +5744,65 @@ App.prototype.updateButtonContainer = function()
 
 App.prototype.fetchAndShowNotification = function(target)
 {
-	target = target || 'online';
-	
-	mxUtils.get(NOTIFICATIONS_URL + '?target=' + target, mxUtils.bind(this, function(req)
+	if (this.fetchingNotif)
 	{
-		if (req.getStatus() >= 200 && req.getStatus() <= 299)
+		return;	
+	}
+	
+	target = target || 'online';
+	var cachedNotifKey = '.notifCache';
+	var cachedNotif = null;
+	
+	var processNotif = mxUtils.bind(this, function(notifs)
+	{
+		notifs = notifs.filter(function(notif)
 		{
-		    var notifs = JSON.parse(req.getText());
-			
-			//Process and sort
-			var lsReadFlag = target + 'NotifReadTS';
-			var lastRead = parseInt(localStorage.getItem(lsReadFlag));
-			
-			for (var i = 0; i < notifs.length; i++)
-			{
-				notifs[i].isNew = (!lastRead || notifs[i].timestamp > lastRead);
-			}
-			
-			notifs.sort(function(a, b)
-			{
-				return b.timestamp - a.timestamp;
-			});
-			
-			this.showNotification(notifs, lsReadFlag);
+			return !notif.targets || notif.targets.indexOf(target) > -1;
+		});
+		
+		var lsReadFlag = target + 'NotifReadTS';
+		var lastRead = parseInt(localStorage.getItem(lsReadFlag));
+				
+		for (var i = 0; i < notifs.length; i++)
+		{
+			notifs[i].isNew = (!lastRead || notifs[i].timestamp > lastRead);
 		}
-	}));
+		
+		this.showNotification(notifs, lsReadFlag);
+	});
+	
+	try
+	{
+		cachedNotif = JSON.parse(localStorage.getItem(cachedNotifKey));
+	}
+	catch(e) {} //Ignore
+	
+	if (cachedNotif == null || cachedNotif.ts + 24 * 60 * 60 * 1000 < Date.now()) //Cache for one day
+	{
+		this.fetchingNotif = true;
+		//Fetch all notifications and store them, then filter client-side
+		mxUtils.get(NOTIFICATIONS_URL, mxUtils.bind(this, function(req)
+		{
+			if (req.getStatus() >= 200 && req.getStatus() <= 299)
+			{
+			    var notifs = JSON.parse(req.getText());
+				
+				//Process and sort
+				notifs.sort(function(a, b)
+				{
+					return b.timestamp - a.timestamp;
+				});
+
+				localStorage.setItem(cachedNotifKey, JSON.stringify({ts: Date.now(), notifs: notifs}));
+				this.fetchingNotif = false;	
+				processNotif(notifs);
+			}
+		}));
+	}
+	else
+	{
+		processNotif(cachedNotif.notifs);
+	}
 };
 
 App.prototype.showNotification = function(notifs, lsReadFlag)
@@ -5801,16 +5848,31 @@ App.prototype.showNotification = function(notifs, lsReadFlag)
 		
 		if (uiTheme == 'min')
 		{
+			this.notificationBtn.style.width = '30px';
 			this.notificationBtn.style.top = '4px';
 		}
 		
-		this.notificationBtn.innerHTML = '<span class="geNotification-count"></span>' +
-										 '<div class="geNotification-bell"' + (uiTheme == 'min'? ' style="opacity: 0.5"' : '') + '>'+
-											'<span class="geBell-top"></span>' + 
-											'<span class="geBell-middle"></span>' +
-											'<span class="geBell-bottom"></span>' +
-											'<span class="geBell-rad"></span>' +
-										 '</div>';
+		var notifCount = document.createElement('span');
+		notifCount.className = 'geNotification-count';
+		this.notificationBtn.appendChild(notifCount);
+		
+		var notifBell = document.createElement('div');
+		notifBell.className = 'geNotification-bell';
+		notifBell.style.opacity = uiTheme == 'min'? '0.5' : '';
+		var bellPart = document.createElement('span');
+		bellPart.className = 'geBell-top';
+		notifBell.appendChild(bellPart);
+		var bellPart = document.createElement('span');
+		bellPart.className = 'geBell-middle';
+		notifBell.appendChild(bellPart);
+		var bellPart = document.createElement('span');
+		bellPart.className = 'geBell-bottom';
+		notifBell.appendChild(bellPart);
+		var bellPart = document.createElement('span');
+		bellPart.className = 'geBell-rad';
+		notifBell.appendChild(bellPart);
+		this.notificationBtn.appendChild(notifBell);
+		
 		//Add as first child such that it is the left-most one
 		this.buttonContainer.insertBefore(this.notificationBtn, this.buttonContainer.firstChild);
 		
@@ -5818,18 +5880,26 @@ App.prototype.showNotification = function(notifs, lsReadFlag)
 		this.notificationWin.className = 'geNotifPanel';
 		this.notificationWin.style.display = 'none';
 		document.body.appendChild(this.notificationWin);
-		this.notificationWin.innerHTML ='<div class="header">' + 
-										'    <div class="menu-icon">' + 
-										'        <div class="dash-top"></div>' + 
-										'        <div class="dash-bottom"></div>' + 
-										'        <div class="circle"></div>' + 
-										'    </div>' + 
-										'    <span class="title">' + mxResources.get('notifications') + '</span>' + 
-										'    <span id="geNotifClose" class="closeBtn">x</span>' + 
-										'</div>' + 
-										'<div class="notifications clearfix">' +
-										'	<div id="geNotifList"  style="position: relative"></div>' + 
-										'</div>';
+		
+		var winHeader = document.createElement('div');
+		winHeader.className = 'header';
+		var winTitle = document.createElement('span');
+		winTitle.className = 'title';
+		winTitle.textContent = mxResources.get('notifications');
+		winHeader.appendChild(winTitle);
+		var winClose = document.createElement('span');
+		winClose.className = 'closeBtn';
+		winClose.textContent = 'x';
+		winHeader.appendChild(winClose);
+		this.notificationWin.appendChild(winHeader);
+		
+		var winBody = document.createElement('div');
+		winBody.className = 'notifications clearfix';
+		var notifList = document.createElement('div');
+		notifList.setAttribute('id', 'geNotifList');
+		notifList.style.position = 'relative';
+		winBody.appendChild(notifList);
+		this.notificationWin.appendChild(winBody);
 		
 		mxEvent.addListener(this.notificationBtn, 'click', mxUtils.bind(this, function()
 		{
@@ -5848,7 +5918,7 @@ App.prototype.showNotification = function(notifs, lsReadFlag)
 			}
 		}));
 		
-		mxEvent.addListener(document.getElementById('geNotifClose'), 'click', markAllAsRead);
+		mxEvent.addListener(winClose, 'click', markAllAsRead);
 	}
 		
 	var newNotif = 0;
@@ -7250,7 +7320,18 @@ App.prototype.updateUserElement = function()
 					div.style.background = 'whiteSmoke';
 					div.style.borderTop = '1px solid #e0e0e0';
 					div.style.whiteSpace = 'nowrap';
-					
+										
+					if (urlParams['sketch'] == '1')
+					{
+						var btn = mxUtils.button(mxResources.get('share'), mxUtils.bind(this, function()
+						{
+							this.actions.get('share').funct();
+						}));
+						btn.className = 'geBtn gePrimaryBtn';
+						div.appendChild(btn);
+						this.userPanel.appendChild(div);
+					}
+
 					var btn = mxUtils.button(mxResources.get('close'), mxUtils.bind(this, function()
 					{
 						if (!mxEvent.isConsumed(evt) && this.userPanel != null && this.userPanel.parentNode != null)

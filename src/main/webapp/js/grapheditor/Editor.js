@@ -250,9 +250,10 @@ Editor.hintOffset = 20;
 Editor.popupsAllowed = true;
 	
 /**
- * Specifies if the native clipboard is enabled.
+ * Specifies if the native clipboard is enabled. Blocked in iframes for possible sandbox attribute.
+ * LATER: Check if actually blocked.
  */
-Editor.enableNativeCipboard = !mxClient.IS_FF && navigator.clipboard != null;
+Editor.enableNativeCipboard = window == window.top && !mxClient.IS_FF && navigator.clipboard != null;
 
 /**
  * Editor inherits from mxEventSource
@@ -423,7 +424,7 @@ Editor.prototype.createGraph = function(themes, model)
  */
 Editor.prototype.resetGraph = function()
 {
-	this.graph.gridEnabled = !this.isChromelessView() || urlParams['grid'] == '1';
+	this.graph.gridEnabled = this.graph.defaultGridEnabled && (!this.isChromelessView() || urlParams['grid'] == '1');
 	this.graph.graphHandler.guidesEnabled = true;
 	this.graph.setTooltips(true);
 	this.graph.setConnectable(true);
@@ -2385,7 +2386,7 @@ FilenameDialog.createFileTypes = function(editorUi, nameInput, types)
 		var image = 'none';
 		var position = '';
 		
-		if (graph.isGridEnabled())
+		if (graph.isGridEnabled() || graph.gridVisible)
 		{
 			var phase = 10;
 			

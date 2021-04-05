@@ -132,7 +132,35 @@ abstract public class AbsAuthServlet extends HttpServlet
 	@SuppressWarnings("unchecked")
 	protected static void putCacheValue(String key, String val)
 	{
-		tokenCache.put(key, val);
+		int trials = 0;
+		boolean done = false;
+		
+		do
+		{
+			//Exponential? back-off
+			if (trials > 0)
+			{
+				try 
+				{
+					Thread.sleep(200 * trials);
+				}
+				catch (InterruptedException e) { }
+			}
+			
+			trials++;
+			
+			try
+			{
+				tokenCache.put(key, val);
+				done = true;
+			}
+			catch(Exception e) //MemcacheServiceException
+			{
+				//delay in re-trial is above
+				done = false;
+			}
+		}
+		while(!done && trials < 3);
 	}
 	
 	protected String getCookieValue(String name, HttpServletRequest request)
